@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>方案 C · Canvas 自绘</title>
+<!--
+  方案 C：一块画布自己画。
+  优点：像素味最地道、缩放最自由、动画最顺。
+  缺点：连「字」都是画上去的，所以——
+    · 中文换行要自己算（见 wrap 函数）
+    · 对话文字、选项、按钮全要自己排版
+    · 点击要自己算鼠标在哪个方块里
+-->
+<style>
+  body{
+    margin:0; min-height:100vh; background:#0b0d12; color:#e8e6e3;
+    font-family:"Microsoft YaHei","Noto Sans SC",sans-serif;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:24px;
+  }
+  .caption{ font-size:14px; color:#9a9a9a; }
+  .caption b{ color:#c9a227; font-weight:400; }
+  canvas{ box-shadow:0 0 0 2px #2a2f3a; cursor:pointer; image-rendering:pixelated; }
+</style>
+</head>
+<body>
+  <div class="caption">方案 C · <b>Canvas 自绘</b>：连字都是画上去的</div>
+  <canvas id="cv" width="640" height="520"></canvas>
+
+<script>
+const U = 16;              // 一个像素放大成 16×16 屏幕像素
+const ROOM_H = 368;
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+
+const PAL = {
+  '.': '#1b1e26', '_': '#242832', 'f': '#3a4356', 'w': '#2b3444',
+  'D': '#3a2f22', 'd': '#2a2118', 'y': '#c9a227', 't': '#4a3728',
+  'l': '#3a2b1f', 'p': '#f2e9d8', 'g': '#6b7280', 'r': '#d94a4a',
+};
+const ROOM = [
+  '........................................',
+  '........................................',
+  '....ffffffff............................',
+  '....fwwfwwwf............................',
+  '....ffffffff............................',
+  '....fwwfwwwf............................',
+  '....ffffffff............................',
+  '........................................',
+  '........................................',
+  '.....................DDDDDD.............',
+  '.....................DdddyD.............',
+  '.....................DddddD.............',
+  '.....................DddddD.............',
+  '.....................DddddD.............',
+  '.....................DddddD.............',
+  '.....................DDDDDD.............',
+  '........................................',
+  '........................................',
+  '............................tttttttttttt',
+  '............................l..........l',
+  '________________________________________',
+  '________________________________________',
+  '________________________________________',
+];
+const ITEM = { x: 31, y: 14, art: ['pppp', 'pggp', 'pgrp', 'pppp'] };
+const MEM = ['你记得这张成绩单。九十二分。', '你把它拿回家的时候，心里其实是高兴的。', '「怎么不是满分？」'];
+const DLG = '你比预约时间早到了二十分钟。走廊尽头的门牌上写着「心理咨询室」。';
+const FONT = '"Microsoft YaHei", "Noto Sans SC", sans-serif';
+
+let overlayOn = false;
+let t0 = performance.now();
+
+// —— 中文换行要自己写 ——
+function wrap(text, maxWidth, font) {
+  ctx.font = font;
+  const lines = [];
+  let cur = '';
+  for (const ch of text) {
+    if (ctx.measureText(cur + ch).width > maxWidth && cur) { lines.push(cur); cur = ch; }
+    else cur += ch;
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+function drawRoom(now) {
+  ctx.fillStyle = PAL['.'];
+  ctx.fillRect(0, 0, 640, ROOM_H);
+
+  ROOM.forEach((line, y) => {
+    let x = 0;
+    while (x < line.length) {
+      const ch = line[x];
+      if (ch === '.' || !PAL[ch]) { x++; continue; }
+      let w = 1;
+      while (line[x + w] === ch) w++;
+      ctx.fillStyle = PAL[ch];
+      ctx.fillRect(x * U, y * U, w * U, U);
+      x += w;
+    }
+  });
+
+  // 窗上的灰
+  ctx.fillStyle = 'rgba(138,143,122,.5)';
+  ctx.fillRect(4.5 * U, 2.5 * U, 7 * U, 4 * U);
+
+  // 成绩单：呼吸闪烁
+  ctx.globalAlpha = 0.55 + 0.45 * Math.abs(Math.sin(now / 900));
+  ITEM.art.forEach((line, dy) => {
+    [...line].forEach((ch, dx) => {
+      if (!PAL[ch]) return;
+      ctx.fillStyle = PAL[ch];
+      ctx.fillRect((ITEM.x + dx) * U, (ITEM.y + dy) * U, U, U);
+    });
+  });
+  ctx.globalAlpha = 1;
+}
+
+function drawDialogue() {
+  const top = ROOM_H + 10;
+  ctx.fillStyle = '#14161c';
+  ctx.fillRect(0, top, 640, 142);
+  ctx.strokeStyle = '#2a2f3a';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, top + 1, 638, 140);
+
+  ctx.fillStyle = '#7fb3d5';
+  ctx.font = `13px ${FONT}`;
+  ctx.fillText('咨询师', 18, top + 26);
+
+  ctx.fillStyle = '#e8e6e3';
+  const lines = wrap(DLG, 604, `16px ${FONT}`);
+  lines.forEach((l, i) => ctx.fillText(l, 18, top + 56 + i * 27));
+
+  ctx.fillStyle = '#9a9a9a';
+  ctx.font = `15px ${FONT}`;
+  ctx.fillText('· 我想先说说最近的状态', 18, top + 118);
+  ctx.fillText('· 我不太确定该从哪里开始', 320, top + 118);
+}
+
+const BTN = { x: 138, y: 266, w: 110, h: 38 };
+
+function drawOverlay() {
+  if (!overlayOn) return;
+  ctx.fillStyle = 'rgba(6,7,10,.92)';
+  ctx.fillRect(0, 0, 640, ROOM_H);
+
+  const bx = 110, by = 72, bw = 420, bh = 250;
+  ctx.fillStyle = '#14161c';
+  ctx.fillRect(bx, by, bw, bh);
+  ctx.strokeStyle = '#2a2f3a';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(bx, by, bw, bh);
+
+  ctx.fillStyle = '#c9a227';
+  ctx.font = `15px ${FONT}`;
+  ctx.fillText('一段记忆 · 成绩单', bx + 28, by + 44);
+
+  ctx.fillStyle = '#e8e6e3';
+  ctx.font = `17px ${FONT}`;
+  MEM.forEach((l, i) => ctx.fillText(l, bx + 28, by + 86 + i * 30));
+
+  ctx.fillStyle = '#1d2230';
+  ctx.fillRect(BTN.x, BTN.y, BTN.w, BTN.h);
+  ctx.strokeStyle = '#2a2f3a';
+  ctx.strokeRect(BTN.x, BTN.y, BTN.w, BTN.h);
+  ctx.fillStyle = '#e8e6e3';
+  ctx.font = `15px ${FONT}`;
+  ctx.fillText('放回抽屉', BTN.x + 22, BTN.y + 25);
+}
+
+function frame(now) {
+  drawRoom(now);
+  drawDialogue();
+  drawOverlay();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// —— 点击也要自己算坐标 ——
+cv.addEventListener('click', (e) => {
+  const r = cv.getBoundingClientRect();
+  const x = (e.clientX - r.left) * (cv.width / r.width);
+  const y = (e.clientY - r.top) * (cv.height / r.height);
+
+  if (overlayOn) {
+    if (x >= BTN.x && x <= BTN.x + BTN.w && y >= BTN.y && y <= BTN.y + BTN.h) overlayOn = false;
+    return;
+  }
+  const ix = ITEM.x * U, iy = ITEM.y * U, is = 4 * U;
+  if (x >= ix && x < ix + is && y >= iy && y < iy + is) overlayOn = true;
+});
+</script>
+</body>
+</html>

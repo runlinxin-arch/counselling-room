@@ -1,0 +1,10 @@
+# 统一换行，避免 Windows 上结账后整份文件显示为"已修改"
+* text=auto eol=lf
+
+# 这些必须是字节精确的，别做任何换行转换
+*.png binary
+*.html text eol=lf
+*.json text eol=lf
+
+# Git 语言统计：把交付物和源码都算成 HTML/JS，截图排除
+docs/mockups/shots/*.png binary

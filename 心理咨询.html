@@ -1,0 +1,3856 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>心理咨询 · 康复心理学课程作业</title>
+<meta name="description" content="一个叙事驱动的康复心理学科普游戏。你扮演康复医院心理门诊的咨询师。">
+<meta name="color-scheme" content="dark">
+<style>
+/* ==========================================================================
+   《心理咨询》· 样式
+   设计令牌在最上面，下面的规则全部从这里取值。改颜色只改这一段。
+   ========================================================================== */
+
+:root {
+  /* ---- 色板（全部取自方案 B 已冻结的 39 色，界面和房间是同一个下午）---- */
+  --wall:      #2b2c39;  /* 墙灰 · 页面底 */
+  --wall-dark: #24252f;  /* 深缝 · 更深一层 */
+  --base:      #3d3e4d;  /* 踢脚线 · 所有分隔线 */
+  --floor:     #413527;  /* 地板棕 · 侧栏 */
+  --blue:      #5b8199;  /* 沙发蓝 · 品牌色 */
+  --blue-dim:  #3f5f75;  /* 沙发暗蓝 */
+  --lamp:      #ffe0a8;  /* 暖灯黄 · 唯一的高饱和暖色 */
+  --paper:     #efe3c8;  /* 纸黄 · 督导笔记 */
+  --paper-ink: #3a3227;  /* 纸上的字 */
+  --ink:       #f2eee2;  /* 钟面米 · 正文 */
+  --ink-dim:   #9d9a92;  /* 次要文字 */
+  --ink-faint: #6f6c66;  /* 最弱的一层 */
+
+  /* 说话人 */
+  --who-narrator:   #8b8880;
+  --who-counselor:  #8fbcd6;
+  --who-client:     #d8c39a;
+  --who-doctor:     #c0a0a0;
+
+  /* ---- 字体 ---- */
+  --sans: "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  --serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace;
+  /* 电话号码用它：等宽是为了"数字对齐"，但电话号码是给人拨的，不是给人比的。
+     等宽字体一排版，号码就变成了数据；这里要的是能一眼读出来。 */
+  --num: "Noto Sans SC", system-ui, "Segoe UI", sans-serif;
+
+  /* ---- 尺度 ---- */
+  --room-w: 636px;
+  --room-h: 360px;
+  --pad: 22px;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: #0b0d12;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* 整个页面就是这间房：底上一层极淡的暖光，四角再压暗 */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% 62%, rgba(255, 217, 160, .045) 0%, rgba(255, 217, 160, 0) 55%),
+    radial-gradient(140% 120% at 50% 50%, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, .55) 100%);
+  z-index: 0;
+}
+
+#screen {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================================================
+   页头
+   ========================================================================== */
+
+#top {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px var(--pad) 10px;
+  border-bottom: 1px solid var(--wall-dark);
+}
+
+#brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+#brand .zh {
+  font-size: 15px;
+  letter-spacing: .16em;
+  color: var(--ink);
+}
+
+#brand .en {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .22em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+
+#brand .chapter {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--blue);
+  letter-spacing: .1em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#top .spacer { flex: 1 1 auto; }
+
+/* 常驻的危机入口。这是"热线出现在 3 处"里的第 2 处——
+   玩家在任何一屏、任何一步都能点到。 */
+#crisisBtn {
+  flex: 0 0 auto;
+  font-family: inherit;
+  font-size: 13px;
+  color: #e8b4b4;
+  background: transparent;
+  border: 1px solid #6b4040;
+  border-radius: 2px;
+  padding: 5px 12px;
+  cursor: pointer;
+  letter-spacing: .06em;
+  transition: background .15s, border-color .15s, color .15s;
+}
+#crisisBtn:hover { background: #2a1c1c; border-color: #9b5a5a; color: #ffd6d6; }
+
+/* ==========================================================================
+   场景（咨询室）
+   ========================================================================== */
+
+#stage {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  padding: 14px var(--pad) 0;
+}
+
+#roomWrap { width: var(--room-w); max-width: 100%; }
+
+#room {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 106 / 60;
+  background: var(--wall);
+  /* 细边框 + 一道内阴影，像墙上开的一扇窗 */
+  box-shadow:
+    0 0 0 1px var(--base),
+    0 0 0 6px rgba(0, 0, 0, .22),
+    0 18px 40px -18px rgba(0, 0, 0, .9);
+  overflow: hidden;
+  transform-origin: top center;
+}
+
+#scene { display: block; width: 100%; height: 100%; shape-rendering: crispEdges; }
+
+/* 可点物件：平时极轻地呼吸，指上去立刻亮起来 */
+.hotspot { cursor: pointer; }
+.hotspot .art { animation: breathe 1.9s ease-in-out infinite; }
+.hotspot:hover .art,
+.hotspot:focus-visible .art {
+  animation: none;
+  filter: brightness(1.6) drop-shadow(0 0 4px var(--lamp));
+}
+@keyframes breathe { 0%, 100% { opacity: 1 } 50% { opacity: .62 } }
+
+/* ==========================================================================
+   对话区
+   ========================================================================== */
+
+#panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 18px var(--pad) 16px;
+}
+
+#who {
+  flex: 0 0 auto;
+  font-size: 13px;
+  letter-spacing: .1em;
+  color: var(--who-narrator);
+  min-height: 1.4em;
+  margin-bottom: 6px;
+}
+#who[data-role="咨询师"]      { color: var(--who-counselor); }
+#who[data-role="林越"]        { color: var(--who-client); }
+#who[data-role="王医生"]      { color: var(--who-doctor); }
+#who[data-role="旁白"]        { color: var(--who-narrator); }
+
+#text {
+  flex: 1 1 auto;
+  min-height: 3.8em;
+  font-size: 19px;
+  line-height: 1.85;
+  letter-spacing: .01em;
+  color: var(--ink);
+}
+/* 旁白和内心独白：斜一点、灰一点，和说出来的话分开 */
+#text[data-role="旁白"],
+#text[data-role="咨询师（内心）"] { color: #b9b5ac; font-style: italic; }
+
+/* 光标：对话推进的提示，也是一个明确的"可点"信号 */
+.caret {
+  display: inline-block;
+  width: .5em;
+  color: var(--blue);
+  animation: blink 1.1s steps(1, end) infinite;
+}
+@keyframes blink { 0%, 50% { opacity: 1 } 50.01%, 100% { opacity: 0 } }
+.caret.off { visibility: hidden; }
+
+/* ---- 选项 ---- */
+#choices {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink);
+  background: #191b23;
+  border: 1px solid var(--base);
+  border-left: 2px solid var(--blue-dim);
+  border-radius: 2px;
+  padding: 11px 14px;
+  cursor: pointer;
+  transition: background .14s, border-color .14s, transform .1s;
+}
+.choice:hover:not(:disabled) {
+  background: #20242f;
+  border-left-color: var(--blue);
+  transform: translateX(2px);
+}
+.choice:active:not(:disabled) { transform: translateX(2px) scale(.995); }
+.choice:disabled { cursor: default; opacity: .5; }
+
+.choice .key {
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.9;
+  color: var(--blue);
+  min-width: 1em;
+}
+.choice .label { flex: 1 1 auto; }
+
+/* ---- 底部提示 ---- */
+#hint {
+  flex: 0 0 auto;
+  min-height: 1.5em;
+  margin-top: 12px;
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  letter-spacing: .04em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#hint .dot {
+  width: 6px; height: 6px;
+  background: var(--lamp);
+  border-radius: 50%;
+  box-shadow: 0 0 7px var(--lamp);
+  animation: breathe 1.9s ease-in-out infinite;
+}
+#hint .right { margin-left: auto; font-family: var(--mono); font-size: 11px; }
+
+/* ==========================================================================
+   纸（督导笔记 / 科普卡 / 转介单 / 资源卡 / 成绩单）
+   这是整个界面唯一的高亮物 —— 别的都得安静。
+   ========================================================================== */
+
+#overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px;
+  background: rgba(6, 7, 10, .84);
+  backdrop-filter: blur(2px);
+}
+#overlay.on { display: flex; }
+
+.paper {
+  position: relative;
+  width: min(560px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  color: var(--paper-ink);
+  font-family: var(--serif);
+  border-radius: 1px;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, .95), 0 0 0 1px rgba(0, 0, 0, .4);
+  /* 纸角一点点不齐，像真的被裁过 */
+  clip-path: polygon(0 .6%, 99.4% 0, 100% 99.2%, .7% 100%);
+  animation: paperIn .34s cubic-bezier(.16, .84, .3, 1);
+}
+@keyframes paperIn {
+  from { opacity: 0; transform: translateY(10px) rotate(-.5deg) scale(.985); }
+  to   { opacity: 1; transform: none; }
+}
+#overlay.slide .paper { animation: noteIn .4s cubic-bezier(.16, .84, .3, 1); }
+@keyframes noteIn {
+  from { opacity: 0; transform: translateX(34px) rotate(1.1deg); }
+  to   { opacity: 1; transform: none; }
+}
+
+.paper .head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 24px 10px;
+}
+.paper .head .label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: #8a7c62;
+}
+.paper[data-kind="referral"]  .head .label { color: #8a5a5a; }
+.paper[data-kind="resource"]  .head .label { color: #7a6a3a; }
+.paper[data-kind="science"]   .head .label { color: #4f6b7a; }
+.paper .head .rule { flex: 1 1 auto; height: 1px; background: rgba(58, 50, 39, .22); }
+
+.paper h2 {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0 24px;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: .02em;
+  color: #2e281f;
+}
+
+.paper .body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 12px 24px 6px;
+  font-size: 16.5px;
+  line-height: 1.95;
+}
+.paper .body p { margin: 0 0 12px; }
+.paper .body p:last-child { margin-bottom: 0; }
+
+.paper .foot {
+  flex: 0 0 auto;
+  padding: 6px 24px 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .04em;
+  color: #8a7c62;
+}
+.paper .foot:empty { display: none; }
+
+.paper .actions {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px 20px;
+}
+
+/* 纸上的按钮：不是界面按钮，是"在纸上盖个章"的感觉 */
+.btn {
+  font-family: var(--sans);
+  font-size: 14px;
+  letter-spacing: .08em;
+  color: var(--paper-ink);
+  background: transparent;
+  border: 1px solid rgba(58, 50, 39, .45);
+  border-radius: 1px;
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: background .14s, color .14s;
+}
+.btn:hover { background: rgba(58, 50, 39, .1); }
+.btn.primary { background: var(--paper-ink); color: var(--paper); border-color: var(--paper-ink); }
+.btn.primary:hover { background: #241f18; }
+
+/* 转介单：右上角一个回形针的暗示，不用图，用一道斜杠 */
+.paper[data-kind="referral"]::after {
+  content: "";
+  position: absolute;
+  top: 0; right: 34px;
+  width: 12px; height: 46px;
+  border: 2px solid rgba(58, 50, 39, .3);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+}
+
+/* 资源卡：加一条红色标记条，和科普卡区分开 */
+.paper[data-kind="resource"] { border-top: 3px solid #a4463f; }
+.paper[data-kind="resource"] .body { font-size: 17px; }
+
+/* 成绩单 */
+.paper[data-kind="result"] .body { font-family: var(--sans); font-size: 15px; line-height: 1.9; }
+/* lead 是"结论"，用衬线；下面的清单是"账目"，用无衬线 */
+.paper .result-lead {
+  margin: 0;
+  padding: 10px 24px 0;
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.95;
+  color: #3a3227;
+}
+.tally { list-style: none; margin: 0 0 16px; padding: 0; }
+.tally li {
+  display: flex;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px dashed rgba(58, 50, 39, .22);
+}
+.tally li:last-child { border-bottom: none; }
+.tally .k { flex: 0 0 6.5em; color: #6d6250; }
+.tally .v { flex: 1 1 auto; color: #2e281f; }
+.tally .v.miss { color: #8a5a20; }
+
+/* ---- 逐字写出 ---- */
+.writing { white-space: pre-wrap; }
+.writing .w { opacity: 0; }
+.writing .w.on { opacity: 1; }
+
+/* ==========================================================================
+   情绪日记（手机备忘录 —— 和"纸"刻意不是一套材质）
+   ========================================================================== */
+
+.diary {
+  width: min(430px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #16181f;
+  border: 1px solid var(--base);
+  border-radius: 10px;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, .95);
+  overflow: hidden;
+  animation: paperIn .3s cubic-bezier(.16, .84, .3, 1);
+}
+.diary .bar {
+  flex: 0 0 auto;
+  padding: 12px 18px 10px;
+  border-bottom: 1px solid #23252e;
+  font-size: 13px;
+  color: var(--ink-dim);
+  letter-spacing: .04em;
+}
+.diary .bar b { color: var(--ink); font-weight: 400; }
+.diary .list { flex: 1 1 auto; overflow-y: auto; padding: 8px 10px 12px; }
+
+.entry {
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 11px 12px;
+  cursor: pointer;
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  transition: background .14s;
+}
+.entry:hover { background: #1e212b; }
+.entry.open { background: #1e212b; }
+.entry .day {
+  flex: 0 0 3.2em;
+  font-size: 13px;
+  color: var(--blue);
+  letter-spacing: .06em;
+}
+.entry .peek {
+  flex: 1 1 auto;
+  font-size: 14px;
+  color: var(--ink-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.entry.open .peek { display: none; }
+.entry .full { display: none; flex: 1 1 auto; font-size: 15px; line-height: 1.9; color: var(--ink); }
+.entry.open .full { display: block; }
+.entry .full .line { display: block; }
+.entry .full .line.strong { color: var(--lamp); }
+.entry .full .note {
+  display: block;
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--ink-faint);
+}
+
+.diary .foot {
+  flex: 0 0 auto;
+  padding: 10px 18px 14px;
+  border-top: 1px solid #23252e;
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  text-align: center;
+}
+.diary .foot.ready { color: var(--blue); }
+
+/* ==========================================================================
+   标题页 / 选线页
+   ========================================================================== */
+
+.page {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 30px var(--pad);
+}
+
+/* ---- 标题页 ---- */
+.title-grid {
+  display: grid;
+  grid-template-columns: 1.15fr .85fr;
+  gap: 30px;
+  align-items: start;
+  min-height: 100%;
+}
+
+.title-main { display: flex; flex-direction: column; justify-content: center; padding-top: 8px; }
+
+.title-main .kicker {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .3em;
+  color: var(--blue);
+  text-transform: uppercase;
+  margin-bottom: 22px;
+}
+.title-main h1 {
+  margin: 0 0 6px;
+  font-size: 46px;
+  line-height: 1.15;
+  letter-spacing: .1em;
+  font-weight: 400;
+  color: var(--ink);
+}
+.title-main .sub {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .34em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  margin-bottom: 26px;
+}
+.title-main .pitch {
+  font-size: 16px;
+  line-height: 2;
+  color: var(--ink-dim);
+  max-width: 34em;
+  margin: 0 0 30px;
+}
+.title-main .pitch em { font-style: normal; color: var(--ink); }
+
+.start {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: inherit;
+  font-size: 17px;
+  letter-spacing: .14em;
+  color: #0b0d12;
+  background: var(--blue);
+  border: none;
+  border-radius: 2px;
+  padding: 14px 34px;
+  cursor: pointer;
+  transition: background .16s, transform .1s;
+}
+.start:hover { background: #7aa5bd; }
+.start:active { transform: translateY(1px); }
+.start .arrow { font-family: var(--mono); font-size: 13px; }
+
+.resume {
+  align-self: flex-start;
+  margin-top: 12px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ink-faint);
+  background: none;
+  border: none;
+  border-bottom: 1px dashed var(--base);
+  padding: 2px 0;
+  cursor: pointer;
+  letter-spacing: .04em;
+}
+.resume:hover { color: var(--blue); border-color: var(--blue); }
+
+/* ---- 右侧：声明与资源 ---- */
+.title-side {
+  border-left: 1px solid var(--wall-dark);
+  padding: 4px 0 4px 26px;
+  font-size: 13.5px;
+  line-height: 1.85;
+  color: var(--ink-dim);
+}
+.title-side h3 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: .2em;
+  color: var(--ink-faint);
+  font-family: var(--mono);
+  text-transform: uppercase;
+}
+.title-side p { margin: 0 0 12px; }
+.title-side .disc { color: var(--ink); }
+.title-side hr { border: none; border-top: 1px solid var(--wall-dark); margin: 18px 0; }
+
+.hotline {
+  margin-top: 4px;
+  padding: 13px 16px;
+  background: #1a1c24;
+  border-left: 2px solid #a4463f;
+  border-radius: 1px;
+}
+.hotline .n {
+  font-family: var(--num);
+  font-size: 21px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  display: block;
+  margin: 2px 0 8px;
+}
+.hotline .n:last-child { margin-bottom: 0; }
+.hotline .n small {
+  display: block;
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: .04em;
+  color: var(--ink-faint);
+  margin-top: 2px;
+}
+
+/* ---- 选线页 ---- */
+.choose-head { margin-bottom: 24px; }
+.choose-head .kicker {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .28em;
+  color: var(--blue);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.choose-head h2 {
+  margin: 0 0 8px;
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: .06em;
+}
+.choose-head p { margin: 0; color: var(--ink-dim); font-size: 14.5px; max-width: 44em; }
+
+.lines { display: flex; flex-direction: column; gap: 12px; }
+
+.line-card {
+  position: relative;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  background: #191b23;
+  border: 1px solid var(--base);
+  border-radius: 2px;
+  padding: 18px 20px;
+  cursor: pointer;
+  transition: background .16s, border-color .16s, transform .1s;
+}
+.line-card[data-ready="true"]:hover {
+  background: #1f2330;
+  border-color: var(--blue-dim);
+  transform: translateX(3px);
+}
+.line-card[data-ready="false"] { cursor: not-allowed; opacity: .42; }
+.line-card[data-ready="false"]:hover { opacity: .52; }
+
+.line-card .num {
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-size: 30px;
+  line-height: 1;
+  color: var(--blue-dim);
+  width: 1.5em;
+  text-align: center;
+}
+.line-card[data-ready="true"] .num { color: var(--blue); }
+
+.line-card .meta { flex: 1 1 auto; min-width: 0; }
+.line-card .meta h3 {
+  margin: 0 0 5px;
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: .06em;
+  color: var(--ink);
+}
+.line-card .meta .who {
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  letter-spacing: .03em;
+  margin-bottom: 7px;
+  font-family: var(--mono);
+}
+.line-card .meta .what { font-size: 14.5px; color: var(--ink-dim); }
+
+.line-card .badge {
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .18em;
+  padding: 4px 10px;
+  border: 1px solid var(--base);
+  border-radius: 1px;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+.line-card[data-ready="true"] .badge { color: var(--blue); border-color: var(--blue-dim); }
+.line-card[data-done="true"] .badge { color: var(--lamp); border-color: #7a6a3a; }
+
+/* 剪影：没写的两条线，用一条人的形状占位，不假装能玩 */
+.silhouette {
+  position: absolute;
+  right: 22px;
+  bottom: 14px;
+  width: 40px;
+  height: 40px;
+  opacity: .5;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   转场
+   ========================================================================== */
+
+#fade {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: #06070a;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .5s ease;
+}
+#fade.on { opacity: 1; }
+
+/* ==========================================================================
+   焦点 / 键盘 / 小屏 / 减弱动效
+   ========================================================================== */
+
+:focus-visible {
+  outline: 2px solid var(--lamp);
+  outline-offset: 3px;
+}
+
+/* 窄屏：右栏挪到主栏下面，房间满宽 */
+@media (max-width: 820px) {
+  .title-grid { grid-template-columns: 1fr; gap: 26px; }
+  .title-side { border-left: none; border-top: 1px solid var(--wall-dark); padding: 22px 0 0; }
+  .title-main h1 { font-size: 34px; }
+  #text { font-size: 17px; }
+}
+
+@media (max-height: 620px) {
+  #text { font-size: 17px; min-height: 3em; }
+  #panel { padding-top: 12px; }
+  .title-main h1 { font-size: 34px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+  .hotspot .art { opacity: 1; }
+  .paper, .diary { animation: none; }
+}
+
+/* 打印/无脚本时的兜底，别让页面白屏 */
+.noscript {
+  padding: 40px var(--pad);
+  color: var(--ink-dim);
+  font-size: 15px;
+  line-height: 2;
+}
+</style>
+</head>
+<body>
+
+<div id="screen">
+  <header id="top"></header>
+  <main id="main"></main>
+  <section id="panel"></section>
+</div>
+
+<div id="fade"></div>
+
+<noscript>
+  <div class="noscript">
+    <h2>这个游戏需要 JavaScript</h2>
+    <p>请在浏览器里打开它，不要用文本编辑器或预览工具。</p>
+    <p>如果你或你身边的人正在经历心理困扰，请联系专业机构或拨打
+      <strong>12356</strong>（全国心理援助热线）。存在立即的危险，请拨打 <strong>120</strong>。</p>
+  </div>
+</noscript>
+
+<!-- ==========================================================================
+     像素物件（从 docs/mockups/方案B-内联SVG.html 抽出）
+     放在 JSON 里而不是 JS 字面量里：里面的中文注释和引号不用转义。
+     ========================================================================== -->
+<script id="sprites-data" type="application/json">
+{
+  "_source": "docs/mockups/方案B-内联SVG.html",
+  "_note": "由 tools/extract-sprites.mjs 自动抽出，不要手改；美术以 docs/mockups/方案B-内联SVG.html 为准",
+  "size": {
+    "w": 106,
+    "h": 60
+  },
+  "pal": {
+    ".": "#2b2c39",
+    ",": "#32333f",
+    "-": "#24252f",
+    "=": "#3d3e4d",
+    "#": "#413527",
+    "+": "#392e22",
+    "|": "#2b2118",
+    "f": "#4a4356",
+    "g": "#4c5666",
+    "h": "#6d7886",
+    "n": "#565670",
+    "m": "#414158",
+    "q": "#6a6a82",
+    "D": "#33281c",
+    "d": "#6b5540",
+    "e": "#54412f",
+    "y": "#d8ae35",
+    "s": "#5b8199",
+    "S": "#3f5f75",
+    "T": "#c39a76",
+    "w": "#eee8da",
+    "k": "#a9a294",
+    "x": "#c94a4a",
+    "t": "#7a5a3a",
+    "u": "#5c4229",
+    "v": "#8e6b45",
+    "p": "#5c8253",
+    "P": "#42603c",
+    "o": "#8f5a3e",
+    "b": "#9a7852",
+    "B": "#775c3d",
+    "i": "#f2eee2",
+    "G": "#c4bdac",
+    "C": "#eaeaea",
+    "V": "#b4b4b4",
+    "@": "#54424f",
+    "O": "#40333f",
+    "%": "#63503f",
+    "j": "#ffe0a8"
+  },
+  "sprites": {
+    "window": [
+      "ffffffffffffffffffffff",
+      "fgggggggggfggggggggggf",
+      "fghhhhggggfghhhhgggggf",
+      "fghhhhggggfghhhhgggggf",
+      "fghhhhggggfghhhhgggggf",
+      "fgggggggggfggggggggggf",
+      "fgggggggggfggggggggggf",
+      "fgggggggggfggggggggggf",
+      "fgggggggggfggggggggggf",
+      "fgggggggggfggggggggggf",
+      "ffffffffffffffffffffff",
+      "fgggggggggfggggggggggf",
+      "fghhhhggggfghhhhgggggf",
+      "fghhhhggggfghhhhgggggf",
+      "fghhhhggggfghhhhgggggf",
+      "fgggggggggfggggggggggf",
+      "fgggggggggfggggggggggf",
+      "fgggggggggfggggggggggf",
+      "fgggggggggfggggggggggf",
+      "ffffffffffffffffffffff"
+    ],
+    "curtainL": [
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "mmmmmm",
+      "mmmmmm"
+    ],
+    "curtainR": [
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "mmmmmm",
+      "mmmmmm"
+    ],
+    "rod": [
+      "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+      "ffffffffffffffffffffffffffffffffff"
+    ],
+    "clock": [
+      "GGGGGGGGG",
+      "GiiiDiiiG",
+      "GiiiDiiiG",
+      "GiiiDiiiG",
+      "GDiiDDDDG",
+      "GiiiiiiiG",
+      "GiiiiiiiG",
+      "GiiiDiiiG",
+      "GGGGGGGGG"
+    ],
+    "poster": [
+      "ffffffffffffff",
+      "fiiiiiiiiiiiif",
+      "fiiiiiiiijjjif",
+      "fiiiiiiiijjjif",
+      "fiiiiiiiijjjif",
+      "fiiipiiiiiiiif",
+      "fiipppiippiiif",
+      "fippppppppppif",
+      "fiiiiiiiiiiiif",
+      "fiiiiiiiiiiiif",
+      "ffffffffffffff"
+    ],
+    "shelf": [
+      "bbbbbbbbbbbbbbb",
+      "bBBBBBBBBBBBBBb",
+      "bBBBpBBBCBBBpBb",
+      "bBBspBBTCBBspBb",
+      "bByspBwTCByspBb",
+      "bxyspiwTCxyspib",
+      "bxyspiwTCxyspib",
+      "bxyspiwTCxyspib",
+      "bbbbbbbbbbbbbbb",
+      "bBBBBBBBBBBBBBb",
+      "bBBBBBBBBBBBBBb",
+      "bBpBBBCBBBpBBBb",
+      "bBpiBBCxBBpiBBb",
+      "bBpiwBCxyBpiwBb",
+      "bspiwTCxyspiwTb",
+      "bspiwTCxyspiwTb",
+      "bspiwTCxyspiwTb",
+      "bbbbbbbbbbbbbbb",
+      "bBBBBBBBBBBBBBb",
+      "bBBBBBBBBBBBBBb",
+      "bBBBBBBBBBBBBBb",
+      "bwTCxyspiwTCxyb",
+      "bwTCxyspiwTCxyb",
+      "bwTCxyspiwTCxyb",
+      "bwTCxyspiwTCxyb",
+      "bbbbbbbbbbbbbbb"
+    ],
+    "door": [
+      "DDDDDDDDDDDDD",
+      "DdddddddddddD",
+      "DdddddddddddD",
+      "DdddddddddddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DdddddddddddD",
+      "DdddddddddddD",
+      "DddddddddyydD",
+      "DddddddddyydD",
+      "DddddddddyydD",
+      "DdddddddddddD",
+      "DdddddddddddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DdddddddddddD",
+      "DdddddddddddD",
+      "DdddddddddddD",
+      "DDDDDDDDDDDDD"
+    ],
+    "plant": [
+      "              ",
+      "              ",
+      "              ",
+      "   pppppppp   ",
+      "   pppppppp   ",
+      "   pPPPPPPPP  ",
+      "  PPPPPPPPPP  ",
+      "  PPPPPPPPPP  ",
+      "  PPPPPPPPppp ",
+      " pppppppppppp ",
+      " ppppp  ppppp ",
+      " ppppp  ppppp ",
+      " ppppp  ppppp ",
+      " pppppPPppppp ",
+      " pppppPPP     ",
+      "      PPP     ",
+      "      PPP     ",
+      "      PPP     ",
+      "   oooooooo   ",
+      "    oooooo    ",
+      "    oooooo    ",
+      "    oooooo    ",
+      "    oooooo    ",
+      "    oooooo    "
+    ],
+    "rug": [
+      "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",
+      "@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@",
+      "@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@",
+      "@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@",
+      "@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@",
+      "@%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%@",
+      "@%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%@",
+      "@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@",
+      "@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@",
+      "@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@",
+      "@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@",
+      "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+    ],
+    "sofaL": [
+      " SSSSSS               ",
+      " ssssss               ",
+      " ssssss               ",
+      " ssssss               ",
+      " ssssss               ",
+      " ssssss               ",
+      " ssssss               ",
+      " ssssss               ",
+      " ssssss           ss  ",
+      " SSSSSS          ssss ",
+      " ssssss          ssss ",
+      " ssssss          ssss ",
+      " ssssss          ssss ",
+      " ssssssSSSSSSSSSSssss ",
+      " ssssssssssssssssssss ",
+      " ssssssssssssssssssss ",
+      " ssssssssssssssssssss ",
+      " ssssssSSSSSSSSSSSSSS ",
+      " sSSSSSSSSSSSSSSSSSS  ",
+      "  SSSSSSSSSSSSSSSSSS  ",
+      "   DD            DD   ",
+      "   DD            DD   "
+    ],
+    "sofaR": [
+      "               SSSSSS ",
+      "               ssssss ",
+      "               ssssss ",
+      "               ssssss ",
+      "               ssssss ",
+      "               ssssss ",
+      "               ssssss ",
+      "               ssssss ",
+      "  ss           ssssss ",
+      " ssss          SSSSSS ",
+      " ssss          ssssss ",
+      " ssss          ssssss ",
+      " ssss          ssssss ",
+      " ssssSSSSSSSSSSssssss ",
+      " ssssssssssssssssssss ",
+      " ssssssssssssssssssss ",
+      " ssssssssssssssssssss ",
+      " SSSSSSSSSSSSSSssssss ",
+      "  SSSSSSSSSSSSSSSSSSs ",
+      "  SSSSSSSSSSSSSSSSSS  ",
+      "   DD            DD   ",
+      "   DD            DD   "
+    ],
+    "table": [
+      "vvvvvvvvvvvvvvvv",
+      "tttttttttttttttt",
+      "tttttttttttttttt",
+      "tttttttttttttttt",
+      "uuuuuuuuuuuuuuuu",
+      " uu          uu ",
+      " uuuuuuuuuuuuuu ",
+      " uu          uu ",
+      " uu          uu ",
+      " uu          uu ",
+      " uu          uu ",
+      " uu          uu ",
+      " uu          uu "
+    ],
+    "tissue": [
+      "  www  ",
+      "  www  ",
+      "kkkkkkk",
+      "TTTTTTT",
+      "TTTTTTT"
+    ],
+    "cup": [
+      "VVVV",
+      "CVVC",
+      "CVVC",
+      "CVVC",
+      "CVVC",
+      " CC "
+    ]
+  },
+  "shadows": [
+    [
+      21,
+      45,
+      20,
+      4
+    ],
+    [
+      57,
+      45,
+      20,
+      4
+    ],
+    [
+      42,
+      50,
+      14,
+      3
+    ]
+  ],
+  "scene": [
+    [
+      "window",
+      12,
+      6
+    ],
+    [
+      "curtainL",
+      7,
+      4
+    ],
+    [
+      "curtainR",
+      33,
+      4
+    ],
+    [
+      "rod",
+      5,
+      2
+    ],
+    [
+      "poster",
+      54,
+      7
+    ],
+    [
+      "shelf",
+      78,
+      9
+    ],
+    [
+      "door",
+      92,
+      7
+    ],
+    [
+      "plant",
+      1,
+      24
+    ],
+    [
+      "rug",
+      19,
+      42
+    ],
+    [
+      "sofaL",
+      20,
+      26
+    ],
+    [
+      "sofaR",
+      56,
+      26
+    ],
+    [
+      "table",
+      41,
+      40
+    ],
+    [
+      "cup",
+      52,
+      34
+    ]
+  ],
+  "items": [
+    {
+      "id": "clock",
+      "sprite": "clock",
+      "x": 43,
+      "y": 5,
+      "label": "墙上的钟"
+    },
+    {
+      "id": "tissue",
+      "sprite": "tissue",
+      "x": 44,
+      "y": 35,
+      "label": "茶几上的纸巾盒"
+    },
+    {
+      "id": "sofa",
+      "sprite": "sofaR",
+      "x": 56,
+      "y": 26,
+      "label": "两把沙发"
+    }
+  ],
+  "notes": {
+    "clock": {
+      "title": "咨询设置 · 墙上的钟",
+      "lines": [
+        "你注意到墙上那个钟。它挂在咨询师的侧后方。",
+        "一次五十分钟。一开始你觉得很长，后来发现过得比想象中快。",
+        "钟挂在那里，咨询师就不用低头看手表——",
+        "你也不会被一个「时间到了」的动作打断。"
+      ]
+    },
+    "tissue": {
+      "title": "咨询设置 · 茶几上的纸巾盒",
+      "lines": [
+        "茶几上放着一盒纸巾，就在你一伸手就够得到的地方。",
+        "没有人会说「别哭」。",
+        "纸巾盒摆在那儿，本身就是一个态度：在这里，你可以哭。"
+      ]
+    },
+    "sofa": {
+      "title": "咨询设置 · 座位不是面对面的",
+      "lines": [
+        "两把沙发没有正对着摆。它们之间有一个夹角，大概 90 到 120 度。",
+        "这样你不想对视的时候，可以把目光自然地移开，看地板、看窗外都行。",
+        "正面对着坐，更像审问，不像谈话。",
+        "中间那张茶几也是一种缓冲——它让两个人之间不至于空得发慌。"
+      ]
+    }
+  }
+}
+</script>
+
+<script>
+/* ===== src/sprites.js ===== */
+// 立绘 + 场景时段变体。
+// 方案 B 冻结的是「空房间」，没有画人；这里补上两个人和几处随剧情变的东西。
+//
+// 坐标系统一：和方案 B 一样，每个字符 = 1 个逻辑像素，空格 = 透明，106 × 60 的画布。
+// 渲染时不做缩放，所以人必须画在房间尺度的像素上——头大概 5–6 像素宽，跟沙发一个量级。
+
+// 方案 B 的 39 色里没有肤色、发色、衣服色（原本只画家具）。补 6 个，语气保持一致：低饱和。
+const PAL_EXT = {
+  H: '#2a2622', // 头发（黑）
+  Z: '#bd8e6b', // 皮肤
+  z: '#9c7154', // 皮肤（暗面）
+  E: '#4f6478', // 来访者卫衣（灰蓝，压得比沙发暗一点，不抢）
+  e: '#3d4f60', // 来访者卫衣（暗面）
+  K: '#5f707f', // 咨询师针织衫（比沙发浅，坐左边那把沙发时能分开）
+  L: '#c0c6cc', // 咨询师内搭 T 恤（浅灰）
+};
+
+// 轮椅（14 × 17）：大轮 + 小前轮 + 脚踏 + 推手。
+// 关键：**大轮要有浅色轮辋（s）**。全用深色框（D）的话，轮子会糊进沙发和地板的暗部，
+// 整把椅子就只剩一个悬空的小前轮，看起来像画错了。
+// 轮辐之间留空，让墙和地板透过轮子——读起来才是个"轮"。
+const WHEELCHAIR = [
+  '  sSS         ',
+  ' SsssS        ',
+  'Ss   Ss   S   ',
+  'Ss D sS  SS   ',
+  'Ss D sS SSS   ',
+  'Ss D sS SS    ',
+  'Ss D sS S     ',
+  'Ss D sS       ',
+  'Ss   sS       ',
+  ' SsssS        ',
+  '  sssssssss   ',
+  '  SS          ',
+  '   SS         ',
+  '   S          ',
+  '   S          ',
+  '   SS         ',
+  '  uuu         ',
+];
+// 林越：坐姿，深色头发、灰蓝卫衣、手搭在扶手上，腿朝右搁在脚踏上
+const LINYUE = [
+  '    HHHH      ',
+  '   HHHHHH     ',
+  '   HZZZZH     ',
+  '   ZZZZZZ     ',
+  '    ZZZZ      ',
+  '    EEEE      ',
+  '   EEEEEE     ',
+  ' Z EEEEEE Z   ',
+  ' Z EEEEEE Z   ',
+  ' z eeeeee z   ',
+  '   EEEEEE     ',
+  '   EEEEEE     ',
+  '   DDDDDD     ',
+  '   DDDDDDDDD  ',
+  '   DDDD  DDDD ',
+  '   DDD    DDD ',
+  '  DDDD    DDD ',
+];
+
+// 咨询师（玩家）：坐在左边沙发上，面朝右，手里的笔和本子是玩家自己的视角，
+// 所以不画——画了会变成"看着自己"，很怪。
+const COUNSELOR = [
+  '   HHHHH      ',
+  '  HHHHHHH     ',
+  '  HHZZZZH     ',
+  '   ZZZZZ      ',
+  '   ZZZZ       ',
+  '   KKKK       ',
+  '  KKKKKK      ',
+  ' ZKKKKKK Z    ',
+  ' ZKLLLLKK Z   ',
+  ' zKKKKKK z    ',
+  '  KKKKKK      ',
+  '  KKKKKK      ',
+  '  DDDDDD      ',
+  '  DDDDDDDD    ',
+  '  DDDD DDDD   ',
+  ' DDDD   DDD   ',
+];
+
+// 人的画法分两种，别搞混：
+//   · 坐沙发的人（咨询师）——**后画**，腿被坐垫吃掉才是"坐着"
+//   · 坐轮椅的人（林越）——**先画椅子、后画人**，椅子的框架要从人的腿前面穿过去
+//     （真实坐姿就是这样：人坐在架子中间，大轮和脚踏在人和地面之间）
+//
+// 沙发坐垫在第 13–18 行（沙发摆 y=26 → 画布 y=39–44）。
+// 头 y≈30–34，髋部 y≈41，腿 y≈42–45。
+const CHARS = {
+  // 林越：靠门那把沙发（sofaR 在 x=56，坐垫 x=63–72）。
+  // 髋部要对上轮椅第 10 行的坐面（椅摆 y=33 → 画布 y=43），所以人摆在 y=31。
+  client: { chair: WHEELCHAIR, chairX: 63, chairY: 33, body: LINYUE, bodyX: 63, bodyY: 31 },
+  // 咨询师：左边那把（sofaL 在 x=20，坐垫 x=27–36），朝向画面右
+  counselor: { body: COUNSELOR, bodyX: 26, bodyY: 29 },
+};
+
+// 钟针的时段变体。方案 B 的钟是「两点十分」，这里补另外两节要的时间。
+// 钟 9×9，圆心在 (4,4)。
+const CLOCK_VARIANTS = {
+  // 第 1 节 14:10 —— 分针指 2，时针刚过 2
+  c1: [
+    'GGGGGGGGG',
+    'GiiiDiiiG',
+    'GiiiDiiiG',
+    'GiiiDiiiG',
+    'GDiiDDDDG',
+    'GiiiiiiiG',
+    'GiiiiiiiG',
+    'GiiiDiiiG',
+    'GGGGGGGGG',
+  ],
+  // 第 2 节 14:05 —— 分针指 1，时针压在 2 正上
+  c2: [
+    'GGGGGGGGG',
+    'GiiiDiiiG',
+    'GiiiDiiiG',
+    'GiDiDiiiG',
+    'GiiDDiiDG',
+    'GiiiiiiiG',
+    'GiiiiiiiG',
+    'GiiiDiiiG',
+    'GGGGGGGGG',
+  ],
+  // 第 3 节 13:50 —— 分针指 10，时针快到 2
+  c3: [
+    'GGGGGGGGG',
+    'GiiiDiiiG',
+    'GiiiDiiiG',
+    'GDiipiiiG',
+    'GDiiDiiiG',
+    'GiiiiiiiG',
+    'GiiiiiiiG',
+    'GiiiDiiiG',
+    'GGGGGGGGG',
+  ],
+};
+
+// 茶几上的转介单（5 × 5）+ 纸巾盒（4 × 4）。
+//
+// 尺寸是按现实比例定的，不是按"看得清"定的：沙发坐垫 10 像素宽（≈60cm），
+// 那 A4 纸就该是 5 像素左右、纸巾盒 4 像素左右。画大了虽然显眼，
+// 但整张茶几会立刻失去尺度感——一眼就看出是"贴上去的图标"。
+// 方案 B 原来那盒纸巾是 7×5，同样偏大，这里是缩过的版本。
+const REFERRAL = [
+  'wwwwk',
+  'wkkkk',
+  'wwwww',
+  'wkkkw',
+  'wwwww',
+];
+
+const TISSUE = [
+  ' ww  ',
+  'kkkk ',
+  'TTTT ',
+  'TTTT ',
+];
+
+// 三节咨询的房间亮度。开局最暗（遮光窗帘拉着、灯还没开），一节比一节亮一点，
+// 但**不会全亮**——终章也只是"下午的房间里有一块暖光"，不是"痊愈了"。
+const WARMTH = {
+  1: { glow: 0.10, vignette: 0.36 },
+  2: { glow: 0.15, vignette: 0.28 },
+  3: { glow: 0.21, vignette: 0.20 },
+};
+
+// ---------------------------------------------------------------------------
+// 挂到命名空间上。产物只有一段脚本，所以这里不写 export。
+// ---------------------------------------------------------------------------
+var XLZX = (typeof window !== 'undefined' && window.XLZX) || {};
+if (typeof window !== 'undefined') window.XLZX = XLZX;
+
+// 场景数据（从方案 B 抽出来的像素地图）在页面里那段 application/json 里。
+// **必须在这里就抓进来**：engine.js 是在加载时就把 pal / sprites 解构成常量的，
+// 等启动脚本再赋值就晚了，会直接抛 "cannot read properties of undefined"。
+if (typeof document !== 'undefined') {
+  var dataEl = document.getElementById('sprites-data');
+  if (dataEl) XLZX.sprites = JSON.parse(dataEl.textContent);
+}
+
+XLZX.PAL_EXT = PAL_EXT;
+XLZX.WHEELCHAIR = WHEELCHAIR;
+XLZX.REFERRAL = REFERRAL;
+XLZX.TISSUE = TISSUE;
+XLZX.LINYUE = LINYUE;
+XLZX.COUNSELOR = COUNSELOR;
+XLZX.CHARS = CHARS;
+XLZX.CLOCK_VARIANTS = CLOCK_VARIANTS;
+XLZX.WARMTH = WARMTH;
+
+/* ===== src/story.js ===== */
+// ============================================================================
+// 内容数据 · 故事线一：脊髓损伤
+// ----------------------------------------------------------------------------
+// 全部台词来自 docs/story/故事线1-脊髓损伤.md（剧本草稿 v2 · 日常口语版）。
+// 这里只做三件事：拆行、挂跳转、挂科普卡。
+// **不改台词**——台词的问题应该在剧本文件里改，改完再同步到这里。
+//
+// 引擎只认识 say / choice / diary / card / end 五种节点，不认识"脊髓损伤"。
+// 加第二条线只需要再写一份同样结构的数据。
+// ============================================================================
+
+// 全部挂在同一个命名空间上。产物只有一段脚本，但源码分文件写，
+// 用命名空间比靠"变量提升"更稳，顺序也随便调。
+var XLZX = (typeof window !== 'undefined' && window.XLZX) || {};
+if (typeof window !== 'undefined') window.XLZX = XLZX;
+
+// ---------------------------------------------------------------------------
+// 第 1 节
+// ---------------------------------------------------------------------------
+const SCI_S1 = {
+  // ---- 开场 ----
+  'n1': {
+    type: 'say', who: '旁白', act: 1, warmth: 1,
+    text: '他比约定时间早到了十分钟。坐在靠门那把沙发上，轮椅停在手边。',
+    next: 'n2',
+  },
+  'n2': {
+    type: 'say', who: '咨询师',
+    text: '你好，我是这儿的心理咨询师。今天大概五十分钟，你看行吗？',
+    next: 'n3',
+  },
+  'n3': { type: 'say', who: '林越', text: '嗯。', next: 'c1' },
+
+  // ---- 选项 1：开场白 ----
+  'c1': {
+    type: 'choice',
+    prompt: '先说什么',
+    options: [
+      { key: 'A', label: '王医生说你这段时间训练不太配合，咱先聊聊这个。', next: 'a1', flag: 'openA' },
+      { key: 'B', label: '今天想先认识一下你。你想聊啥，咱就聊啥。', next: 'b1', flag: 'openB' },
+      { key: 'C', label: '最近怎么样？', next: 'd1', flag: 'openC' },
+    ],
+  },
+  'a1': { type: 'say', who: '林越', text: '……哦。', next: 'a2' },
+  'a2': { type: 'say', who: '林越', text: '他跟你说的？', next: 'a3' },
+  'a3': { type: 'say', who: '林越', text: '我也去了啊。就是没笑而已。', next: 'a4' },
+  'a4': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '转介单上「配合度差」是别的判断。你一上来就复述它，他就把你归到「他们」那边去了。',
+    next: 'setup1',
+  },
+
+  'b1': { type: 'say', who: '林越', text: '都行。', next: 'b2' },
+  'b2': { type: 'say', who: '林越', text: '（顿了一下）我也不知道聊啥。', next: 'b3' },
+  'b3': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '他说「不知道聊啥」，不是拒绝，是在等你先开口。这时候别急着把话填满。',
+    next: 'setup1',
+  },
+
+  'd1': { type: 'say', who: '林越', text: '还行。', next: 'd2' },
+  'd2': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '第一次见面就问「怎么样」，一般只能换回「还行」。他给你的是安全答案。',
+    next: 'setup1',
+  },
+
+  // ---- 说明设置（必走）----
+  'setup1': {
+    type: 'say', who: '咨询师',
+    text: '那我说一下这儿是怎么弄的。两三分钟，你听完再决定要不要接着聊。',
+    next: 'setup2',
+  },
+  'setup2': { type: 'say', who: '咨询师', text: '一次五十分钟。你说的话我保密。', next: 'setup3' },
+  'setup3': {
+    type: 'say', who: '咨询师',
+    text: '但有个例外。你要是说到想伤害自己或者别人，那我不能瞒着，得做点事——可能是联系你的医生，也可能联系你家里人。真到那一步，我会先跟你说一声，不会背着你弄。',
+    next: 'setup4',
+  },
+  'setup4': {
+    type: 'say', who: '咨询师',
+    text: '还有，你要是不想回答哪个问题，直接说「这个不聊」就行，不影响的。',
+    next: 'c2',
+  },
+  'c2': {
+    type: 'choice',
+    prompt: '说完设置之后',
+    options: [
+      { key: 'A', label: '听明白了吗？', next: 'c2a1' },
+      { key: 'B', label: '这里面有哪条，你想再问细点？', next: 'c2b1', flag: 'askedBoundary' },
+      { key: 'C', label: '直接往下：那咱说说，最近咋样？', next: 'c2c1' },
+    ],
+  },
+  'c2a1': { type: 'say', who: '林越', text: '嗯。', next: 'c2a2' },
+  'c2a2': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '他答「嗯」，但你不知道他到底听懂没有。',
+    next: 'room1',
+  },
+
+  'c2b1': { type: 'say', who: '林越', text: '（停了停）那个……「做点事」是啥意思？', next: 'c2b2' },
+  'c2b2': { type: 'say', who: '咨询师', text: '看情况。要是有危险，可能得让人过来一趟。', next: 'c2b3' },
+  'c2b3': { type: 'say', who: '林越', text: '……告诉我爸妈？', next: 'c2b4' },
+  'c2b4': { type: 'say', who: '咨询师', text: '不一定。但不管做啥，我会先跟你说。', next: 'c2b5' },
+  'c2b5': { type: 'say', who: '林越', text: '……行。', next: 'c2b6' },
+  'c2b6': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '他问的是边界，说明他听进去了。保密例外讲清楚，是拉近关系的东西，不是扫兴的免责声明。',
+    next: 'room1',
+  },
+
+  'c2c1': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '跳过设置直接往下，你还没跟他讲清楚「哪些话我会往外说」。这条以后会回来找你。',
+    next: 'room1',
+  },
+
+  // ---- 房间可点（自由探索，不推进剧情）----
+  'room1': {
+    type: 'say', who: '旁白',
+    text: '房间里有几样东西带光晕。点一下，会告诉你是干什么用的。',
+    allowItems: ['referral', 'tissue', 'clock', 'sofa'],
+    hint: '点房间里带光晕的东西',
+    next: 'eth1',
+  },
+
+  // ---- 伦理抉择：走廊里的王医生 ----
+  'eth1': {
+    type: 'say', who: '旁白',
+    text: '中间休息，你去走廊接水。迎面碰见康复科的王医生。',
+    next: 'eth2',
+  },
+  'eth2': { type: 'say', who: '王医生', text: '哎，你见着他了吧？', next: 'eth3' },
+  'eth3': {
+    type: 'say', who: '王医生',
+    text: '那孩子就是得有人在后面推一把。你跟他说说，让他好好练。你说话他听。',
+    next: 'eth4',
+  },
+  'eth4': {
+    type: 'say', who: '旁白',
+    text: '（说完拍拍你肩膀，走了）',
+    next: 'c3',
+  },
+  'c3': {
+    type: 'choice',
+    prompt: '怎么回他',
+    options: [
+      { key: 'A', label: '行，我下回跟他说说。', next: 'e3a1', flag: 'ethA' },
+      { key: 'B', label: '我先看看他自己想干啥，再说。', next: 'e3b1', flag: 'ethB' },
+      { key: 'C', label: '他这种情况站不起来的，这么说他更不愿意练。', next: 'e3c1', flag: 'ethC' },
+    ],
+  },
+  'e3a1': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '你答应了一件做不到、也不该做的事。下回你开口，他听到的会是你，还是「他们」？',
+    next: 'crisis1',
+  },
+  'e3b1': { type: 'say', who: '王医生', text: '……也行。你们有你们的做法。', next: 'e3b2' },
+  'e3b2': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '你没当面驳他，也没替来访者做主。「目标得他自己定」是伦理要求，不是客气话。\n\n【依据：第 7 章 · 尊重人的权利与尊严、忠诚与责任】',
+    next: 'crisis1',
+  },
+  'e3c1': { type: 'say', who: '王医生', text: '（有点尴尬）我知道，我就随口一说。', next: 'e3c2' },
+  'e3c2': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '医学上你说得对，但这句话里没有来访者。而且他能不能站起来，不该由你在走廊里替他定调。\n\n【依据：第 7 章 · 尊重人的权利与尊严、忠诚与责任】',
+    next: 'crisis1',
+  },
+
+  // ---- 危机筛查（可以不问）----
+  'crisis1': {
+    type: 'say', who: '咨询师',
+    text: '还有个事，问得有点直接。你要是不想答，可以不答。',
+    next: 'c4',
+  },
+  'c4': {
+    type: 'choice',
+    prompt: '问不问',
+    options: [
+      { key: 'A', label: '最近有没有觉得，活着挺没意思的？或者不想醒过来？', next: 'cr1', flag: 'screened' },
+      { key: 'B', label: '不问。今天第一次见，先不碰这个。', next: 'cn1', flag: 'screenSkipped' },
+    ],
+  },
+  'cr1': { type: 'say', who: '旁白', text: '（他没说话，过了会儿）', next: 'cr2' },
+  'cr2': { type: 'say', who: '林越', text: '……有吧。', next: 'cr3' },
+  'cr3': { type: 'say', who: '林越', text: '也不是说要干啥。', next: 'cr4' },
+  'cr4': {
+    type: 'say', who: '林越',
+    text: '就是晚上躺那儿，有时候想，要是睡过去不醒了，好像也行。',
+    next: 'cr5',
+  },
+  'cr5': { type: 'say', who: '咨询师', text: '谢谢你跟我说这个。', next: 'cr6' },
+  'cr6': {
+    type: 'say', who: '咨询师',
+    text: '我想多问一句——是觉得累，还是不想活了？',
+    next: 'crisisBranch',
+  },
+
+  'cn1': {
+    type: 'say', who: '林越', text: '（把轮椅往前挪了挪）那今天先这样？', next: 'cn2',
+  },
+  'cn2': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '第一次见不问，可以。\n\n但记住一件事：脊髓损伤的人里，抑郁很容易被漏掉。而「睡过去不醒」这种念头，不会自己冒出来。下一次，得问。',
+    effect: 'markScreenMissed',
+    next: 'hw1',
+  },
+
+  // ---- 危机关怀分支（写死，不给"再想想"的机会）----
+  'crisisBranch': {
+    type: 'say', who: '咨询师', text: '谢谢你跟我说这个。能说出来，不容易。',
+    effect: 'crisis',
+    next: 'cb2',
+  },
+  'cb2': { type: 'say', who: '咨询师', text: '我想跟你多聊几句，行吗？', next: 'cb3' },
+  'cb3': {
+    type: 'say', who: '咨询师',
+    text: '你刚说「睡过去不醒也挺省事」。我想分清楚一件事——是觉得活着太累了，还是不想活了？',
+    next: 'cb4',
+  },
+  'cb4': { type: 'say', who: '林越', text: '……累。', next: 'cb5' },
+  'cb5': { type: 'say', who: '林越', text: '也不是想死。', next: 'cb6' },
+  'cb6': {
+    type: 'say', who: '林越',
+    text: '就是每天醒过来，发现还是这样。然后又要过一天。',
+    next: 'cb7',
+  },
+  'cb7': { type: 'say', who: '咨询师', text: '我明白了。', next: 'cb8' },
+  'cb8': {
+    type: 'say', who: '咨询师',
+    text: '这种累是真的。我不打算劝你「会好的」。',
+    next: 'cb9',
+  },
+  'cb9': {
+    type: 'say', who: '咨询师',
+    text: '但有三件事，我现在得跟你说清楚。',
+    next: 'cb10',
+  },
+  'cb10': {
+    type: 'say', who: '咨询师',
+    text: '第一，这种念头要是变强了，或者你开始想具体怎么做，一定要马上告诉人。告诉我、告诉王医生，或者打下面这个电话。这不是「麻烦别人」，这是你现在该做的事。',
+    next: 'cb11',
+  },
+  'cb11': {
+    type: 'say', who: '咨询师',
+    text: '第二，你不是一个人。脊髓损伤之后有这种感受的人不少。这跟你「够不够坚强」没关系。',
+    next: 'cb12',
+  },
+  'cb12': {
+    type: 'say', who: '咨询师',
+    text: '第三，接下来这段时间，我想跟你见得勤一点。',
+    next: 'cbCard',
+  },
+  'cbCard': {
+    type: 'card', kind: 'resource',
+    title: '如果你或你身边的人正在经历这些',
+    lines: [
+      '全国心理援助热线：12356（国家卫健委统一号码）',
+      '北京心理危机研究与干预中心：010-82951332',
+      '如果存在立即的危险，请拨打 120，或直接前往最近的急诊。',
+    ],
+    footer: '这不是「小题大做」。打这个电话的人，每天都在打。',
+    button: '知道了',
+    next: 'hw1',
+  },
+
+  // ---- 留作业 ----
+  'hw1': {
+    type: 'say', who: '咨询师',
+    text: '今天先到这儿。给你留个小东西，不用给谁看。',
+    next: 'hw2',
+  },
+  'hw2': {
+    type: 'say', who: '咨询师',
+    text: '记一下每天啥时候最难受。一句话就行，写手机上。',
+    next: 'hw3',
+  },
+  'hw3': { type: 'say', who: '林越', text: '记这干啥？', next: 'hw4' },
+  'hw4': {
+    type: 'say', who: '咨询师',
+    text: '下回带来，咱一块看看。我想知道啥时候、因为啥事，你最不好受。',
+    next: 'hw5',
+  },
+  'hw5': {
+    type: 'say', who: '林越', text: '……行吧。',
+    effect: 'unlockDiary',
+    next: 's1end',
+  },
+  's1end': {
+    type: 'say', who: '旁白',
+    text: '他把手机揣回兜里，轮椅转到门口，停了一下才出去。',
+    next: '@s2/n1',
+  },
+};
+
+// ---------------------------------------------------------------------------
+// 第 2 节
+// ---------------------------------------------------------------------------
+const SCI_S2 = {
+  'n1': {
+    type: 'say', who: '旁白', act: 2, warmth: 2,
+    text: '一周后，同一间房。他从兜里掏出手机。',
+    next: 'n2',
+  },
+  'n2': { type: 'say', who: '林越', text: '……记了。', next: 'n3' },
+  'n3': { type: 'say', who: '林越', text: '没啥内容。', next: 'n4' },
+  'n4': {
+    type: 'say', who: '旁白',
+    text: '手机递过来，备忘录里四条。',
+    next: 'diary',
+  },
+
+  // ---- 情绪日记面板 ----
+  'diary': {
+    type: 'diary',
+    title: '情绪日记 · 林越的手机备忘录',
+    hint: '点开看看他都记了什么',
+    entries: [
+      {
+        id: 'mon', day: '周一',
+        lines: ['去楼下买水。走到单元门口，看见台阶。', '算了。', '反正也没啥意思。'],
+        note: '这条里有第一句「自动化思维」。',
+      },
+      {
+        id: 'wed', day: '周三',
+        lines: ['我妈又哭了。以为我没看见。', '都怪我。'],
+        note: '「都怪我」——典型的个人化。',
+      },
+      {
+        id: 'fri', day: '周五',
+        lines: ['老张问去不去看球。', '没回。', '去了也是累赘。他就是客气一下。'],
+        note: '「他就是客气一下」——读心术。',
+      },
+      {
+        id: 'sun', day: '周日',
+        lines: ['今天还行。', '一天没出门。', '挺好。'],
+        note: '这条最要紧。',
+      },
+    ],
+    next: 'c5',
+  },
+  'c5': {
+    type: 'choice',
+    prompt: '先谈哪一条',
+    hint: '四条都能谈，谈出来的东西不一样',
+    options: [
+      { key: 'A', label: '周一 · 「反正也没啥意思」', next: 'dm1' },
+      { key: 'B', label: '周三 · 「都怪我」', next: 'dw1' },
+      { key: 'C', label: '周五 · 「他就是客气一下」', next: 'df1' },
+      { key: 'D', label: '周日 · 「一天没出门，挺好」', next: 'ds1' },
+    ],
+  },
+
+  'dm1': {
+    type: 'say', who: '咨询师',
+    text: '周一这条。你说「反正也没啥意思」。',
+    next: 'dm2',
+  },
+  'dm2': {
+    type: 'say', who: '咨询师',
+    text: '这句是你在门口想的，还是出门前就这么想的？',
+    next: 'dm3',
+  },
+  'dm3': { type: 'say', who: '林越', text: '……啥意思？', next: 'dm4' },
+  'dm4': {
+    type: 'say', who: '咨询师',
+    text: '就是，你走到门口之前，知道「没意思」吗？还是看见台阶那一下，才冒出来的？',
+    next: 'dm5',
+  },
+  'dm5': { type: 'say', who: '林越', text: '（想了想）……看见台阶的时候吧。', next: 'dm6' },
+  'dm6': { type: 'say', who: '咨询师', text: '嗯。', next: 'dm7' },
+  'dm7': {
+    type: 'say', who: '咨询师',
+    text: '那这句是那会儿冒出来的，不是你查证过的事。',
+    next: 'dm8',
+  },
+  'dm8': { type: 'say', who: '林越', text: '那不一个意思吗。', next: 'dm9' },
+  'dm9': { type: 'say', who: '咨询师', text: '不太一样。', next: 'dm10' },
+  'dm10': { type: 'say', who: '林越', text: '……', next: 'dm11' },
+  'dm11': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '这就是识别自动化思维。关键不是告诉他「你想错了」，是让他自己看见「这是个念头，不是判决」。',
+    next: 'card3',
+  },
+
+  'dw1': {
+    type: 'say', who: '咨询师',
+    text: '周三。「我妈哭了，都怪我」。',
+    next: 'dw2',
+  },
+  'dw2': {
+    type: 'say', who: '咨询师',
+    text: '这个「都」，是你确定的，还是猜的？',
+    next: 'dw3',
+  },
+  'dw3': { type: 'say', who: '林越', text: '她哭我就知道。', next: 'dw4' },
+  'dw4': {
+    type: 'say', who: '咨询师',
+    text: '嗯。那有没有可能是，她自己难受？看着你遭这个罪，她过不去。',
+    next: 'dw5',
+  },
+  'dw5': { type: 'say', who: '林越', text: '（没说话）', next: 'dw6' },
+  'dw6': { type: 'say', who: '林越', text: '那不还是因为我。', next: 'dw7' },
+  'dw7': { type: 'say', who: '咨询师', text: '是因为这场事故。', next: 'dw8' },
+  'dw8': { type: 'say', who: '咨询师', text: '不是因为你。', next: 'dw9' },
+  'dw9': { type: 'say', who: '林越', text: '……', next: 'dw10' },
+  'dw10': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '这是个人化——把外面的事的因果揽到自己身上。注意你没说「你想多了」，你只是把「事故」和「你」分开了。',
+    next: 'card3',
+  },
+
+  'df1': {
+    type: 'say', who: '咨询师',
+    text: '周五。老张约你看球，你没回。',
+    next: 'df2',
+  },
+  'df2': {
+    type: 'say', who: '咨询师',
+    text: '你说「他就是客气一下」。这是他说的，还是你猜的？',
+    next: 'df3',
+  },
+  'df3': { type: 'say', who: '林越', text: '……猜的吧。', next: 'df4' },
+  'df4': { type: 'say', who: '林越', text: '还能咋的。', next: 'df5' },
+  'df5': { type: 'say', who: '咨询师', text: '那就是不知道。', next: 'df6' },
+  'df6': { type: 'say', who: '林越', text: '（笑了一下）你这不废话吗。', next: 'df7' },
+  'df7': { type: 'say', who: '咨询师', text: '是废话。', next: 'df8' },
+  'df8': {
+    type: 'say', who: '咨询师',
+    text: '但你现在是拿一个猜的东西，当不回消息的理由了。',
+    next: 'df9',
+  },
+  'df9': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '这是读心术——假定自己知道别人怎么想。你没让他「往好处想」，只是把「不知道」还回给「不知道」。',
+    next: 'card3',
+  },
+
+  'ds1': {
+    type: 'say', who: '咨询师',
+    text: '周日。「一天没出门，挺好。」',
+    next: 'ds2',
+  },
+  'ds2': {
+    type: 'say', who: '咨询师',
+    text: '我想问一下，这个「挺好」，是舒服，还是松口气？',
+    next: 'ds3',
+  },
+  'ds3': { type: 'say', who: '林越', text: '（愣住）', next: 'ds4' },
+  'ds4': { type: 'say', who: '林越', text: '……啥区别。', next: 'ds5' },
+  'ds5': {
+    type: 'say', who: '咨询师',
+    text: '你今天没出门，是觉得挺自在，还是觉得这天算是躲过去了？',
+    next: 'ds6',
+  },
+  'ds6': { type: 'say', who: '林越', text: '（很久）', next: 'ds7' },
+  'ds7': { type: 'say', who: '林越', text: '……躲过去了。', next: 'ds8' },
+  'ds8': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '这是整份日记里最要紧的一条。回避经常伪装成「我还行」。',
+    next: 'card3',
+  },
+
+  // ---- 科普卡 3 ----
+  'card3': {
+    type: 'card', kind: 'science',
+    title: '脑子里冒出来的那句话',
+    lines: [
+      '认出它，是认知行为治疗最基础的一步。',
+      '它的意思不是「你想错了」，而是：那个让你停下来的结论，往往不是事实，是当时脑子里的一句话。',
+      '关于证据，有件事得说实话：CBT 用在脊髓损伤后的抑郁焦虑上，证据等级是中等——只有单项随机对照试验或小样本研究支持。它有用，但不是「最有效的疗法」。',
+      '别的方向上，问题解决训练在减轻照护者抑郁上证据更强；动机式访谈对「还在犹豫的人」更合适。',
+      '所以：别把 CBT 写成万能药。',
+    ],
+    footer: '依据：第 5 章 · 表 5.1 证据等级',
+    button: '继续',
+    next: 'end1',
+  },
+  'end1': {
+    type: 'say', who: '咨询师',
+    text: '今天不聊训练，也不聊以后。',
+    next: 'end2',
+  },
+  'end2': {
+    type: 'say', who: '咨询师',
+    text: '就一件事：下回那个念头冒出来，你看它一眼。不用改，看一眼就行。',
+    next: 'end3',
+  },
+  'end3': { type: 'say', who: '林越', text: '……看一眼。', next: 'end4' },
+  'end4': { type: 'say', who: '咨询师', text: '嗯。', next: 'end5' },
+  'end5': {
+    type: 'say', who: '林越', text: '（推着轮椅到门口）行。',
+    next: '@s3/n1',
+  },
+};
+
+// ---------------------------------------------------------------------------
+// 第 3 节
+// ---------------------------------------------------------------------------
+const SCI_S3 = {
+  'n1': {
+    type: 'say', who: '旁白', act: 3, warmth: 3,
+    text: '第三次见面。他这次坐得离你近了点。',
+    next: 'n2',
+  },
+  'n2': { type: 'say', who: '林越', text: '我想问个事。', next: 'n3' },
+  'n3': { type: 'say', who: '林越', text: '王医生说，我要是好好练，以后没准能站。', next: 'n4' },
+  'n4': { type: 'say', who: '林越', text: '你们是不是都觉得我在浪费时间。', next: 'n5' },
+  'n5': { type: 'say', who: '林越', text: '等我能走了，这些事不都好办了吗。', next: 'c6' },
+
+  'c6': {
+    type: 'choice',
+    prompt: '这是他最要紧的一句话',
+    options: [
+      { key: 'A', label: '你得接受现实。T6 完全性损伤，站起来的可能很小。', next: 'f6a1', flag: 'reality' },
+      { key: 'B', label: '我听到的是——你在等。等能走了，再开始过。', next: 'f6b1', flag: 'waiting' },
+      { key: 'C', label: '你有没有想过，也许生活不是这个顺序？', next: 'f6c1' },
+    ],
+  },
+  'f6a1': { type: 'say', who: '林越', text: '（脸沉下来）', next: 'f6a2' },
+  'f6a2': { type: 'say', who: '林越', text: '……所以你也这么觉得。', next: 'f6a3' },
+  'f6a3': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '你说的可能是医学事实。但「接受现实」这四个字，是由你来宣布的。这就变成了「哀伤阶段」那套假设——书里明确说别这么干。而且目标该由他定，不是你。',
+    next: 'g1',
+  },
+
+  'f6b1': { type: 'say', who: '林越', text: '（没说话，挺久）', next: 'f6b2' },
+  'f6b2': { type: 'say', who: '林越', text: '……嗯。', next: 'f6b3' },
+  'f6b3': { type: 'say', who: '林越', text: '我就是想着，等能走了……', next: 'f6b4' },
+  'f6b4': {
+    type: 'say', who: '咨询师',
+    text: '我不是说这个念头不对。',
+    next: 'f6b5',
+  },
+  'f6b5': {
+    type: 'say', who: '咨询师',
+    text: '我就是想问一句——那这一年多，你在干啥？',
+    next: 'f6b6',
+  },
+  'f6b6': { type: 'say', who: '林越', text: '（停了停）', next: 'f6b7' },
+  'f6b7': { type: 'say', who: '林越', text: '……等着。', next: 'f6b8' },
+  'f6b8': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '你没拆他的目标，你只是把「等」摆到桌面上，让他自己看见。这就是目标调整。不是让他认命，是给卡住的目标腾个位置。',
+    next: 'g1',
+  },
+
+  'f6c1': { type: 'say', who: '林越', text: '啥顺序？', next: 'f6c2' },
+  'f6c2': { type: 'say', who: '林越', text: '（看着你）', next: 'f6c3' },
+  'f6c3': { type: 'say', who: '咨询师', text: '……', next: 'f6c4' },
+  'f6c4': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '方向对，但你抛了个太虚的问题回去。具体一点，他才接得住。',
+    next: 'g1',
+  },
+
+  // ---- 拆小目标 ----
+  'g1': {
+    type: 'say', who: '咨询师',
+    text: '问你个事。今年有没有啥你其实想去、后来算了的？',
+    next: 'g2',
+  },
+  'g2': { type: 'say', who: '林越', text: '（想了想）……老张结婚。下个月。', next: 'g3' },
+  'g3': { type: 'say', who: '林越', text: '他跟我说了。我说看情况。', next: 'g4' },
+  'g4': { type: 'say', who: '咨询师', text: '看情况是啥意思？', next: 'g5' },
+  'g5': { type: 'say', who: '林越', text: '……就是不去了。', next: 'g6' },
+  'g6': { type: 'say', who: '咨询师', text: '那咱不聊去不去。', next: 'g7' },
+  'g7': {
+    type: 'say', who: '咨询师',
+    text: '就聊一件事：真要去，最麻烦的是哪一步？',
+    next: 'g8',
+  },
+  'g8': { type: 'say', who: '林越', text: '……酒店那个台阶吧。', next: 'g9' },
+  'g9': { type: 'say', who: '林越', text: '还有，坐一晚上腰受不了。', next: 'g10' },
+  'g10': { type: 'say', who: '咨询师', text: '这俩都是能想办法的事。', next: 'g11' },
+  'g11': {
+    type: 'say', who: '咨询师',
+    text: '台阶可以问酒店有没有坡道。坐久了难受，可以带个垫子，或者中途出来歇会儿。',
+    next: 'g12',
+  },
+  'g12': {
+    type: 'say', who: '咨询师',
+    text: '这些都不用等能走了才能弄。',
+    next: 'g13',
+  },
+  'g13': { type: 'say', who: '林越', text: '（沉默）', next: 'g14' },
+  'g14': {
+    type: 'say', who: '林越',
+    text: '……那我得问他酒店有没有坡道？这咋问啊。',
+    next: 'g15',
+  },
+  'g15': { type: 'say', who: '咨询师', text: '嗯。', next: 'g16' },
+  'g16': {
+    type: 'say', who: '咨询师',
+    text: '你刚问的这句，就已经是个能做的动作了。',
+    next: 'g17',
+  },
+  'g17': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '目标调整的样子，不是「放弃婚礼」，是从「等我能走」变成「我先问问有没有坡道」。',
+    next: 'card4',
+  },
+
+  // ---- 科普卡 4 ----
+  'card4': {
+    type: 'card', kind: 'science',
+    title: '「适应」不是一条必经的悲伤阶梯',
+    lines: [
+      '很多人以为，遭遇脊髓损伤之后，人一定会依次经过否认、愤怒、讨价还价、抑郁、接受。',
+      '这个「五阶段」说法缺乏实证支持。书里明确提醒：不要假定当事人正在经历哀伤反应——实际情况比想象中少得多，而且因人而异。',
+      '真实的适应轨迹大概是：约 66% 适应良好；约 13% 一开始很痛苦，一年内缓解；约 10% 是迟发的；10%–11% 会持续处在痛苦中。',
+      '所以「他一定会经过这几个阶段，熬过去就好了」——是错的。适应没有规定路线，也不是每个人都要走一遍。',
+    ],
+    footer: '依据：第 5 章 · Natural History；第 17 章',
+    button: '继续',
+    next: 'end1',
+  },
+  'end1': {
+    type: 'say', who: '咨询师',
+    text: '今天到这儿。我不问你下个月去不去。',
+    next: 'end2',
+  },
+  'end2': {
+    type: 'say', who: '咨询师',
+    text: '就问一件事：这周，你会不会去问一下那个坡道？',
+    next: 'end3',
+  },
+  'end3': { type: 'say', who: '旁白', text: '（推到门口，停了一下）', next: 'end4' },
+  'end4': { type: 'say', who: '林越', text: '……我问问吧。', next: 'end5' },
+  'end5': { type: 'say', who: '林越', text: '不一定去啊。', next: 'end6' },
+  'end6': { type: 'say', who: '咨询师', text: '嗯。不一定去。', next: 'end7' },
+  'end7': {
+    type: 'say', who: '旁白',
+    text: '这一节结束时，他没说「我好了」。他说的是——「我下周还来。」',
+    next: 'end8',
+  },
+  'end8': {
+    type: 'say', who: '咨询师（内心）',
+    text: '一年以后他会不会去上班，我不知道。',
+    next: 'end9',
+  },
+  'end9': {
+    type: 'say', who: '咨询师（内心）',
+    text: '伤后十年，脊髓损伤者的就业率是 24% 到 32%，截瘫大概是四肢瘫的两倍，而受教育程度是最强的预测因素。这些数字我都知道。',
+    next: 'end10',
+  },
+  'end10': {
+    type: 'say', who: '咨询师（内心）',
+    text: '但今天他做的是：把「等我能走了」往后挪了一格，腾出一小块地方，放了一件今天就能做的事。',
+    next: 'end11',
+  },
+  'end11': {
+    type: 'say', who: '咨询师（内心）',
+    text: '这就是今天全部的成绩。',
+    next: '@end/1',
+  },
+};
+
+// ---------------------------------------------------------------------------
+// 终章
+// ---------------------------------------------------------------------------
+const SCI_END = {
+  '1': {
+    type: 'result',
+    title: '故事线一 · 完',
+    lead: '心理干预的目标，不是消除疼痛，也不是恢复行走，而是功能、自我效能，和一个人觉得值得过的生活。',
+    button: '看这一节的成绩单',
+    next: '2',
+  },
+  '2': {
+    type: 'card', kind: 'resource',
+    title: '如果你或你身边的人正在经历这些',
+    lines: [
+      '全国心理援助热线：12356（国家卫健委统一号码）',
+      '北京心理危机研究与干预中心：010-82951332',
+      '如果存在立即的危险，请拨打 120，或直接前往最近的急诊。',
+    ],
+    footer: '这不是「小题大做」。打这个电话的人，每天都在打。',
+    button: '回标题页',
+    ending: true,
+    next: null,
+  },
+};
+// ---------------------------------------------------------------------------
+// 房间里的可点物件。分节写，因为同一件东西在不同小节要说的话不一样。
+// 点开是「咨询设置」科普，不推进剧情。
+// ---------------------------------------------------------------------------
+const ROOM_ITEMS = {
+  referral: {
+    label: '茶几上的转介单',
+    acts: {
+      1: {
+        kind: 'referral', title: '转介单',
+        lines: [
+          '林越，26 岁，T6 完全性脊髓损伤，伤后 14 个月。',
+          '情绪低落，训练配合度差，建议心理干预。',
+          '——康复科 王医生',
+        ],
+        footer: '这上面写的是别人对他的判断。他本人没说要来。',
+      },
+    },
+  },
+  tissue: {
+    label: '茶几上的纸巾盒',
+    acts: {
+      1: {
+        kind: 'science', title: '为啥这儿放着一盒纸巾',
+        lines: [
+          '它就在你一伸手够得到的地方。没人会说「别哭」。',
+          '摆在那儿，本身就是一句话：在这儿，你可以哭。',
+          '顺带说个数：脊髓损伤之后出现抑郁的人，比一般人想的要多——不同研究给的比例在 22% 到 28% 之间。',
+          '而最容易被漏掉的，恰恰是最该被看见的那部分。因为「没劲儿」「不想动」「睡不好」这些表现，太容易被当成身体的问题了。',
+          '一个人躺在那儿不动，可能是身体不行，也可能是心里不行。这两件事看着一样。',
+        ],
+        footer: '依据：第 17 章',
+      },
+    },
+  },
+  clock: {
+    label: '墙上的钟',
+    acts: {
+      1: {
+        kind: 'science', title: '为啥「出院后」是最危险的时候',
+        lines: [
+          '很多人觉得，出院说明最难的过去了。',
+          '但对脊髓损伤的人来说，刚确诊之后和出院回家之后，是两个心理上最容易出事的时候。',
+          '在医院里啥都给你安排好了：几点训练、几点吃饭、去哪儿检查。回到家，这些突然全没了。而门口那几级台阶、没有扶手的卫生间、别人的眼神——才刚开始。',
+          '最难的不是事故那天晚上，是回家以后的某个下午。',
+        ],
+        footer: '依据：第 17 章',
+      },
+    },
+  },
+  sofa: {
+    label: '两把沙发',
+    acts: {
+      1: {
+        kind: 'science', title: '座位不是面对面的',
+        lines: [
+          '两把沙发没有正对着摆。它们之间有一个夹角，大概 90 到 120 度。',
+          '这样你不想对视的时候，可以把目光自然地移开，看地板、看窗外都行。',
+          '正面对着坐，更像审问，不像谈话。',
+          '中间那张茶几也是一种缓冲——它让两个人之间不至于空得发慌。',
+        ],
+        footer: '依据：第 7 章 · 咨询设置',
+      },
+    },
+  },
+};
+
+// ---------------------------------------------------------------------------
+// 组装。
+// sections 必须在四个分节都声明完之后才求值——不能写在上头，
+// 那时候 SCI_S1 还在暂时性死区里。
+// ---------------------------------------------------------------------------
+XLZX.storySci = {
+  id: 'sci',
+  title: '脊髓损伤',
+  numeral: '一',
+  lead: '把「等我能走了」当成人生的前提，因而什么也不做',
+  client: {
+    name: '林越',
+    line1: '26 岁 · 男',
+    line2: 'T6 完全性脊髓损伤 · 伤后 14 个月',
+    line3: '出院回家 6 个月',
+  },
+  sections: [
+    { id: 's1', title: '第 1 节', subtitle: '第一次见面', nodes: SCI_S1 },
+    { id: 's2', title: '第 2 节', subtitle: '一周后', nodes: SCI_S2 },
+    { id: 's3', title: '第 3 节', subtitle: '「等我能走了」', nodes: SCI_S3 },
+  ],
+  endingNodes: SCI_END,
+  start: 's1/n1',
+  ending: 'end/1',
+};
+
+XLZX.roomItems = ROOM_ITEMS;
+
+// 后两条线还没写。引擎已经支持，只是没有内容——
+// 所以选线页把它们画成剪影，而不是假装"正在加载"。
+XLZX.storySlots = [
+  {
+    id: 'sci', numeral: '一', title: '脊髓损伤', ready: true,
+    lead: '把「等我能走了」当成人生的前提，因而什么也不做',
+    who: '林越 · 26 岁 · T6 完全性脊髓损伤 · 伤后 14 个月',
+  },
+  {
+    id: 'amp', numeral: '二', title: '截肢', ready: false,
+    lead: '身体意象、幻肢痛，和出院之后那一段情绪回落',
+    who: '——',
+  },
+  {
+    id: 'pain', numeral: '三', title: '慢性疼痛', ready: false,
+    lead: '影像学看不出问题，不代表痛是假的',
+    who: '——',
+  },
+];
+
+/* ===== src/engine.js ===== */
+// ============================================================================
+// 引擎：状态机 + 存档 + 场景渲染
+// 这一层不认识任何剧情内容，只认识 story 数据里的节点类型。
+// ============================================================================
+
+(function (X) {
+  'use strict';
+
+  // ---- 依赖 src/sprites.js / src/story.js ----
+  const S = X.sprites;              // { size, pal, sprites, shadows, scene, items, notes }
+  const PAL = Object.assign({}, S.pal, X.PAL_EXT);
+  const SAVE_KEY = 'xlzx.save.v1';
+
+  // 房间里的可点物件。x/y 是逻辑像素坐标，w/h 由 sprite 尺寸推出来。
+  const HOTSPOTS = [
+    { id: 'clock',    sprite: 'clock',    x: 43, y: 5,  label: '墙上的钟' },
+    { id: 'referral', sprite: 'referral', x: 43, y: 34, label: '茶几上的转介单' },
+    { id: 'tissue',   sprite: 'tissue',   x: 49, y: 35, label: '茶几上的纸巾盒' },
+    { id: 'sofa',     sprite: 'sofaR',    x: 56, y: 26, label: '两把沙发' },
+    { id: 'wheelchair', sprite: 'chair',  x: 63, y: 33, label: '他的轮椅' },
+  ];
+
+  // --------------------------------------------------------------------------
+  // 存档
+  // --------------------------------------------------------------------------
+  function emptySave() {
+    return {
+      v: 1,
+      done: { sci: false, amp: false, pain: false },
+      current: null,
+      lastPlayed: 0,
+    };
+  }
+
+  let save = emptySave();
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      // 存档结构带版本号；对不上的直接丢，不要让白屏
+      if (!parsed || parsed.v !== 1) return;
+      save = Object.assign(emptySave(), parsed);
+      save.done = Object.assign({ sci: false, amp: false, pain: false }, parsed.done || {});
+    } catch (e) {
+      // file:// 下某些浏览器会直接抛异常。存档不是必需品，静默降级。
+      save = emptySave();
+    }
+  }
+
+  function persist() {
+    save.lastPlayed = Date.now();
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { /* 无痕模式等，忽略 */ }
+  }
+
+  // --------------------------------------------------------------------------
+  // 状态机
+  // --------------------------------------------------------------------------
+  const state = {
+    screen: 'title',      // title | choose | story | end
+    story: null,          // 当前故事对象
+    line: null,           // 当前节点 id，形如 's1/n2'
+    node: null,           // 当前节点对象
+    flags: {},
+    choices: [],
+    itemsSeen: [],
+    cardsSeen: [],
+    diaryRead: [],
+    warmth: 1,
+    act: 1,
+    screenMode: 'title',
+  };
+
+  /** 分节 → 节点。's1' → { id, title, nodes } */
+  function sectionOf(story, id) { return story.sections.find((s) => s.id === id); }
+
+  /**
+   * 解析跳转目标。
+   * 规则（和 docs/design 里写的一致）：
+   *   'n2'      → 本节的 n2
+   *   '@s2/n1'  → 绝对，s2 节的 n1
+   *   'end/1'   → 终章第 1 个节点（终章是独立节点表）
+   */
+  function resolve(story, fromId, target) {
+    if (!target) return null;
+    if (target.charAt(0) === '@') return target.slice(1);
+    if (target.indexOf('/') >= 0) return target;
+    return fromId.split('/')[0] + '/' + target;
+  }
+
+  function getNode(story, id) {
+    if (!id) return null;
+    const slash = id.indexOf('/');
+    const secId = id.slice(0, slash);
+    const key = id.slice(slash + 1);
+    if (secId === 'end') return (story.endingNodes || {})[key] || null;
+    const sec = sectionOf(story, secId);
+    return sec ? sec.nodes[key] || null : null;
+  }
+
+  /** 当前节点属于第几节（用来显示章节名、切房间时段） */
+  function sectionMeta(story, id) {
+    if (!id) return null;
+    const secId = id.split('/')[0];
+    if (secId === 'end') return { id: 'end', title: '终章', subtitle: '这一节之后' };
+    return sectionOf(story, secId) || null;
+  }
+
+  function snapshot() {
+    return {
+      story: state.story ? state.story.id : null,
+      line: state.line,
+      flags: JSON.parse(JSON.stringify(state.flags)),
+      choices: state.choices.slice(),
+      itemsSeen: state.itemsSeen.slice(),
+      cardsSeen: state.cardsSeen.slice(),
+      diaryRead: state.diaryRead.slice(),
+      warmth: state.warmth,
+      act: state.act,
+    };
+  }
+
+  function restore(snap) {
+    if (!snap || !snap.story) return false;
+    const story = snap.story === 'sci' ? X.storySci : null;
+    if (!story) return false;
+    state.story = story;
+    state.line = snap.line;
+    state.flags = snap.flags || {};
+    state.choices = snap.choices || [];
+    state.itemsSeen = snap.itemsSeen || [];
+    state.cardsSeen = snap.cardsSeen || [];
+    state.diaryRead = snap.diaryRead || [];
+    state.warmth = snap.warmth || 1;
+    state.act = snap.act || 1;
+    state.node = getNode(story, state.line);
+    return !!state.node;
+  }
+
+  /** 走向下一个节点。target 省略时用当前节点的 next。 */
+  function go(target) {
+    const next = target === undefined ? state.node && state.node.next : target;
+    if (next === null || next === undefined) return null;
+    const id = resolve(state.story, state.line, next);
+    const node = getNode(state.story, id);
+    if (!node) {
+      // 数据写错了不该让玩家白屏：停在原地，控制台留话
+      console.warn('[心理咨询] 跳转落空：', state.line, '→', next, '（解析成', id, '）');
+      return null;
+    }
+    state.line = id;
+    state.node = node;
+    return node;
+  }
+
+  /** 应用节点的副作用。effect 可累加，用 '+' 分隔。 */
+  function applyEffects(node) {
+    if (!node || !node.effect) return;
+    node.effect.split('+').forEach(function (raw) {
+      const eff = raw.trim();
+      if (!eff) return;
+      if (eff === 'crisis') state.flags.crisisTriggered = true;
+      else if (eff === 'markScreenMissed') state.flags.screenMissed = true;
+      else if (eff === 'unlockDiary') state.flags.diaryUnlocked = true;
+      else state.flags[eff] = true;
+    });
+  }
+
+  /** 进到某个节点时的统一处理：切时段、记卡片、落盘 */
+  function enter(node) {
+    if (!node) return;
+    if (typeof node.act === 'number') state.act = node.act;
+    if (typeof node.warmth === 'number') state.warmth = node.warmth;
+    applyEffects(node);
+    // 副作用是"存档状态"的一部分，进节点就落盘。
+    // 不落的话：走到危机关怀分支时关掉页面，或者从标题页看上次进度，
+    // 那次危机触发就丢了——成绩单会说「你问了，他答了」，而实际上你接住了他。
+    //
+    // 这里直接写 save.current，**不要调 saveCurrent()**：那个函数挂在下面的
+    // X.engine 对象字面量上，这时候还没赋值（函数声明会提升，函数表达式不会）。
+    if (node.effect) {
+      save.current = snapshot();
+      persist();
+    }
+    // 节点上挂的卡（say + note）
+    if (node.note && node.kind) recordCard(node.kind, node.text);
+  }
+
+  function recordCard(kind, text) {
+    const key = kind + ':' + String(text || '').slice(0, 18);
+    if (state.cardsSeen.indexOf(key) < 0) state.cardsSeen.push(key);
+  }
+
+  function recordChoice(nodeId, option) {
+    state.choices.push({ node: nodeId, key: option.key, label: option.label });
+    if (option.flag) state.flags[option.flag] = true;
+  }
+
+  function recordItem(itemId) {
+    if (state.itemsSeen.indexOf(itemId) < 0) state.itemsSeen.push(itemId);
+  }
+
+  function recordDiary(entryId) {
+    if (state.diaryRead.indexOf(entryId) < 0) state.diaryRead.push(entryId);
+  }
+
+  // --------------------------------------------------------------------------
+  // 场景渲染
+  // --------------------------------------------------------------------------
+
+  /** 和方案 B 完全一致：墙、踢脚线、地板 */
+  function bgChar(x, y) {
+    if (y <= 33) {
+      if (x % 5 === 0) return ',';
+      return y >= 26 ? '-' : '.';
+    }
+    if (y === 34) return '=';
+    if (x % 8 === 7) return '|';
+    return y % 4 === 0 ? '+' : '#';
+  }
+
+  const NS = 'http://www.w3.org/2000/svg';
+
+  function el(name, attrs) {
+    const e = document.createElementNS(NS, name);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  function px(x, y, w, h, fill, opacity) {
+    const a = { x: x, y: y, width: w, height: h, fill: fill };
+    if (opacity !== undefined) a.opacity = opacity;
+    if (x < 0 || y < 0) return null;
+    return el('rect', a);
+  }
+
+  /** 把一个字符地图画进 parent。空字符串和调色板外的字符当透明。 */
+  function paint(map, ox, oy, parent) {
+    if (!map) return;
+    map.forEach(function (line, dy) {
+      let x = 0;
+      while (x < line.length) {
+        const ch = line.charAt(x);
+        if (ch === ' ' || !PAL[ch]) { x++; continue; }
+        let w = 1;
+        while (line.charAt(x + w) === ch) w++;
+        const r = px(ox + x, oy + dy, w, 1, PAL[ch]);
+        if (r) parent.appendChild(r);
+        x += w;
+      }
+    });
+  }
+
+  /** 物件在画布上的外框，给热区用 */
+  function boundsOf(sprite, x, y) {
+    return {
+      x: x,
+      y: y,
+      w: sprite && sprite[0] ? sprite[0].length : 8,
+      h: sprite ? sprite.length : 8,
+    };
+  }
+
+  const ANIM_RULES =
+    '.hs{cursor:pointer}' +
+    '.hs .art{animation:b 1.9s ease-in-out infinite}' +
+    '.hs:hover .art,.hs:focus-visible .art{animation:none;opacity:1}' +
+    '@keyframes b{0%,100%{opacity:1}50%{opacity:.6}}' +
+    '@media (prefers-reduced-motion:reduce){.hs .art{animation:none;opacity:1}}';
+
+  /**
+   * 画整个房间，按方案 B 的层级。
+   * @param {object} opts
+   *   act          1..3，决定钟针位置
+   *   warmth       1..3，决定暖光和压暗
+   *   withPeople   有没有人（第 1 节的走廊场景没有人）
+   *   clickable    [] 允许点的物件 id
+   *   onItem       (id) => void
+   */
+  function renderScene(opts) {
+    const act = opts.act || 1;
+    const warmth = opts.warmth || 1;
+    const clickable = opts.clickable || [];
+    const withPeople = opts.withPeople !== false;
+    const svg = el('svg', { id: 'scene', viewBox: '0 0 ' + S.size.w + ' ' + S.size.h });
+    const GW = S.size.w;
+    const GH = S.size.h;
+
+    // --- 0) 动画规则写在 SVG 内部，用 class 选择器，别被页面的 CSS 覆盖 ---
+    const style = el('style', {});
+    style.textContent = ANIM_RULES;
+    svg.appendChild(style);
+
+    // --- 1) 墙 / 踢脚线 / 地板 ---
+    const bg = el('g', {});
+    for (let y = 0; y < GH; y++) {
+      let x = 0;
+      while (x < GW) {
+        const ch = bgChar(x, y);
+        let w = 1;
+        while (x + w < GW && bgChar(x + w, y) === ch) w++;
+        bg.appendChild(px(x, y, w, 1, PAL[ch]));
+        x += w;
+      }
+    }
+    svg.appendChild(bg);
+
+    // --- 2) 墙脚接触阴影 + 家具落地影 ---
+    svg.appendChild(px(0, 35, GW, 2, '#0e0f16', 0.35));
+    // 注意别把回调参数命名成 warmth / act / withPeople —— 会把外层的同名参数遮住
+    S.shadows.forEach(function (box) {
+      svg.appendChild(px(box[0], box[1], box[2], box[3], '#0e0f16', 0.42));
+    });
+
+    // --- 3) 家具 + 人 + 茶几上的东西 ---
+    //     人物排在沙发之后、茶几之前：这样手能搭在沙发扶手上，
+    //     而茶几和上面那盒纸巾、那张转介单会挡住两人的下缘。
+    const scene = S.scene;
+    scene.forEach(function (row) {
+      if (row[0] === 'clock') return;                        // 钟按小节换指针，最后单独画
+      if (row[0] === 'table') return;                        // 茶几要压在人上面
+      if (row[0] === 'cup' && withPeople) return;            // 有人时杯子被挡着
+      paint(S.sprites[row[0]], row[1], row[2], svg);
+    });
+
+    if (withPeople) {
+      const c = X.CHARS.client;
+      paint(X.WHEELCHAIR, c.chairX, c.chairY, svg);
+      paint(c.body, c.bodyX, c.bodyY, svg);
+      const k = X.CHARS.counselor;
+      paint(k.body, k.bodyX, k.bodyY, svg);
+    }
+
+    // 茶几（压在人腿上）
+    const tableRow = scene.find(function (r) { return r[0] === 'table'; });
+    if (tableRow) paint(S.sprites.table, tableRow[1], tableRow[2], svg);
+
+    // 茶几上的转介单和纸巾盒。都是小方块，按现实比例画的（见 src/sprites.js 的注释）。
+    paint(X.REFERRAL, 43, 34, svg);
+    paint(X.TISSUE, 49, 35, svg);
+
+    // --- 4) 墙上的钟（按小节换指针）---
+    const clockRow = scene.find(function (r) { return r[0] === 'clock'; });
+    if (clockRow) {
+      const clk = X.CLOCK_VARIANTS['c' + act] || S.sprites.clock;
+      paint(clk, clockRow[1], clockRow[2], svg);
+    }
+
+    // --- 5) 暖光与四角压暗（整体叠一层）---
+    const w = X.WARMTH[warmth] || X.WARMTH[1];
+    svg.appendChild(el('rect', { x: 0, y: 0, width: GW, height: GH, fill: '#ffd9a0', opacity: w.glow }));
+    svg.appendChild(el('rect', { x: 0, y: 0, width: GW, height: GH, fill: '#06070a', opacity: w.vignette * 0.55 }));
+
+    // --- 6) 可点物件的热区。放最上层，保证不被人物挡住。---
+    HOTSPOTS.forEach(function (hs) {
+      if (clickable.indexOf(hs.id) < 0) return;
+      if (hs.id === 'wheelchair' && !withPeople) return;
+
+      let sprite;
+      if (hs.id === 'wheelchair') sprite = X.WHEELCHAIR;
+      else if (hs.id === 'referral') sprite = X.REFERRAL;
+      else if (hs.id === 'tissue') sprite = X.TISSUE || S.sprites.tissue;
+      else if (hs.id === 'clock') sprite = X.CLOCK_VARIANTS['c' + act] || S.sprites.clock;
+      else sprite = S.sprites[hs.sprite];
+      if (!sprite) return;
+
+      const b = boundsOf(sprite, hs.x, hs.y);
+      const g = el('g', { class: 'hs', tabindex: '0', role: 'button' });
+      const art = el('g', { class: 'art' });
+      paint(sprite, hs.x, hs.y, art);
+      g.appendChild(art);
+      const t = el('title', {});
+      t.textContent = hs.label;
+      g.appendChild(t);
+      // 热区比图形大一圈，鼠标好点中；而且它必须是透明的实心块，
+      // 否则 caster 和地板的缝里点不到。
+      g.appendChild(el('rect', {
+        x: b.x - 1.5, y: b.y - 1.5, width: b.w + 3, height: b.h + 3, fill: 'transparent',
+      }));
+      g.addEventListener('click', function () { opts.onItem && opts.onItem(hs.id); });
+      g.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
+          ev.preventDefault();
+          opts.onItem && opts.onItem(hs.id);
+        }
+      });
+      svg.appendChild(g);
+    });
+
+    return svg;
+  }
+
+  // --------------------------------------------------------------------------
+  // 对外
+  // --------------------------------------------------------------------------
+  X.engine = {
+    SAVE_KEY: SAVE_KEY,
+    HOTSPOTS: HOTSPOTS,
+    state: state,
+    save: function () { return save; },
+    load: load,
+    persist: persist,
+    emptySave: emptySave,
+    getNode: getNode,
+    resolve: resolve,
+    sectionMeta: sectionMeta,
+    snapshot: snapshot,
+    restore: restore,
+    go: go,
+    enter: enter,
+    recordCard: recordCard,
+    recordChoice: recordChoice,
+    recordItem: recordItem,
+    recordDiary: recordDiary,
+    renderScene: renderScene,
+    markDone: function (storyId) {
+      save.done[storyId] = true;
+      state.screenMode = 'title';
+      persist();
+    },
+    clearCurrent: function () {
+      save.current = null;
+      persist();
+    },
+    saveCurrent: function () {
+      save.current = snapshot();
+      persist();
+    },
+  };
+})(window.XLZX = window.XLZX || {});
+
+/* ===== src/ui.js ===== */
+// ============================================================================
+// 界面：标题页 / 选线页 / 对话 / 纸 / 情绪日记 / 逐字写出
+// 只负责画和收事件；状态和跳转都在 engine 里。
+// ============================================================================
+
+(function (X) {
+  'use strict';
+
+  const E = X.engine;
+  const state = E.state;
+
+  const $ = function (sel, root) { return (root || document).querySelector(sel); };
+  const $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
+
+  function make(tag, attrs, kids) {
+    const el = document.createElement(tag);
+    if (attrs) for (const k in attrs) {
+      if (k === 'class') el.className = attrs[k];
+      else if (k === 'text') el.textContent = attrs[k];
+      else if (k === 'html') el.innerHTML = attrs[k];
+      else if (attrs[k] !== null && attrs[k] !== undefined) el.setAttribute(k, attrs[k]);
+    }
+    (kids || []).forEach(function (c) { if (c) el.appendChild(c); });
+    return el;
+  }
+
+  // --------------------------------------------------------------------------
+  // 逐字写出
+  // --------------------------------------------------------------------------
+  const reduceMotion = window.matchMedia
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    : false;
+
+  /**
+   * 把文字一段一段写出来。返回一个 { done(), skip() } 句柄。
+   * 用 Array.from 而不是 charAt——中文和标点各占一个码点，substring 会切坏。
+   */
+  function typewrite(container, text, opts) {
+    opts = opts || {};
+    const speed = opts.speed || 26;      // 每个字的毫秒数
+    const container$ = container;
+    container$.textContent = '';
+
+    const chars = Array.from(text);
+    const spans = chars.map(function (ch) {
+      const s = document.createElement('span');
+      s.className = 'w';
+      s.textContent = ch;
+      container$.appendChild(s);
+      return s;
+    });
+
+    if (reduceMotion) {
+      spans.forEach(function (s) { s.classList.add('on'); });
+      return { done: function () { return true; }, skip: function () {} };
+    }
+
+    let i = 0;
+    let finished = false;
+    let timer = null;
+
+    function step() {
+      if (i >= spans.length) {
+        finished = true;
+        if (opts.onEnd) opts.onEnd();
+        return;
+      }
+      const ch = chars[i];
+      spans[i].classList.add('on');
+      i++;
+      // 标点处多停一下——不是匀速打字，是"写"的节奏
+      let wait = speed;
+      if ('。！？'.indexOf(ch) >= 0) wait = speed * 7;
+      else if ('，、；：'.indexOf(ch) >= 0) wait = speed * 3.5;
+      else if (ch === '\n') wait = speed * 4;
+      timer = window.setTimeout(step, wait);
+    }
+
+    timer = window.setTimeout(step, speed);
+
+    return {
+      done: function () { return finished; },
+      skip: function () {
+        if (timer) window.clearTimeout(timer);
+        spans.forEach(function (s) { s.classList.add('on'); });
+        i = spans.length;
+        finished = true;
+        if (opts.onEnd) opts.onEnd();
+      },
+    };
+  }
+
+  // --------------------------------------------------------------------------
+  // 纸（督导笔记 / 科普卡 / 转介单 / 资源卡 / 成绩单）
+  // --------------------------------------------------------------------------
+  let overlayEl = null;
+
+  function closeOverlay() {
+    if (!overlayEl) return;
+    overlayEl.classList.remove('on', 'slide');
+    overlayEl.innerHTML = '';
+  }
+
+  /**
+   * 弹一张纸。
+   * @param {object} o { kind, title, lines[], footer, button, onClose, write }
+   */
+  function showPaper(o) {
+    if (!overlayEl) {
+      overlayEl = make('div', { id: 'overlay' });
+      document.body.appendChild(overlayEl);
+    }
+    // 玩家真正看到过的资料才算数——成绩单里的"看过的资料"就是靠这一步记的。
+    // （不能在节点上记：card 节点里根本没有 note 字段。）
+    if (o.kind && o.kind !== 'result' && o.kind !== 'resource') {
+      E.recordCard(o.kind, o.title);
+    }
+    overlayEl.className = 'on' + (o.slide ? ' slide' : '');
+    overlayEl.innerHTML = '';
+
+    const LABELS = {
+      supervision: '督导笔记',
+      science: '科普',
+      referral: '转介单',
+      resource: '求助资源',
+      result: '成绩',
+    };
+
+    const paper = make('div', { class: 'paper', 'data-kind': o.kind || 'science' });
+    paper.appendChild(make('div', { class: 'head' }, [
+      make('span', { class: 'label', text: LABELS[o.kind] || '资料' }),
+      make('span', { class: 'rule' }),
+    ]));
+    if (o.title) paper.appendChild(make('h2', { text: o.title }));
+
+    const body = make('div', { class: 'body' });
+    paper.appendChild(body);
+
+    const foot = make('div', { class: 'foot', text: o.footer || '' });
+    if (o.footer) paper.appendChild(foot);
+
+    const actions = make('div', { class: 'actions' });
+    const btn = make('button', {
+      class: 'btn' + (o.kind === 'resource' ? ' primary' : ''),
+      type: 'button',
+      text: o.button || '知道了',
+    });
+    actions.appendChild(btn);
+    paper.appendChild(actions);
+    overlayEl.appendChild(paper);
+
+    // 正文：督导笔记和转介单逐字写出来，科普卡直接给（它更长，等不起）
+    const full = (o.lines || []).join('\n\n');
+    let handle = null;
+    if (o.write && !reduceMotion) {
+      const wrap = make('div', { class: 'writing' });
+      body.appendChild(wrap);
+      handle = typewrite(wrap, full, { speed: o.speed || 22 });
+    } else {
+      (o.lines || []).forEach(function (line) {
+        body.appendChild(make('p', { text: line }));
+      });
+    }
+
+    function finish() {
+      closeOverlay();
+      if (o.onClose) o.onClose();
+    }
+
+    btn.addEventListener('click', function () {
+      // 还没写完就点：先把字补完，再点一次才关
+      if (handle && !handle.done()) { handle.skip(); return; }
+      finish();
+    });
+    btn.focus({ preventScroll: true });
+
+    // 点纸外面也能关（但只有写完之后才允许，免得误触跳过）
+    overlayEl.addEventListener('mousedown', function (ev) {
+      if (ev.target !== overlayEl) return;
+      if (handle && !handle.done()) return;
+      finish();
+    });
+
+    return { close: finish };
+  }
+
+  X.ui = { showPaper: showPaper, closeOverlay: closeOverlay, typewrite: typewrite, reduceMotion: reduceMotion };
+
+  // --------------------------------------------------------------------------
+  // 情绪日记（手机备忘录的样子 —— 和"纸"不是一套材质）
+  // --------------------------------------------------------------------------
+  function showDiary(node, onDone) {
+    if (!overlayEl) {
+      overlayEl = make('div', { id: 'overlay' });
+      document.body.appendChild(overlayEl);
+    }
+    overlayEl.className = 'on';
+    overlayEl.innerHTML = '';
+
+    const wrap = make('div', { class: 'diary' });
+    wrap.appendChild(make('div', { class: 'bar' }, [
+      make('b', { text: '备忘录' }),
+      document.createTextNode('　' + (node.title || '情绪日记')),
+    ]));
+
+    const list = make('div', { class: 'list' });
+    const foot = make('div', { class: 'foot' });
+
+    const total = node.entries.length;
+    let opened = 0;
+
+    node.entries.forEach(function (entry) {
+      const btn = make('button', { class: 'entry', type: 'button' });
+      btn.appendChild(make('span', { class: 'day', text: entry.day }));
+      btn.appendChild(make('span', { class: 'peek', text: entry.lines[0] }));
+
+      const full = make('span', { class: 'full' });
+      entry.lines.forEach(function (ln) {
+        // 最后一行是那句话本身，最要紧，提亮
+        const strong = ln === entry.lines[entry.lines.length - 1] && entry.lines.length > 1;
+        full.appendChild(make('span', { class: 'line' + (strong ? ' strong' : ''), text: ln }));
+      });
+      if (entry.note) full.appendChild(make('span', { class: 'note', text: entry.note }));
+      btn.appendChild(full);
+
+      btn.addEventListener('click', function () {
+        const wasOpen = btn.classList.contains('open');
+        btn.classList.toggle('open');
+        if (!wasOpen) {
+          E.recordDiary(entry.id);
+          opened = node.entries.filter(function (e2) {
+            return E.state.diaryRead.indexOf(e2.id) >= 0;
+          }).length;
+          refreshFoot();
+        }
+      });
+      list.appendChild(btn);
+    });
+
+    function refreshFoot() {
+      // 提示只在还值得看的时候出现。都看过了就别再念叨。
+      if (opened >= total) {
+        tip.textContent = '四条都看完了。挑一条跟他谈。';
+        tip.style.color = '#6f6c66';
+      } else if (opened === 0) {
+        tip.textContent = node.hint || '点开看看他都记了什么。';
+        tip.style.color = '';
+      } else {
+        tip.textContent = '还有 ' + (total - opened) + ' 条没看。最少挑一条跟他谈。';
+        tip.style.color = '';
+      }
+      cta.disabled = opened === 0;
+      cta.textContent = opened === 0 ? '先点开一条' : '先谈哪一条';
+    }
+
+    wrap.appendChild(list);
+
+    const actions = make('div', { class: 'foot' });
+    actions.style.textAlign = 'right';
+    var cta = make('button', { class: 'btn primary', type: 'button', text: '先点开一条' });
+    cta.addEventListener('click', function () {
+      closeOverlay();
+      onDone();
+    });
+    actions.appendChild(cta);
+
+    // 提示：不看完也能继续，但得先看一条
+    var tip = make('div', { class: 'foot', text: '' });
+    wrap.appendChild(tip);
+    wrap.appendChild(actions);
+    refreshFoot();
+
+    overlayEl.appendChild(wrap);
+    cta.focus({ preventScroll: true });
+  }
+
+  X.ui.showDiary = showDiary;
+
+  // --------------------------------------------------------------------------
+  // 顶栏
+  // --------------------------------------------------------------------------
+  function renderTop(chapter) {
+    const top = $('#top');
+    top.innerHTML = '';
+    top.appendChild(make('div', { id: 'brand' }, [
+      make('span', { class: 'zh', text: '心理咨询' }),
+      make('span', { class: 'en', text: 'xlzx' }),
+      chapter ? make('span', { class: 'chapter', text: chapter }) : null,
+    ]));
+    top.appendChild(make('div', { class: 'spacer' }));
+
+    if (state.screen === 'story' || state.screen === 'end') {
+      const back = make('button', { id: 'crisisBtn', type: 'button', text: '我很难受' });
+      back.style.color = '#9d9a92';
+      back.style.borderColor = '#3d3e4d';
+      back.addEventListener('click', function () { openCrisisHelp(); });
+      // 回标题
+      const home = make('button', { id: 'homeBtn', type: 'button', text: '回标题' });
+      home.style.cssText = 'font-family:inherit;font-size:13px;color:#6f6c66;background:transparent;' +
+        'border:1px solid #3d3e4d;border-radius:2px;padding:5px 12px;cursor:pointer;letter-spacing:.06em';
+      home.addEventListener('click', function () {
+        E.saveCurrent();
+        state.screen = 'title';
+        render();
+      });
+      top.appendChild(home);
+      top.appendChild(make('span', { style: 'width:8px' }));
+      top.appendChild(back);
+    } else {
+      const help = make('button', { id: 'crisisBtn', type: 'button', text: '我很难受' });
+      help.addEventListener('click', function () { openCrisisHelp(); });
+      top.appendChild(help);
+    }
+  }
+
+  /** 任何一屏都能点到的求助资源。这是"热线出现 3 处"里的第 2 处。 */
+  function openCrisisHelp() {
+    showPaper({
+      kind: 'resource',
+      title: '如果你或你身边的人正在经历这些',
+      lines: [
+        '全国心理援助热线：12356（国家卫健委统一号码）',
+        '北京心理危机研究与干预中心：010-82951332',
+        '如果存在立即的危险，请拨打 120，或直接前往最近的急诊。',
+      ],
+      footer: '这不是「小题大做」。打这个电话的人，每天都在打。',
+      button: '回到游戏',
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // 标题页
+  // --------------------------------------------------------------------------
+  function renderTitle() {
+    renderTop(null);
+    const main = $('#main');
+    const panel = $('#panel');
+    panel.innerHTML = '';
+    panel.style.display = 'none';
+    main.style.display = '';
+    main.innerHTML = '';
+
+    const page = make('div', { class: 'page' });
+    const grid = make('div', { class: 'title-grid' });
+
+    // ---- 左：标题 ----
+    const left = make('div', { class: 'title-main' });
+    left.appendChild(make('div', { class: 'kicker', text: '康复心理学 · 课程作业' }));
+    left.appendChild(make('h1', { text: '心理咨询' }));
+    left.appendChild(make('div', { class: 'sub', text: 'counselling room' }));
+    left.appendChild(make('p', {
+      class: 'pitch',
+      html: '你是康复医院心理门诊的咨询师。这间诊室每天下午开门，<em>来访者不是来听道理的</em>，' +
+        '他们是被转介来的、被家人劝来的，或者自己也不知道为什么坐在这儿。<br><br>' +
+        '你要做的不是劝他想开点，是让他自己看见那句话——<em>那个让他停下来的结论，' +
+        '往往不是事实，是当时脑子里的一句话</em>。',
+    }));
+
+    const start = make('button', { class: 'start', type: 'button' });
+    start.appendChild(make('span', { text: '开始' }));
+    start.appendChild(make('span', { class: 'arrow', text: '→' }));
+    start.addEventListener('click', function () {
+      state.screen = 'choose';
+      render();
+    });
+    left.appendChild(start);
+
+    const cur = E.save().current;
+    if (cur && cur.story) {
+      const story = cur.story === 'sci' ? X.storySci : null;
+      const meta = story ? E.sectionMeta(story, cur.line) : null;
+      const resume = make('button', {
+        class: 'resume', type: 'button',
+        text: '接着上次玩 · ' + (story ? story.title : '') + (meta ? ' · ' + meta.title : ''),
+      });
+      resume.addEventListener('click', function () {
+        if (E.restore(cur)) {
+          state.screen = 'story';
+          render();
+          renderNode();
+        }
+      });
+      left.appendChild(resume);
+    }
+    grid.appendChild(left);
+
+    // ---- 右：声明 + 资源 ----
+    const side = make('div', { class: 'title-side' });
+    side.appendChild(make('h3', { text: '关于这个作品' }));
+    side.appendChild(make('p', {
+      class: 'disc',
+      html: '<b>本作品为康复心理学课程作业。</b><br>故事、人物、机构均为虚构，' +
+        '与任何真实的人、单位、事件无关。<br>本作品不构成任何医疗建议，不能替代真实心理咨询。',
+    }));
+
+    side.appendChild(make('hr'));
+    side.appendChild(make('h3', { text: '如果你需要帮助' }));
+    const hot = make('div', { class: 'hotline' });
+    hot.appendChild(make('span', {
+      class: 'n',
+      html: '12356<small>全国心理援助热线（国家卫健委统一号码）</small>',
+    }));
+    hot.appendChild(make('span', {
+      class: 'n',
+      html: '010-82951332<small>北京心理危机研究与干预中心</small>',
+    }));
+    hot.appendChild(make('span', {
+      class: 'n',
+      html: '120<small>存在立即的危险，请拨打或直接前往最近的急诊</small>',
+    }));
+    side.appendChild(hot);
+
+    side.appendChild(make('hr'));
+    side.appendChild(make('p', {
+      html: '<span style="color:#6f6c66;font-size:12.5px">' +
+        '进度只存在这台电脑的浏览器里，不会上传。清掉浏览器数据就没有了。</span>',
+    }));
+    grid.appendChild(side);
+
+    page.appendChild(grid);
+    main.appendChild(page);
+  }
+
+  // --------------------------------------------------------------------------
+  // 选线页
+  // --------------------------------------------------------------------------
+  function renderChoose() {
+    renderTop(null);
+    const main = $('#main');
+    const panel = $('#panel');
+    panel.innerHTML = '';
+    panel.style.display = 'none';
+    main.style.display = '';
+    main.innerHTML = '';
+
+    const page = make('div', { class: 'page' });
+    const head = make('div', { class: 'choose-head' });
+    head.appendChild(make('div', { class: 'kicker', text: '选一条线' }));
+    head.appendChild(make('h2', { text: '同一间诊室，不同的人' }));
+    head.appendChild(make('p', {
+      text: '三条完全独立的故事线，选一条走完。每条都是一次完整的过程，' +
+        '不用按顺序玩。目前只有第一条写完了，另外两条还在写。',
+    }));
+    page.appendChild(head);
+
+    const list = make('div', { class: 'lines' });
+    const done = E.save().done;
+
+    X.storySlots.forEach(function (slot) {
+      const ready = !!slot.ready;
+      const card = make('button', {
+        class: 'line-card', type: 'button',
+        'data-ready': String(ready),
+        'data-done': String(!!done[slot.id]),
+        disabled: ready ? null : 'disabled',
+      });
+      card.appendChild(make('span', { class: 'num', text: slot.numeral }));
+      const meta = make('span', { class: 'meta' });
+      meta.appendChild(make('h3', { text: slot.title }));
+      meta.appendChild(make('div', { class: 'who', text: slot.who }));
+      meta.appendChild(make('div', { class: 'what', text: slot.lead }));
+      card.appendChild(meta);
+
+      let badgeText = '即将推出';
+      if (ready) badgeText = done[slot.id] ? '✓ 已完成' : '可玩 · 约 8 分钟';
+      card.appendChild(make('span', { class: 'badge', text: badgeText }));
+
+      if (ready) {
+        card.addEventListener('click', function () { startStory(X.storySci); });
+      } else {
+        // 剪影：没写的线用一条人的形状占位，不假装能玩
+        card.appendChild(make('span', {
+          class: 'silhouette',
+          html: '<svg viewBox="0 0 20 20" width="40" height="40">' +
+            '<circle cx="10" cy="5" r="3.4" fill="#3d3e4d"/>' +
+            '<path d="M4 20c0-4 2.7-7 6-7s6 3 6 7z" fill="#3d3e4d"/></svg>',
+        }));
+      }
+      list.appendChild(card);
+    });
+
+    page.appendChild(list);
+    main.appendChild(page);
+  }
+
+  // --------------------------------------------------------------------------
+  // 进游戏
+  // --------------------------------------------------------------------------
+  let typer = null;        // 当前这一句的逐字写出句柄
+  let awaitingChoice = false;
+  let paperOpen = false;
+
+  function startStory(story) {
+    state.story = story;
+    state.line = story.start;
+    state.node = E.getNode(story, story.start);
+    state.flags = {};
+    state.choices = [];
+    state.itemsSeen = [];
+    state.cardsSeen = [];
+    state.diaryRead = [];
+    state.act = 1;
+    state.warmth = 1;
+    state.screen = 'story';
+    E.enter(state.node);
+    render();
+    renderNode();
+  }
+
+  X.ui.startStory = startStory;
+
+  // --------------------------------------------------------------------------
+  // 场景
+  // --------------------------------------------------------------------------
+  function currentClickable() {
+    const node = state.node || {};
+    const allowed = node.allowItems || [];
+    if (!allowed.length || !X.roomItems) return [];
+
+    const act = state.act;
+    // 既有内容、又被这一段允许的，才是热的
+    return allowed.filter(function (id) {
+      if (id === 'wheelchair') return true;
+      const item = X.roomItems[id];
+      return item && item.acts && item.acts[act];
+    });
+  }
+
+  function renderRoom() {
+    const host = $('#room');
+    if (!host) return;
+    host.innerHTML = '';
+    const clickable = currentClickable();
+    const svg = E.renderScene({
+      act: state.act,
+      warmth: state.warmth,
+      withPeople: true,
+      clickable: clickable,
+      onItem: openRoomItem,
+    });
+    host.appendChild(svg);
+    scaleRoom();
+  }
+
+  function openRoomItem(id) {
+    E.recordItem(id);
+    if (id === 'wheelchair') {
+      showPaper({
+        kind: 'science',
+        title: '他的轮椅',
+        lines: [
+          '轮椅停在沙发边上，离他很近，但不是"停好"的那种近——轮子还朝着门。',
+          '一个人坐着的时候，椅子朝向哪边，比他说什么更早说明他准备待多久。',
+          '第 1 节，他早到十分钟。椅子朝着门。',
+        ],
+        button: '继续聊',
+      });
+      return;
+    }
+    const item = X.roomItems[id];
+    if (!item) return;
+    const actData = item.acts[state.act];
+    if (!actData) return;
+    showPaper({
+      kind: actData.kind,
+      title: actData.title,
+      lines: actData.lines,
+      footer: actData.footer,
+      button: '知道了',
+      write: actData.kind === 'referral',
+      speed: 18,
+    });
+  }
+
+  /** 房间按视口缩放（保持整数倍，否则像素会糊） */
+  function scaleRoom() {
+    const room = $('#room');
+    const wrap = $('#roomWrap');
+    if (!room || !wrap) return;
+    const cssW = wrap.clientWidth || 636;
+    const avail = window.innerHeight;
+    // 636×360 是原始尺寸，底下还要给对话区留 300px
+    const maxH = Math.max(220, avail - 320);
+    let factor = Math.min(1, maxH / 360);
+    factor = Math.max(0.5, factor);
+    if (factor >= 0.999) {
+      room.style.transform = '';
+      wrap.style.height = '';
+    } else {
+      room.style.transform = 'scale(' + factor.toFixed(3) + ')';
+      wrap.style.height = Math.round(360 * factor) + 'px';
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // 正文渲染
+  // --------------------------------------------------------------------------
+  function setWho(who, role) {
+    const who$ = $('#who');
+    who$.textContent = who || '';
+    who$.setAttribute('data-role', role || who || '');
+  }
+
+  function clearChoices() {
+    const c = $('#choices');
+    if (c) { c.innerHTML = ''; c.style.display = 'none'; }
+    awaitingChoice = false;
+  }
+
+  function setHint(text) {
+    const hint = $('#hint');
+    if (!hint) return;
+    hint.innerHTML = '';
+    if (text) {
+      hint.appendChild(make('span', { class: 'dot' }));
+      hint.appendChild(make('span', { text: text }));
+    }
+    const right = make('span', { class: 'right', text: '' });
+    hint.appendChild(right);
+  }
+
+  function caretSlot() {
+    const t = $('#text');
+    const c = make('span', { class: 'caret', text: '▌' });
+    t.appendChild(c);
+    return c;
+  }
+
+  /** 画当前节点 */
+  function renderSay(node) {
+    if (state.screen !== 'story') return;
+    renderTop(chapterLabel());
+    renderRoom();
+
+    const textEl = $('#text');
+    clearChoices();
+
+    paperOpen = false;
+    const role = node.who || '旁白';
+    setWho(role === '旁白' ? '' : role, role);
+
+    // 督导笔记是挂在台词上的一张纸：先把话说出来，再弹纸
+    const hasNote = !!node.note;
+
+    if (typer) typer.skip();
+
+    if (!node.text) {
+      textEl.textContent = '';
+      advance(node.next);
+      return;
+    }
+
+    const caret = caretSlot();
+    let advanced = false;
+
+    function allowAdvance() {
+      const hintText = node.hint
+        || (currentClickable().length ? '点房间里发光的东西，可以看它的来历' : '');
+      setHint(hintText);
+      const right = $('#hint .right');
+      if (right) right.textContent = '空格 / 点文字继续';
+    }
+
+    function hit() {
+      if (advanced || paperOpen || awaitingChoice) return;
+      if (typer && !typer.done()) { typer.skip(); return; }  // 第一下：把字补完
+      if (hasNote) return;                                  // 纸自己会推进
+      advanced = true;                                      // 第二下：往下走
+      advance(node.next);
+    }
+
+    // 纸上的标题由数据决定。督导笔记默认不写标题——左上角的类型标签
+    // 已经说明了这是什么，再写一遍"督导笔记"就是同一句话说两次。
+    var noteMeta = node.note || { kind: 'supervision' };
+
+    // **必须在启动打字机之前就挂上**。
+    // 打字机跑的时候每次都重建了 #text 的内容，但 _advance 要是这时候还没挂，
+    // 玩家在头一两秒里点文字就完全没反应——看起来像卡住了。
+    textEl.onclick = hit;
+    textEl._advance = hit;
+    // 这一段答完之后会滑进来一张纸。纸自己会推进，所以这一小段时间里
+    // 点文字是"没反应"的——把这件事说出来，别让调用方以为卡住了。
+    textEl._awaitingNote = hasNote;
+
+    typer = typewrite(textEl, node.text, {
+      onEnd: function () {
+        if (caret) caret.classList.remove('off');
+        allowAdvance();
+        if (hasNote) {
+          // 话说完了，纸从右边滑进来
+          showPaper({
+            kind: noteMeta.kind || 'supervision',
+            title: noteMeta.title || '',
+            lines: [noteMeta.text || node.text],
+            button: '知道了',
+            slide: true,
+            write: true,
+            speed: 24,
+            onClose: function () { advance(node.next); },
+          });
+        }
+      },
+    });
+    if (caret) caret.classList.add('off');
+
+    if (node.next === null || node.next === undefined) allowAdvance();
+  }
+
+  /** 画一个选择点：先把提示句说出来，再挂选项 */
+  function renderChoice(node) {
+    if (state.screen !== 'story') return;
+    renderTop(chapterLabel());
+    renderRoom();
+
+    if (typer) typer.skip();
+    setWho('', '');
+
+    const textEl = $('#text');
+    textEl.onclick = null;
+    textEl._advance = null;
+    textEl.textContent = node.prompt || '';
+
+    const choicesEl = $('#choices');
+    choicesEl.innerHTML = '';
+    choicesEl.style.display = '';
+    awaitingChoice = true;
+
+    node.options.forEach(function (opt, i) {
+      const btn = make('button', { class: 'choice', type: 'button' });
+      btn.appendChild(make('span', { class: 'key', text: String(i + 1) }));
+      btn.appendChild(make('span', { class: 'label', text: opt.label }));
+      btn.addEventListener('click', function () { X.ui.chooseOption(i); });
+      choicesEl.appendChild(btn);
+      if (i === 0) window.setTimeout(function () { btn.focus({ preventScroll: true }); }, 30);
+    });
+
+    setHint(node.hint || '');
+    const right = $('#hint .right');
+    if (right) right.textContent = '按 1–' + node.options.length + ' 也能选';
+  }
+
+  /** 总入口：按节点类型分派 */
+  function renderNode() {
+    if (state.screen !== 'story') return;
+    const node = state.node;
+    if (!node) return;
+
+    if (node.type === 'choice') return renderChoice(node);
+    if (node.type === 'say') return renderSay(node);
+
+    // 以下是"纸"类的节点，正文区空着，靠弹层推进
+    renderTop(chapterLabel());
+    renderRoom();
+    const textEl = $('#text');
+    if (typer) typer.skip();
+    textEl.onclick = null;
+    textEl._advance = null;
+    clearChoices();
+    paperOpen = true;
+
+    if (node.type === 'card') {
+      setWho('', '');
+      textEl.textContent = '';
+      setHint('');
+      showPaper({
+        kind: node.kind || 'science',
+        title: node.title,
+        lines: node.lines,
+        footer: node.footer,
+        button: node.button,
+        onClose: function () {
+          paperOpen = false;
+          if (node.ending) { finishStory(); return; }
+          advance(node.next);
+        },
+      });
+      return;
+    }
+
+    if (node.type === 'result') {
+      setWho('', '');
+      textEl.textContent = '';
+      setHint('');
+      showResult(node);
+      return;
+    }
+
+    if (node.type === 'diary') {
+      setWho('', '');
+      textEl.textContent = '';
+      setHint('');
+      showDiary(node, function () { paperOpen = false; advance(node.next); });
+      return;
+    }
+  }
+
+  function chapterLabel() {
+    const meta = E.sectionMeta(state.story, state.line);
+    if (!meta) return '';
+    return state.story.title + ' · ' + meta.title + (meta.subtitle ? ' · ' + meta.subtitle : '');
+  }
+
+  /** 推进到下一个节点并重画 */
+  function advance(target) {
+    if (state.screen !== 'story') return;
+    const before = state.line;
+    const node = E.go(target);
+    if (!node) return;
+    const beforeSec = before.split('/')[0];
+    const afterSec = state.line.split('/')[0];
+    E.enter(node);
+
+    // 换小节：淡出淡入一次
+    if (beforeSec !== afterSec) {
+      transition(function () { renderNode(); });
+    } else {
+      renderNode();
+    }
+    E.saveCurrent();
+  }
+
+  function transition(mid) {
+    const fade = $('#fade');
+    fade.classList.add('on');
+    window.setTimeout(function () {
+      mid();
+      window.setTimeout(function () { fade.classList.remove('on'); }, 90);
+    }, 480);
+  }
+
+  // --------------------------------------------------------------------------
+  // 成绩单
+  // --------------------------------------------------------------------------
+  /** 成绩单只看一次：看过之后按钮改成"继续"，别一直让人以为还有新东西 */
+  let resultSeen = false;
+
+  function showResult(node) {
+    const flags = state.flags;
+    const choices = state.choices;
+
+    // 这一节真正发生了什么，全部从 choices / flags 里读出来，不写死
+    const lines = [];
+    const openB = flags.openB;
+    lines.push(['开场', openB ? '你先问他想聊什么，而不是复述转介单。'
+      : flags.openA ? '你复述了转介单上「配合度差」那句。'
+        : '你问了「最近怎么样」，换回一个安全答案。']);
+    lines.push(['保密例外', flags.askedBoundary
+      ? '你把边界讲清楚了，他追问了一次——说明他听进去了。'
+      : '你讲完了设置，但没确认他听懂没有。']);
+    lines.push(['王医生的托付', flags.ethB ? '你没替来访者做主，也没当面驳他。'
+      : flags.ethA ? '你答应了一件不该由你答应的事。'
+        : '你指出了医学事实，但那是你在走廊里替他定的调。']);
+    lines.push(['危机筛查', flags.screened
+      ? (flags.crisisTriggered ? '你问了。他说了。你按写死的流程接住了他。' : '你问了，他答了。')
+      : '你没问。这不扣分，但下次得问。']);
+
+    const diaryRead = state.diaryRead.length;
+    lines.push(['情绪日记', diaryRead >= 4 ? '四条都看了。你从里头认出了自动化思维、个人化、读心术和回避。'
+      : '你看了 ' + diaryRead + ' 条。剩下的没看，也就没谈。']);
+
+    lines.push(['「等我能走了」', flags.waiting ? '你没拆他的目标，你把「等」摆到了桌面上。'
+      : flags.reality ? '你宣布了「接受现实」——目标是他的，不该由你说。'
+        : '你抛回了一个太虚的问题，他接不住。']);
+
+    const cards = state.cardsSeen.length;
+    lines.push(['看过的资料', cards + ' 张']);
+
+    const body = make('div', {});
+    const ul = make('ul', { class: 'tally' });
+    lines.forEach(function (pair) {
+      const li = make('li', {});
+      li.appendChild(make('span', { class: 'k', text: pair[0] }));
+      const v = make('span', { class: 'v', text: pair[1] });
+      if (/没问|不该|不安全|没看|接不住|复述/.test(pair[1])) v.className = 'v miss';
+      li.appendChild(v);
+      ul.appendChild(li);
+    });
+    body.appendChild(ul);
+
+    if (!flags.screened) {
+      body.appendChild(make('p', {
+        style: 'color:#8a5a20',
+        text: '提醒：这条线里你没有做危机筛查。脊髓损伤的人里，抑郁很容易被漏掉——' +
+          '「没劲儿」「不想动」「睡不好」太容易被当成身体的问题。下一次，得问。',
+      }));
+    }
+    body.appendChild(make('p', {
+      style: 'color:#6d6250;font-size:13.5px;margin-top:14px',
+      text: '同一件事有不止一种做法，没有哪一次选择会卡死。',
+    }));
+
+    const paper = make('div', { class: 'paper', 'data-kind': 'result' });
+    paper.appendChild(make('div', { class: 'head' }, [
+      make('span', { class: 'label', text: '成绩' }),
+      make('span', { class: 'rule' }),
+    ]));
+    paper.appendChild(make('h2', { text: node.title }));
+    if (node.lead) {
+      // lead 用衬线，和台词分开——这是"结论"，不是"对话"
+      paper.appendChild(make('p', {
+        class: 'result-lead',
+        text: node.lead,
+      }));
+    }
+    const bodyWrap = make('div', { class: 'body' });
+    bodyWrap.appendChild(body);
+    paper.appendChild(bodyWrap);
+
+    const actions = make('div', { class: 'actions' });
+    const btn = make('button', {
+      class: 'btn primary', type: 'button',
+      text: resultSeen ? '继续' : (node.button || '继续'),
+    });
+    resultSeen = true;
+    actions.appendChild(btn);
+    paper.appendChild(actions);
+    overlayEl.innerHTML = '';
+    overlayEl.className = 'on';
+    overlayEl.appendChild(paper);
+    btn.focus({ preventScroll: true });
+    btn.addEventListener('click', function () {
+      closeOverlay();
+      paperOpen = false;
+      advance(node.next);
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // 通关
+  // --------------------------------------------------------------------------
+  function finishStory() {
+    E.markDone(state.story.id);
+    E.clearCurrent();
+    state.screen = 'end';
+    renderEnd();
+  }
+
+  function renderEnd() {
+    renderTop('');
+    const main = $('#main');
+    const panel = $('#panel');
+    panel.style.display = '';
+    main.style.display = 'none';
+    panel.innerHTML = '';
+
+    panel.appendChild(make('div', { id: 'who' }));
+    const h = make('div', {
+      style: 'font-size:26px;letter-spacing:.06em;margin:0 0 14px',
+      text: '故事线一 · 完',
+    });
+    panel.appendChild(h);
+
+    const text = make('div', {
+      style: 'font-size:18px;line-height:1.95;color:#b9b5ac;max-width:38em',
+      text: '他把「等我能走了」往后挪了一格，腾出一小块地方，放了一件今天就能做的小事。' +
+        '这就是今天全部的成绩——不是痊愈，是带着工具继续生活。',
+    });
+    panel.appendChild(text);
+
+    const row = make('div', { style: 'display:flex;gap:10px;margin-top:24px;flex-wrap:wrap' });
+    const again = make('button', { class: 'btn primary', type: 'button', text: '再来一遍' });
+    again.addEventListener('click', function () { startStory(X.storySci); });
+    const home = make('button', { class: 'btn', type: 'button', text: '回标题页' });
+    home.addEventListener('click', function () { state.screen = 'title'; render(); });
+    const help = make('button', { class: 'btn', type: 'button', text: '求助资源' });
+    help.addEventListener('click', function () { openCrisisHelp(); });
+    row.appendChild(again); row.appendChild(home); row.appendChild(help);
+    panel.appendChild(row);
+  }
+
+  // --------------------------------------------------------------------------
+  // 总渲染
+  // --------------------------------------------------------------------------
+  function render() {
+    if (state.screen === 'title') return renderTitle();
+    if (state.screen === 'choose') return renderChoose();
+    if (state.screen === 'story') return renderStoryShell();
+    if (state.screen === 'end') return renderEnd();
+  }
+
+  function renderStoryShell() {
+    const main = $('#main');
+    const panel = $('#panel');
+    main.style.display = 'none';
+    main.innerHTML = '';
+    panel.style.display = '';
+    panel.innerHTML = '';
+
+    // 场景
+    const stage = make('div', { id: 'stage' });
+    stage.appendChild(make('div', { id: 'roomWrap' }, [
+      make('div', { id: 'room' }),
+    ]));
+    // 对话区
+    const who = make('div', { id: 'who' });
+    const text = make('div', { id: 'text' });
+    const choices = make('div', { id: 'choices' });
+    choices.style.display = 'none';
+    const hint = make('div', { id: 'hint' });
+    panel.appendChild(who); panel.appendChild(text);
+    panel.appendChild(choices); panel.appendChild(hint);
+
+    // stage 放在 panel 之前：DOM 顺序决定上下位置
+    panel.parentNode.insertBefore(stage, panel);
+  }
+
+  X.ui.render = render;
+  X.ui.renderNode = function () { renderNode(); };
+  X.ui.showResult = showResult;
+  X.ui.advance = advance;
+  X.ui.openCrisisHelp = openCrisisHelp;
+  X.ui.startStory = startStory;
+  X.ui.scaleRoom = scaleRoom;
+
+  /**
+   * 清干净回到标题页。
+   * 别让外部直接改 state 再调 render()——那样上一局的 overlay / 打字机 /
+   * 选项状态都还留着，下一页会莫名其妙（测试里踩过）。
+   */
+  X.ui.restart = function () {
+    if (typer) { typer.skip(); typer = null; }
+    closeOverlay();
+    awaitingChoice = false;
+    paperOpen = false;
+    resultSeen = false;
+    state.screen = 'title';
+    state.story = null;
+    state.node = null;
+    state.line = null;
+    render();
+  };
+
+  // 选选项
+  X.ui.chooseOption = function (index) {
+    const node = state.node;
+    if (!node || node.type !== 'choice' || !awaitingChoice) return;
+    const opt = node.options[index];
+    if (!opt) return;
+    E.recordChoice(state.line, opt);
+    awaitingChoice = false;
+    clearChoices();
+    advance(opt.next);
+  };
+
+  // --------------------------------------------------------------------------
+  // 键盘
+  // --------------------------------------------------------------------------
+  document.addEventListener('keydown', function (ev) {
+    if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+
+    // 纸开着时，空格 / 回车 = 点那张纸的按钮
+    if (overlayEl && overlayEl.classList.contains('on')) {
+      if (ev.key === ' ' || ev.key === 'Enter') {
+        const btn = $('.btn.primary', overlayEl) || $('.btn', overlayEl);
+        if (btn) { ev.preventDefault(); btn.click(); }
+      }
+      return;
+    }
+
+    if (state.screen !== 'story') {
+      if (ev.key === 'Escape' && state.screen !== 'title') {
+        state.screen = 'title';
+        render();
+      }
+      return;
+    }
+
+    if (awaitingChoice) {
+      const n = parseInt(ev.key, 10);
+      if (n >= 1 && n <= 9) {
+        ev.preventDefault();
+        X.ui.chooseOption(n - 1);
+      }
+      return;
+    }
+
+    if (ev.key === ' ' || ev.key === 'Enter') {
+      ev.preventDefault();
+      const t = $('#text');
+      if (t && t._advance) t._advance();
+    }
+  });
+
+  window.addEventListener('resize', function () {
+    if (state.screen === 'story') scaleRoom();
+  });
+
+  // --------------------------------------------------------------------------
+  // 启动
+  // --------------------------------------------------------------------------
+  X.ui.boot = function () {
+    E.load();
+    render();
+  };
+})(window.XLZX = window.XLZX || {});
+
+/* ===== 启动 ===== */
+window.XLZX.ui.boot();
+
+</script>
+
+</body>
+</html>

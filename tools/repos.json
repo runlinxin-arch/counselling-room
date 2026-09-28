@@ -1,0 +1,41 @@
+[
+  { "name": "33-js-concepts", "repo": "leonardomso/33-js-concepts", "cat": "01-basics", "pri": "RED" },
+  { "name": "zh.javascript.info", "repo": "javascript-tutorial/zh.javascript.info", "cat": "01-basics", "pri": "RED", "big": true },
+  { "name": "git-game", "repo": "git-game/git-game", "cat": "01-basics", "pri": "RED" },
+  { "name": "prettier", "repo": "prettier/prettier", "cat": "01-basics", "pri": "YELLOW", "big": true },
+  { "name": "eslint", "repo": "eslint/eslint", "cat": "01-basics", "pri": "YELLOW", "big": true },
+
+  { "name": "phaser", "repo": "phaserjs/phaser", "cat": "02-engine", "pri": "RED", "big": true },
+  { "name": "create-game", "repo": "phaserjs/create-game", "cat": "02-engine", "pri": "RED" },
+  { "name": "template-vite-ts", "repo": "phaserjs/template-vite-ts", "cat": "02-engine", "pri": "RED" },
+  { "name": "examples", "repo": "phaserjs/examples", "cat": "02-engine", "pri": "RED", "big": true },
+  { "name": "zustand", "repo": "pmndrs/zustand", "cat": "02-engine", "pri": "YELLOW" },
+  { "name": "tiled", "repo": "mapeditor/tiled", "cat": "02-engine", "pri": "RED", "big": true },
+
+  { "name": "ink", "repo": "inkle/ink", "cat": "03-narrative", "pri": "RED" },
+  { "name": "inky", "repo": "inkle/inky", "cat": "03-narrative", "pri": "RED" },
+  { "name": "inkjs", "repo": "y-lohse/inkjs", "cat": "03-narrative", "pri": "RED" },
+  { "name": "renpy", "repo": "renpy/renpy", "cat": "03-narrative", "pri": "YELLOW", "big": true },
+  { "name": "twinejs", "repo": "klembot/twinejs", "cat": "03-narrative", "pri": "YELLOW" },
+
+  { "name": "free-tex-packer", "repo": "odrick/free-tex-packer", "cat": "04-art", "pri": "RED" },
+  { "name": "ComfyUI", "repo": "comfyanonymous/ComfyUI", "cat": "04-art", "pri": "RED" },
+  { "name": "noto-cjk", "repo": "notofonts/noto-cjk", "cat": "04-art", "pri": "RED", "big": true },
+  { "name": "sharp", "repo": "lovell/sharp", "cat": "04-art", "pri": "RED", "big": true },
+
+  { "name": "ai", "repo": "vercel/ai", "cat": "05-ai", "pri": "RED", "big": true },
+  { "name": "openai-node", "repo": "openai/openai-node", "cat": "05-ai", "pri": "RED" },
+  { "name": "ollama", "repo": "ollama/ollama", "cat": "05-ai", "pri": "RED", "big": true },
+  { "name": "guardrails", "repo": "guardrails-ai/guardrails", "cat": "05-ai", "pri": "RED", "big": true },
+  { "name": "NeMo-Guardrails", "repo": "NVIDIA-NeMo/Guardrails", "cat": "05-ai", "pri": "RED", "big": true },
+  { "name": "sensitive-word", "repo": "houbb/sensitive-word", "cat": "05-ai", "pri": "RED" },
+  { "name": "Prompt-Engineering-Guide", "repo": "dair-ai/Prompt-Engineering-Guide", "cat": "05-ai", "pri": "RED", "big": true },
+
+  { "name": "tauri", "repo": "tauri-apps/tauri", "cat": "06-deploy", "pri": "RED", "big": true },
+
+  { "name": "cbt-assistant", "repo": "KazKozDev/cbt-assistant", "cat": "07-psych", "pri": "YELLOW" },
+  { "name": "freecbt", "repo": "erosson/freecbt", "cat": "07-psych", "pri": "YELLOW" },
+  { "name": "awesome-mental-health", "repo": "hhy5277/awesome-mental-health", "cat": "07-psych", "pri": "YELLOW" },
+
+  { "name": "playwright", "repo": "microsoft/playwright", "cat": "08-test", "pri": "YELLOW", "big": true }
+]

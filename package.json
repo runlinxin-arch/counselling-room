@@ -1,0 +1,17 @@
+{
+  "name": "counselling-room",
+  "version": "0.1.0",
+  "private": true,
+  "description": "康复心理学科普页游《心理咨询》——交付物是单个 HTML 文件，无依赖",
+  "scripts": {
+    "build": "node build.mjs",
+    "check": "node tests/run-all.mjs",
+    "sprites": "node tests/render-sprites.mjs",
+    "walkthrough": "node tests/walkthrough.mjs",
+    "fetch-repos": "node tools/fetch-repos.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "comment": "本项目刻意没有任何 dependencies。这里只放几个脚本快捷方式，装了 npm 才用得上；不装也能直接 node build.mjs。"
+}

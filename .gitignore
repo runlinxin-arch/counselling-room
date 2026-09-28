@@ -1,0 +1,34 @@
+# 依赖
+node_modules/
+.pnpm-store/
+
+# 构建产物
+dist/
+build/
+*.local
+
+# 日志与缓存
+*.log
+npm-debug.log*
+.vite/
+.cache/
+
+# 编辑器 / 系统
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# 参考源码库（第三方仓库源码，体积大且非本项目代码，不入版本控制）
+# 重新获取：node tools/fetch-repos.mjs   （或 --retry 重试失败项）
+resources/
+
+# 教材全文与精读笔记（第三方出版物，有版权，不入版本控制）
+# 需要时自己转换放回 docs/reference/；剧情里引用的页码/数据见 docs/项目存档-Notion.md 第七节
+docs/reference/
+
+# 临时文件
+tools/.fetch-state.json
+*.tar.gz
+*.tmp

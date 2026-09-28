@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>方案 B · 内联 SVG 像素画 · 咨询室</title>
+<!--
+  方案 B：内联 SVG，「画面」是用文字打的。
+  SPRITES 里每个字母 = 一个像素，字母到颜色的对照表在 PAL。
+  空格 = 透明，后面的墙会露出来。
+
+  分辨率：106 × 60 个逻辑像素（每个放大 6 倍 = 636 × 360）
+
+  这一版按真实心理咨询室的设置来摆：
+    · 两把沙发呈夹角、不面对面，中间隔一张茶几
+    · 茶几上有纸巾盒和水杯
+    · 挂钟挂在咨询师侧后方（方便掌握时间，又不用低头看表）
+    · 遮光窗帘保护隐私
+    · 墙上挂温馨的画
+    · 浅蓝沙发（教育部《中小学心理辅导室建设指南》建议浅蓝/浅绿）
+    · 柔和暖光 + 绿植
+
+  点房间里带光晕的三样东西，会弹出对应的「咨询设置」科普。
+-->
+<style>
+  :root{ --ink:#e8e6e3; --muted:#9a9a9a; --line:#2a2f3a; --gold:#c9a227; }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; min-height:100vh; background:#0b0d12; color:var(--ink);
+    font-family:"Microsoft YaHei","Noto Sans SC",sans-serif;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:24px;
+  }
+  .caption{ font-size:14px; color:var(--muted); }
+  .caption b{ color:var(--gold); font-weight:400; }
+
+  #app{ width:636px; }
+  #room{ position:relative; width:636px; height:360px; box-shadow:0 0 0 2px var(--line); overflow:hidden; }
+  #stage{ display:block; width:100%; height:100%; shape-rendering:crispEdges; }
+
+  .item{ cursor:pointer; }
+  .item .art{ animation:breathe 1.7s ease-in-out infinite; }
+  .item:hover .art{ animation:none; opacity:1; filter:brightness(1.55) drop-shadow(0 0 3px #ffd97a); }
+  @keyframes breathe{ 0%,100%{ opacity:1 } 50%{ opacity:.7 } }
+
+  #overlay{
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+    background:#06070ae6; z-index:20; padding:32px;
+  }
+  #overlay.on{ display:flex; }
+  .box{ background:#14161c; border:2px solid var(--line); padding:22px 26px; max-width:430px; }
+  .box h2{ font-size:15px; color:var(--gold); margin:0 0 12px; font-weight:400; }
+  .box p{ font-size:16px; line-height:1.95; margin:0 0 18px; }
+  button{
+    font-family:inherit; font-size:15px; color:var(--ink); background:#1d2230;
+    border:2px solid var(--line); padding:8px 18px; cursor:pointer;
+  }
+  button:hover{ background:#26304a; border-color:#4a5a80; }
+
+  #dlg{ margin-top:10px; background:#14161c; border:2px solid var(--line); padding:14px 18px; }
+  #who{ font-size:13px; color:#7fb3d5; margin-bottom:6px; }
+  #txt{ font-size:16px; line-height:1.7; }
+  #choices{ display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+  #choices span{ font-size:15px; color:var(--muted); }
+  .hint{ margin-top:8px; font-size:13px; color:#6b6b6b; }
+
+  details{ width:636px; font-size:13px; color:var(--muted); }
+  pre{ background:#0f1116; border:1px solid var(--line); padding:12px; overflow:auto;
+       font-size:9px; line-height:1.1; color:#8fa8c8; }
+</style>
+</head>
+<body>
+  <div class="caption">方案 B · <b>咨询室</b>：106×60 像素，6 像素一块</div>
+
+  <div id="app">
+    <div id="room">
+      <svg id="stage" viewBox="0 0 106 60"></svg>
+      <div id="overlay">
+        <div class="box">
+          <h2 id="memTitle">咨询设置</h2>
+          <p id="memBody"></p>
+          <button id="close">知道了</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="dlg">
+      <div id="who">咨询师</div>
+      <div id="txt">你好，请坐。我是这里的咨询师。第一次来，可能会有点不知道从哪儿说起，这很正常。</div>
+      <div id="choices">
+        <span>· 我想先说说最近的状态</span>
+        <span>· 我不太确定该从哪里开始</span>
+      </div>
+      <div class="hint">↑ 房间里有三样东西带光晕，点一下会告诉你是干什么用的</div>
+    </div>
+  </div>
+
+  <details>
+    <summary>展开看看「画面」到底长什么样（这就是全部的美术资源）</summary>
+    <pre id="mapDump"></pre>
+  </details>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+const GW = 106, GH = 60;   // 逻辑像素尺寸，每格 6 个屏幕像素
+
+const PAL = {
+  '.': '#2b2c39',  // 墙
+  ',': '#32333f',  // 墙（竖纹）
+  '-': '#24252f',  // 墙（下半更暗）
+  '=': '#3d3e4d',  // 踢脚线
+  '#': '#413527',  // 地板
+  '+': '#392e22',  // 地板（木板缝）
+  '|': '#2b2118',  // 地板（竖缝）
+  'f': '#4a4356',  // 窗框 / 画框
+  'g': '#4c5666',  // 玻璃
+  'h': '#6d7886',  // 玻璃反光
+  'n': '#565670',  // 窗帘
+  'm': '#414158',  // 窗帘（暗折）
+  'q': '#6a6a82',  // 窗帘杆
+  'D': '#33281c',  // 门框 / 深色线条
+  'd': '#6b5540',  // 门板
+  'e': '#54412f',  // 门板凹槽
+  'y': '#d8ae35',  // 金属把手
+  's': '#5b8199',  // 沙发（浅蓝，教育部建议色）
+  'S': '#3f5f75',  // 沙发（暗部）
+  'T': '#c39a76',  // 纸巾盒
+  'w': '#eee8da',  // 纸巾 / 纸
+  'k': '#a9a294',  // 纸（暗）
+  'x': '#c94a4a',  // 红
+  't': '#7a5a3a',  // 桌面
+  'u': '#5c4229',  // 桌身 / 桌腿
+  'v': '#8e6b45',  // 桌面亮边
+  'p': '#5c8253',  // 绿植
+  'P': '#42603c',  // 绿植（暗）
+  'o': '#8f5a3e',  // 花盆
+  'b': '#9a7852',  // 书架
+  'B': '#775c3d',  // 书架（暗）
+  'i': '#f2eee2',  // 钟面 / 画纸
+  'G': '#c4bdac',  // 钟框
+  'C': '#eaeaea',  // 水杯
+  'V': '#b4b4b4',  // 水杯（暗）
+  '@': '#54424f',  // 地毯边
+  'O': '#40333f',  // 地毯面
+  '%': '#63503f',  // 地毯花纹
+  'j': '#ffe0a8',  // 暖光 / 太阳
+};
+
+// ==== SPRITES:BEGIN ====
+const SPRITES = {
+  window: [
+    'ffffffffffffffffffffff',
+    'fgggggggggfggggggggggf',
+    'fghhhhggggfghhhhgggggf',
+    'fghhhhggggfghhhhgggggf',
+    'fghhhhggggfghhhhgggggf',
+    'fgggggggggfggggggggggf',
+    'fgggggggggfggggggggggf',
+    'fgggggggggfggggggggggf',
+    'fgggggggggfggggggggggf',
+    'fgggggggggfggggggggggf',
+    'ffffffffffffffffffffff',
+    'fgggggggggfggggggggggf',
+    'fghhhhggggfghhhhgggggf',
+    'fghhhhggggfghhhhgggggf',
+    'fghhhhggggfghhhhgggggf',
+    'fgggggggggfggggggggggf',
+    'fgggggggggfggggggggggf',
+    'fgggggggggfggggggggggf',
+    'fgggggggggfggggggggggf',
+    'ffffffffffffffffffffff',
+  ],
+  curtainL: [
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'mmmmmm',
+    'mmmmmm',
+  ],
+  curtainR: [
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'nmnnmn',
+    'mmmmmm',
+    'mmmmmm',
+  ],
+  rod: [
+    'qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq',
+    'ffffffffffffffffffffffffffffffffff',
+  ],
+  clock: [
+    'GGGGGGGGG',
+    'GiiiDiiiG',
+    'GiiiDiiiG',
+    'GiiiDiiiG',
+    'GDiiDDDDG',
+    'GiiiiiiiG',
+    'GiiiiiiiG',
+    'GiiiDiiiG',
+    'GGGGGGGGG',
+  ],
+  poster: [
+    'ffffffffffffff',
+    'fiiiiiiiiiiiif',
+    'fiiiiiiiijjjif',
+    'fiiiiiiiijjjif',
+    'fiiiiiiiijjjif',
+    'fiiipiiiiiiiif',
+    'fiipppiippiiif',
+    'fippppppppppif',
+    'fiiiiiiiiiiiif',
+    'fiiiiiiiiiiiif',
+    'ffffffffffffff',
+  ],
+  shelf: [
+    'bbbbbbbbbbbbbbb',
+    'bBBBBBBBBBBBBBb',
+    'bBBBpBBBCBBBpBb',
+    'bBBspBBTCBBspBb',
+    'bByspBwTCByspBb',
+    'bxyspiwTCxyspib',
+    'bxyspiwTCxyspib',
+    'bxyspiwTCxyspib',
+    'bbbbbbbbbbbbbbb',
+    'bBBBBBBBBBBBBBb',
+    'bBBBBBBBBBBBBBb',
+    'bBpBBBCBBBpBBBb',
+    'bBpiBBCxBBpiBBb',
+    'bBpiwBCxyBpiwBb',
+    'bspiwTCxyspiwTb',
+    'bspiwTCxyspiwTb',
+    'bspiwTCxyspiwTb',
+    'bbbbbbbbbbbbbbb',
+    'bBBBBBBBBBBBBBb',
+    'bBBBBBBBBBBBBBb',
+    'bBBBBBBBBBBBBBb',
+    'bwTCxyspiwTCxyb',
+    'bwTCxyspiwTCxyb',
+    'bwTCxyspiwTCxyb',
+    'bwTCxyspiwTCxyb',
+    'bbbbbbbbbbbbbbb',
+  ],
+  door: [
+    'DDDDDDDDDDDDD',
+    'DdddddddddddD',
+    'DdddddddddddD',
+    'DdddddddddddD',
+    'DddeeeeeeeddD',
+    'DddeeeeeeeddD',
+    'DddeeeeeeeddD',
+    'DddeeeeeeeddD',
+    'DddeeeeeeeddD',
+    'DddeeeeeeeddD',
+    'DddeeeeeeeddD',
+    'DdddddddddddD',
+    'DdddddddddddD',
+    'DddddddddyydD',
+    'DddddddddyydD',
+    'DddddddddyydD',
+    'DdddddddddddD',
+    'DdddddddddddD',
+    'DddeeeeeeeddD',
+    'DddeeeeeeeddD',
+    'DddeeeeeeeddD',
+    'DddeeeeeeeddD',
+    'DddeeeeeeeddD',
+    'DddeeeeeeeddD',
+    'DdddddddddddD',
+    'DdddddddddddD',
+    'DdddddddddddD',
+    'DDDDDDDDDDDDD',
+  ],
+  plant: [
+    '              ',
+    '              ',
+    '              ',
+    '   pppppppp   ',
+    '   pppppppp   ',
+    '   pPPPPPPPP  ',
+    '  PPPPPPPPPP  ',
+    '  PPPPPPPPPP  ',
+    '  PPPPPPPPppp ',
+    ' pppppppppppp ',
+    ' ppppp  ppppp ',
+    ' ppppp  ppppp ',
+    ' ppppp  ppppp ',
+    ' pppppPPppppp ',
+    ' pppppPPP     ',
+    '      PPP     ',
+    '      PPP     ',
+    '      PPP     ',
+    '   oooooooo   ',
+    '    oooooo    ',
+    '    oooooo    ',
+    '    oooooo    ',
+    '    oooooo    ',
+    '    oooooo    ',
+  ],
+  rug: [
+    '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',
+    '@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@',
+    '@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@',
+    '@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@',
+    '@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@',
+    '@%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%@',
+    '@%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%@',
+    '@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@',
+    '@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@',
+    '@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@',
+    '@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@',
+    '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',
+  ],
+  sofaL: [
+    ' SSSSSS               ',
+    ' ssssss               ',
+    ' ssssss               ',
+    ' ssssss               ',
+    ' ssssss               ',
+    ' ssssss               ',
+    ' ssssss               ',
+    ' ssssss               ',
+    ' ssssss           ss  ',
+    ' SSSSSS          ssss ',
+    ' ssssss          ssss ',
+    ' ssssss          ssss ',
+    ' ssssss          ssss ',
+    ' ssssssSSSSSSSSSSssss ',
+    ' ssssssssssssssssssss ',
+    ' ssssssssssssssssssss ',
+    ' ssssssssssssssssssss ',
+    ' ssssssSSSSSSSSSSSSSS ',
+    ' sSSSSSSSSSSSSSSSSSS  ',
+    '  SSSSSSSSSSSSSSSSSS  ',
+    '   DD            DD   ',
+    '   DD            DD   ',
+  ],
+  sofaR: [
+    '               SSSSSS ',
+    '               ssssss ',
+    '               ssssss ',
+    '               ssssss ',
+    '               ssssss ',
+    '               ssssss ',
+    '               ssssss ',
+    '               ssssss ',
+    '  ss           ssssss ',
+    ' ssss          SSSSSS ',
+    ' ssss          ssssss ',
+    ' ssss          ssssss ',
+    ' ssss          ssssss ',
+    ' ssssSSSSSSSSSSssssss ',
+    ' ssssssssssssssssssss ',
+    ' ssssssssssssssssssss ',
+    ' ssssssssssssssssssss ',
+    ' SSSSSSSSSSSSSSssssss ',
+    '  SSSSSSSSSSSSSSSSSSs ',
+    '  SSSSSSSSSSSSSSSSSS  ',
+    '   DD            DD   ',
+    '   DD            DD   ',
+  ],
+  table: [
+    'vvvvvvvvvvvvvvvv',
+    'tttttttttttttttt',
+    'tttttttttttttttt',
+    'tttttttttttttttt',
+    'uuuuuuuuuuuuuuuu',
+    ' uu          uu ',
+    ' uuuuuuuuuuuuuu ',
+    ' uu          uu ',
+    ' uu          uu ',
+    ' uu          uu ',
+    ' uu          uu ',
+    ' uu          uu ',
+    ' uu          uu ',
+  ],
+  tissue: [
+    '  www  ',
+    '  www  ',
+    'kkkkkkk',
+    'TTTTTTT',
+    'TTTTTTT',
+  ],
+  cup: [
+    'VVVV',
+    'CVVC',
+    'CVVC',
+    'CVVC',
+    'CVVC',
+    ' CC ',
+  ],
+};
+// ==== SPRITES:END ====
+
+// 家具落在地上的影子
+const SHADOWS = [
+  [21, 45, 20, 4],
+  [57, 45, 20, 4],
+  [42, 50, 14, 3],
+];
+
+// 摆位：[物件, 横坐标, 纵坐标]（单位是逻辑像素）
+const SCENE = [
+  ['window',    12,  6],
+  ['curtainL',   7,  4],
+  ['curtainR',  33,  4],
+  ['rod',        5,  2],
+  ['poster',    54,  7],
+  ['shelf',     78,  9],
+  ['door',      92,  7],
+  ['plant',      1, 24],
+  ['rug',       19, 42],
+  ['sofaL',     20, 26],
+  ['sofaR',     56, 26],
+  ['table',     41, 40],
+  ['cup',       52, 34],
+];
+
+// 可以点的三样东西（点开是一段「咨询设置」科普）
+const ITEMS = [
+  { id: 'clock',  sprite: 'clock',  x: 43, y:  5, label: '墙上的钟' },
+  { id: 'tissue', sprite: 'tissue', x: 44, y: 35, label: '茶几上的纸巾盒' },
+  { id: 'sofa',   sprite: 'sofaR',  x: 56, y: 26, label: '两把沙发' },
+];
+
+const NOTES = {
+  clock: {
+    title: '咨询设置 · 墙上的钟',
+    lines: ['你注意到墙上那个钟。它挂在咨询师的侧后方。',
+            '一次五十分钟。一开始你觉得很长，后来发现过得比想象中快。',
+            '钟挂在那里，咨询师就不用低头看手表——',
+            '你也不会被一个「时间到了」的动作打断。'],
+  },
+  tissue: {
+    title: '咨询设置 · 茶几上的纸巾盒',
+    lines: ['茶几上放着一盒纸巾，就在你一伸手就够得到的地方。',
+            '没有人会说「别哭」。',
+            '纸巾盒摆在那儿，本身就是一个态度：在这里，你可以哭。'],
+  },
+  sofa: {
+    title: '咨询设置 · 座位不是面对面的',
+    lines: ['两把沙发没有正对着摆。它们之间有一个夹角，大概 90 到 120 度。',
+            '这样你不想对视的时候，可以把目光自然地移开，看地板、看窗外都行。',
+            '正面对着坐，更像审问，不像谈话。',
+            '中间那张茶几也是一种缓冲——它让两个人之间不至于空得发慌。'],
+  },
+};
+
+// ==== 背景：墙、踢脚线、地板 ====
+function bgChar(x, y) {
+  if (y <= 33) {
+    if (x % 5 === 0) return ',';
+    return y >= 26 ? '-' : '.';
+  }
+  if (y === 34) return '=';
+  if (x % 8 === 7) return '|';
+  return y % 4 === 0 ? '+' : '#';
+}
+
+const svg = document.getElementById('stage');
+function el(name, attrs) {
+  const e = document.createElementNS(NS, name);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+function px(x, y, w, h, fill, opacity) {
+  const a = { x, y, width: w, height: h, fill };
+  if (opacity !== undefined) a.opacity = opacity;
+  return el('rect', a);
+}
+function paint(map, ox, oy, into) {
+  map.forEach((line, dy) => {
+    let x = 0;
+    while (x < line.length) {
+      const ch = line[x];
+      if (ch === ' ' || !PAL[ch]) { x++; continue; }
+      let w = 1;
+      while (line[x + w] === ch) w++;
+      into.appendChild(px(ox + x, oy + dy, w, 1, PAL[ch]));
+      x += w;
+    }
+  });
+}
+
+// 1) 背景
+(function drawBg() {
+  for (let y = 0; y < GH; y++) {
+    let x = 0;
+    while (x < GW) {
+      const ch = bgChar(x, y);
+      let w = 1;
+      while (x + w < GW && bgChar(x + w, y) === ch) w++;
+      svg.appendChild(px(x, y, w, 1, PAL[ch]));
+      x += w;
+    }
+  }
+})();
+
+// 2) 墙和地板交界处的接触阴影
+svg.appendChild(px(0, 35, GW, 2, '#0e0f16', 0.35));
+
+// 3) 家具落在地上的影子
+SHADOWS.forEach(([x, y, w, h]) => svg.appendChild(px(x, y, w, h, '#0e0f16', 0.42)));
+
+// 4) 家具
+SCENE.forEach(([name, x, y]) => paint(SPRITES[name], x, y, svg));
+
+// 5) 三样可以点的东西
+ITEMS.forEach((it) => {
+  const g = el('g', { class: 'item' });
+  const art = el('g', { class: 'art' });
+  paint(SPRITES[it.sprite], it.x, it.y, art);
+  g.appendChild(art);
+  const t = el('title', {});
+  t.textContent = it.label;
+  g.appendChild(t);
+  g.addEventListener('click', () => openNote(it));
+  svg.appendChild(g);
+});
+
+// 6) 柔和暖光 + 四周压暗
+const warm = el('radialGradient', { id: 'warm', cx: '50%', cy: '62%', r: '74%' });
+warm.appendChild(el('stop', { offset: '0%', 'stop-color': '#ffd9a0', 'stop-opacity': '0.12' }));
+warm.appendChild(el('stop', { offset: '55%', 'stop-color': '#ffd9a0', 'stop-opacity': '0.03' }));
+warm.appendChild(el('stop', { offset: '100%', 'stop-color': '#000', 'stop-opacity': '0.32' }));
+const defs = el('defs', {});
+defs.appendChild(warm);
+svg.appendChild(defs);
+svg.appendChild(px(0, 0, GW, GH, 'url(#warm)'));
+
+// ==== 交互 ====
+const overlay = document.getElementById('overlay');
+function openNote(it) {
+  const n = NOTES[it.id];
+  document.getElementById('memTitle').textContent = n.title;
+  document.getElementById('memBody').innerHTML = n.lines.join('<br>');
+  overlay.classList.add('on');
+}
+document.getElementById('close').addEventListener('click', () => overlay.classList.remove('on'));
+
+document.getElementById('mapDump').textContent = Object.entries(SPRITES)
+  .map(([k, v]) => k + '  （' + v[0].length + ' × ' + v.length + '）\n' + v.join('\n'))
+  .join('\n\n');
+</script>
+</body>
+</html>

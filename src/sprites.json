@@ -1,0 +1,471 @@
+{
+  "_source": "docs/mockups/方案B-内联SVG.html",
+  "_note": "由 tools/extract-sprites.mjs 自动抽出，不要手改；美术以 docs/mockups/方案B-内联SVG.html 为准",
+  "size": {
+    "w": 106,
+    "h": 60
+  },
+  "pal": {
+    ".": "#2b2c39",
+    ",": "#32333f",
+    "-": "#24252f",
+    "=": "#3d3e4d",
+    "#": "#413527",
+    "+": "#392e22",
+    "|": "#2b2118",
+    "f": "#4a4356",
+    "g": "#4c5666",
+    "h": "#6d7886",
+    "n": "#565670",
+    "m": "#414158",
+    "q": "#6a6a82",
+    "D": "#33281c",
+    "d": "#6b5540",
+    "e": "#54412f",
+    "y": "#d8ae35",
+    "s": "#5b8199",
+    "S": "#3f5f75",
+    "T": "#c39a76",
+    "w": "#eee8da",
+    "k": "#a9a294",
+    "x": "#c94a4a",
+    "t": "#7a5a3a",
+    "u": "#5c4229",
+    "v": "#8e6b45",
+    "p": "#5c8253",
+    "P": "#42603c",
+    "o": "#8f5a3e",
+    "b": "#9a7852",
+    "B": "#775c3d",
+    "i": "#f2eee2",
+    "G": "#c4bdac",
+    "C": "#eaeaea",
+    "V": "#b4b4b4",
+    "@": "#54424f",
+    "O": "#40333f",
+    "%": "#63503f",
+    "j": "#ffe0a8"
+  },
+  "sprites": {
+    "window": [
+      "ffffffffffffffffffffff",
+      "fgggggggggfggggggggggf",
+      "fghhhhggggfghhhhgggggf",
+      "fghhhhggggfghhhhgggggf",
+      "fghhhhggggfghhhhgggggf",
+      "fgggggggggfggggggggggf",
+      "fgggggggggfggggggggggf",
+      "fgggggggggfggggggggggf",
+      "fgggggggggfggggggggggf",
+      "fgggggggggfggggggggggf",
+      "ffffffffffffffffffffff",
+      "fgggggggggfggggggggggf",
+      "fghhhhggggfghhhhgggggf",
+      "fghhhhggggfghhhhgggggf",
+      "fghhhhggggfghhhhgggggf",
+      "fgggggggggfggggggggggf",
+      "fgggggggggfggggggggggf",
+      "fgggggggggfggggggggggf",
+      "fgggggggggfggggggggggf",
+      "ffffffffffffffffffffff"
+    ],
+    "curtainL": [
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "mmmmmm",
+      "mmmmmm"
+    ],
+    "curtainR": [
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "nmnnmn",
+      "mmmmmm",
+      "mmmmmm"
+    ],
+    "rod": [
+      "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+      "ffffffffffffffffffffffffffffffffff"
+    ],
+    "clock": [
+      "GGGGGGGGG",
+      "GiiiDiiiG",
+      "GiiiDiiiG",
+      "GiiiDiiiG",
+      "GDiiDDDDG",
+      "GiiiiiiiG",
+      "GiiiiiiiG",
+      "GiiiDiiiG",
+      "GGGGGGGGG"
+    ],
+    "poster": [
+      "ffffffffffffff",
+      "fiiiiiiiiiiiif",
+      "fiiiiiiiijjjif",
+      "fiiiiiiiijjjif",
+      "fiiiiiiiijjjif",
+      "fiiipiiiiiiiif",
+      "fiipppiippiiif",
+      "fippppppppppif",
+      "fiiiiiiiiiiiif",
+      "fiiiiiiiiiiiif",
+      "ffffffffffffff"
+    ],
+    "shelf": [
+      "bbbbbbbbbbbbbbb",
+      "bBBBBBBBBBBBBBb",
+      "bBBBpBBBCBBBpBb",
+      "bBBspBBTCBBspBb",
+      "bByspBwTCByspBb",
+      "bxyspiwTCxyspib",
+      "bxyspiwTCxyspib",
+      "bxyspiwTCxyspib",
+      "bbbbbbbbbbbbbbb",
+      "bBBBBBBBBBBBBBb",
+      "bBBBBBBBBBBBBBb",
+      "bBpBBBCBBBpBBBb",
+      "bBpiBBCxBBpiBBb",
+      "bBpiwBCxyBpiwBb",
+      "bspiwTCxyspiwTb",
+      "bspiwTCxyspiwTb",
+      "bspiwTCxyspiwTb",
+      "bbbbbbbbbbbbbbb",
+      "bBBBBBBBBBBBBBb",
+      "bBBBBBBBBBBBBBb",
+      "bBBBBBBBBBBBBBb",
+      "bwTCxyspiwTCxyb",
+      "bwTCxyspiwTCxyb",
+      "bwTCxyspiwTCxyb",
+      "bwTCxyspiwTCxyb",
+      "bbbbbbbbbbbbbbb"
+    ],
+    "door": [
+      "DDDDDDDDDDDDD",
+      "DdddddddddddD",
+      "DdddddddddddD",
+      "DdddddddddddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DdddddddddddD",
+      "DdddddddddddD",
+      "DddddddddyydD",
+      "DddddddddyydD",
+      "DddddddddyydD",
+      "DdddddddddddD",
+      "DdddddddddddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DddeeeeeeeddD",
+      "DdddddddddddD",
+      "DdddddddddddD",
+      "DdddddddddddD",
+      "DDDDDDDDDDDDD"
+    ],
+    "plant": [
+      "              ",
+      "              ",
+      "              ",
+      "   pppppppp   ",
+      "   pppppppp   ",
+      "   pPPPPPPPP  ",
+      "  PPPPPPPPPP  ",
+      "  PPPPPPPPPP  ",
+      "  PPPPPPPPppp ",
+      " pppppppppppp ",
+      " ppppp  ppppp ",
+      " ppppp  ppppp ",
+      " ppppp  ppppp ",
+      " pppppPPppppp ",
+      " pppppPPP     ",
+      "      PPP     ",
+      "      PPP     ",
+      "      PPP     ",
+      "   oooooooo   ",
+      "    oooooo    ",
+      "    oooooo    ",
+      "    oooooo    ",
+      "    oooooo    ",
+      "    oooooo    "
+    ],
+    "rug": [
+      "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",
+      "@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@",
+      "@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@",
+      "@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@",
+      "@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@",
+      "@%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%@",
+      "@%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%@",
+      "@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@",
+      "@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@",
+      "@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@",
+      "@OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO@",
+      "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+    ],
+    "sofaL": [
+      " SSSSSS               ",
+      " ssssss               ",
+      " ssssss               ",
+      " ssssss               ",
+      " ssssss               ",
+      " ssssss               ",
+      " ssssss               ",
+      " ssssss               ",
+      " ssssss           ss  ",
+      " SSSSSS          ssss ",
+      " ssssss          ssss ",
+      " ssssss          ssss ",
+      " ssssss          ssss ",
+      " ssssssSSSSSSSSSSssss ",
+      " ssssssssssssssssssss ",
+      " ssssssssssssssssssss ",
+      " ssssssssssssssssssss ",
+      " ssssssSSSSSSSSSSSSSS ",
+      " sSSSSSSSSSSSSSSSSSS  ",
+      "  SSSSSSSSSSSSSSSSSS  ",
+      "   DD            DD   ",
+      "   DD            DD   "
+    ],
+    "sofaR": [
+      "               SSSSSS ",
+      "               ssssss ",
+      "               ssssss ",
+      "               ssssss ",
+      "               ssssss ",
+      "               ssssss ",
+      "               ssssss ",
+      "               ssssss ",
+      "  ss           ssssss ",
+      " ssss          SSSSSS ",
+      " ssss          ssssss ",
+      " ssss          ssssss ",
+      " ssss          ssssss ",
+      " ssssSSSSSSSSSSssssss ",
+      " ssssssssssssssssssss ",
+      " ssssssssssssssssssss ",
+      " ssssssssssssssssssss ",
+      " SSSSSSSSSSSSSSssssss ",
+      "  SSSSSSSSSSSSSSSSSSs ",
+      "  SSSSSSSSSSSSSSSSSS  ",
+      "   DD            DD   ",
+      "   DD            DD   "
+    ],
+    "table": [
+      "vvvvvvvvvvvvvvvv",
+      "tttttttttttttttt",
+      "tttttttttttttttt",
+      "tttttttttttttttt",
+      "uuuuuuuuuuuuuuuu",
+      " uu          uu ",
+      " uuuuuuuuuuuuuu ",
+      " uu          uu ",
+      " uu          uu ",
+      " uu          uu ",
+      " uu          uu ",
+      " uu          uu ",
+      " uu          uu "
+    ],
+    "tissue": [
+      "  www  ",
+      "  www  ",
+      "kkkkkkk",
+      "TTTTTTT",
+      "TTTTTTT"
+    ],
+    "cup": [
+      "VVVV",
+      "CVVC",
+      "CVVC",
+      "CVVC",
+      "CVVC",
+      " CC "
+    ]
+  },
+  "shadows": [
+    [
+      21,
+      45,
+      20,
+      4
+    ],
+    [
+      57,
+      45,
+      20,
+      4
+    ],
+    [
+      42,
+      50,
+      14,
+      3
+    ]
+  ],
+  "scene": [
+    [
+      "window",
+      12,
+      6
+    ],
+    [
+      "curtainL",
+      7,
+      4
+    ],
+    [
+      "curtainR",
+      33,
+      4
+    ],
+    [
+      "rod",
+      5,
+      2
+    ],
+    [
+      "poster",
+      54,
+      7
+    ],
+    [
+      "shelf",
+      78,
+      9
+    ],
+    [
+      "door",
+      92,
+      7
+    ],
+    [
+      "plant",
+      1,
+      24
+    ],
+    [
+      "rug",
+      19,
+      42
+    ],
+    [
+      "sofaL",
+      20,
+      26
+    ],
+    [
+      "sofaR",
+      56,
+      26
+    ],
+    [
+      "table",
+      41,
+      40
+    ],
+    [
+      "cup",
+      52,
+      34
+    ]
+  ],
+  "items": [
+    {
+      "id": "clock",
+      "sprite": "clock",
+      "x": 43,
+      "y": 5,
+      "label": "墙上的钟"
+    },
+    {
+      "id": "tissue",
+      "sprite": "tissue",
+      "x": 44,
+      "y": 35,
+      "label": "茶几上的纸巾盒"
+    },
+    {
+      "id": "sofa",
+      "sprite": "sofaR",
+      "x": 56,
+      "y": 26,
+      "label": "两把沙发"
+    }
+  ],
+  "notes": {
+    "clock": {
+      "title": "咨询设置 · 墙上的钟",
+      "lines": [
+        "你注意到墙上那个钟。它挂在咨询师的侧后方。",
+        "一次五十分钟。一开始你觉得很长，后来发现过得比想象中快。",
+        "钟挂在那里，咨询师就不用低头看手表——",
+        "你也不会被一个「时间到了」的动作打断。"
+      ]
+    },
+    "tissue": {
+      "title": "咨询设置 · 茶几上的纸巾盒",
+      "lines": [
+        "茶几上放着一盒纸巾，就在你一伸手就够得到的地方。",
+        "没有人会说「别哭」。",
+        "纸巾盒摆在那儿，本身就是一个态度：在这里，你可以哭。"
+      ]
+    },
+    "sofa": {
+      "title": "咨询设置 · 座位不是面对面的",
+      "lines": [
+        "两把沙发没有正对着摆。它们之间有一个夹角，大概 90 到 120 度。",
+        "这样你不想对视的时候，可以把目光自然地移开，看地板、看窗外都行。",
+        "正面对着坐，更像审问，不像谈话。",
+        "中间那张茶几也是一种缓冲——它让两个人之间不至于空得发慌。"
+      ]
+    }
+  }
+}
