@@ -6,8 +6,8 @@
 // 但像素数据那时还没赋进去。node --check 全绿，页面却是一整片黑。
 //
 // 用法：node tests/smoke-browser.mjs
-import { readFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { readFileSync, existsSync, mkdtempSync } from 'node:fs';
+import { findChrome, runChrome, cleanupProfile } from './lib/chrome.mjs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -18,29 +18,7 @@ if (!existsSync(FILE)) {
   process.exit(1);
 }
 
-const IS_WIN = process.platform === 'win32';
-const WIN_CANDIDATES = [
-  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-  'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-];
-const NIX_CANDIDATES = ['/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'];
-
-let chrome = null;
-if (IS_WIN) {
-  chrome = WIN_CANDIDATES.find((p) => existsSync(p)) || null;
-} else {
-  chrome = NIX_CANDIDATES.find((p) => existsSync(p)) || null;
-  if (!chrome) {
-    for (const name of ['google-chrome', 'chromium', 'chromium-browser']) {
-      try {
-        const p = execFileSync('which', [name], { encoding: 'utf8' }).trim();
-        if (p) { chrome = p; break; }
-      } catch (e) { /* 没装 */ }
-    }
-  }
-}
+const chrome = findChrome();
 if (!chrome) {
   console.log('! 找不到 Chrome/Edge，跳过浏览器冒烟测试');
   process.exit(0);
@@ -71,15 +49,15 @@ try {
     '--dump-dom',
     url,
   ];
-  try {
-    dom = execFileSync(chrome, args, { encoding: 'utf8', timeout: 60000, stdio: ['ignore', 'pipe', 'pipe'] });
-  } catch (e) {
-    // Chrome 经常"东西都写出来了但退出码非 0"。stdout / stderr 照样有效。
-    dom = (e.stdout || '') + '';
-    stderr = (e.stderr || '') + '';
+  // 不要用 execFileSync 等它退出：macOS 上 Chrome 吐完 DOM 也不结束，
+  // 会白等到 timeout。runChrome 读到 </html> 就收工。见 tests/lib/chrome.mjs
+  {
+    const r = await runChrome(chrome, args, { timeoutMs: 60000 });
+    dom = r.dom;
+    stderr = r.stderr;
   }
 } finally {
-  rmSync(profile, { recursive: true, force: true });
+  cleanupProfile(profile);
 }
 
 let bad = 0;

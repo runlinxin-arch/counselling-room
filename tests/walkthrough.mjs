@@ -6,8 +6,9 @@
 // 而所有静态检查全绿）。
 //
 // 用法：node tests/playthrough.mjs
-import { readFileSync, writeFileSync, mkdtempSync, rmSync, mkdirSync, existsSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, existsSync, rmSync } from 'node:fs';
+import { runChrome, cleanupProfile } from './lib/chrome.mjs';
+import { decodePNG } from './lib/png.mjs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -17,10 +18,18 @@ const SHOTS = resolve('docs/mockups/shots');
 mkdirSync(SHOTS, { recursive: true });
 
 const CANDIDATES = [
+  // Windows
   'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
   'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
   'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
   'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+  // macOS
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+  '/Applications/Chromium.app/Contents/MacOS/Chromium',
+  // Linux
+  '/usr/bin/google-chrome',
+  '/usr/bin/chromium',
 ];
 const chrome = CANDIDATES.find((p) => existsSync(p));
 if (!chrome) { console.log('! 找不到 Chrome/Edge，跳过走查'); process.exit(0); }
@@ -386,6 +395,12 @@ try {
     const tmpHtml = join(profile, 'step' + i + '.html');
     writeFileSync(tmpHtml, html.replace('</body>', buildHarness(i) + '</body>'), 'utf8');
 
+    // ⚠️ 先删掉这一步要写的截图。
+    // 否则上一次跑留下的旧文件会被 runChrome 的"文件已完整"判断当成
+    // 这一次已经写完，于是它在 Chrome 刚建好空文件时就 kill——留下 0 字节 PNG。
+    // 这是偶发的（取决于时序），最容易骗过"测试全绿"。
+    if (step.shot) rmSync(join(SHOTS, step.shot + '.png'), { force: true });
+
     const args = [
       '--headless=new', '--disable-gpu', '--no-sandbox', '--hide-scrollbars',
       '--user-data-dir=' + join(profile, 'p' + i),
@@ -395,19 +410,17 @@ try {
       // 注入的那些 await 步骤一个都没跑完（标题还是页面原本的标题）。
       // 加了之后 setTimeout 会尽快推进，所以驱动里的等待只是"让出一帧"，
       // 不会真的把时间耗掉——循环上限要按步数给足，别按毫秒算。
+      //
+      // 这个值要给足：危机断言那两步要醒来回轮询，预算给小了会在
+      // "DIAG 还没跑"的时候就被截断，表现为那一步在结果里凭空消失。
+      // 给大不吃亏——反正 runChrome 读到 </html> 就收工，不会真等这么久。
       '--virtual-time-budget=900000',
       '--dump-dom',
     ];
     if (step.shot) args.push('--screenshot=' + join(SHOTS, step.shot + '.png'));
     args.push(pathToFileURL(tmpHtml).href);
 
-    let dom = '', stderr = '';
-    try {
-      dom = execFileSync(chrome, args, { encoding: 'utf8', timeout: 420000, stdio: ['ignore', 'pipe', 'pipe'] });
-    } catch (e) {
-      dom = (e.stdout || '') + '';
-      stderr = (e.stderr || '') + '';
-    }
+    const { dom, stderr } = await runChrome(chrome, args);
 
     const title = (dom.match(/<title>([^<]*)<\/title>/) || [])[1] || '';
     const errs = stderr.split('\n').filter((l) => /Uncaught/.test(l));
@@ -448,7 +461,33 @@ try {
     }
   }
 } finally {
-  rmSync(profile, { recursive: true, force: true });
+  cleanupProfile(profile);
+}
+
+// ---------------------------------------------------------------------------
+// 截图完整性：必须真的是一张能解码的图。
+//
+// 为什么必须查：这个坑踩过两次，而**测试两次都是全绿的**——因为断言只看 title。
+//   1. 只等 </html> 就 kill Chrome → PNG 还没编码，出现 0 字节图
+//   2. 上一次跑留下的旧图被当成"这次写完了" → 同样 0 字节
+// 截图是本项目"看着才知道对不对"的唯一手段（美术/排版都无法自动断言），
+// 所以它自己必须被断言。
+// ---------------------------------------------------------------------------
+{
+  const need = STEPS.filter((s) => s.shot).map((s) => s.shot);
+  let broken = 0;
+  for (const name of need) {
+    const p = join(SHOTS, name + '.png');
+    try {
+      const img = decodePNG(p);
+      if (!img || !img.width || !img.height) throw new Error('尺寸为 0');
+    } catch (e) {
+      broken++;
+      failures++;
+      console.log(`  ✗ ${name}.png 截图不可用：${e.message}`);
+    }
+  }
+  if (!broken) console.log(`  ✓ ${need.length} 张截图都可正常解码`);
 }
 
 console.log('\n截图在 ' + SHOTS);

@@ -3,16 +3,13 @@
 //   · 版面：1366×768 的笔记本上不横向滚动、房间和对话都在
 //
 // 用法：node tests/check-acceptance.mjs
-import { readFileSync, writeFileSync, mkdtempSync, rmSync, existsSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs';
+import { findChrome, runChrome, titleOf, cleanupProfile } from './lib/chrome.mjs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const chrome = [
-  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-].find((p) => existsSync(p));
+const chrome = findChrome();
 if (!chrome) { console.log('! 没有 Chrome，跳过'); process.exit(0); }
 
 const html = readFileSync(resolve('心理咨询.html'), 'utf8');
@@ -21,21 +18,19 @@ let bad = 0;
 const ok = (m) => console.log('  ✓ ' + m);
 const fail = (m) => { console.log('  ✗ ' + m); bad++; };
 
-function run(file, extraArgs = []) {
-  let dom = '';
-  try {
-    dom = execFileSync(chrome, [
-      '--headless=new', '--disable-gpu', '--no-sandbox', '--hide-scrollbars',
-      '--user-data-dir=' + join(profile, 'p'),
-      '--virtual-time-budget=300000',
-      ...extraArgs,
-      '--dump-dom',
-      pathToFileURL(file).href,
-    ], { encoding: 'utf8', timeout: 300000, stdio: ['ignore', 'pipe', 'pipe'] });
-  } catch (e) {
-    dom = (e.stdout || '') + '';
-  }
-  return (dom.match(/<title>([\s\S]*?)<\/title>/) || [])[1] || '';
+// 不要用 execFileSync 等 Chrome 退出：macOS 上它吐完 DOM 也不结束，
+// 每次都会白等到 timeout（这里原先是 300s，全套跑起来像卡死）。
+// runChrome 读到 </html> 就收工。见 tests/lib/chrome.mjs
+async function run(file, extraArgs = []) {
+  const { dom } = await runChrome(chrome, [
+    '--headless=new', '--disable-gpu', '--no-sandbox', '--hide-scrollbars',
+    '--user-data-dir=' + join(profile, 'p'),
+    '--virtual-time-budget=300000',
+    ...extraArgs,
+    '--dump-dom',
+    pathToFileURL(file).href,
+  ], { timeoutMs: 300000 });
+  return titleOf(dom);
 }
 
 console.log('=== 验收 · 存档与版面 ===');
@@ -71,7 +66,7 @@ window.addEventListener('load', function () {
 // 第一趟：造进度
 const f1 = join(profile, 'a.html');
 writeFileSync(f1, html.replace('</body>', ADVANCE + '</body>'), 'utf8');
-const t1 = run(f1);
+const t1 = await run(f1);
 const savedLine = (t1.match(/saved=(\S+)/) || [])[1] || 'NONE';
 if (savedLine === 'NONE') fail('玩了几步，存档里没有 current：' + t1);
 else ok('玩到一半，进度落盘了：' + savedLine);
@@ -90,7 +85,7 @@ window.addEventListener('load', function () {
 </script>`;
 const f2 = join(profile, 'b.html');
 writeFileSync(f2, html.replace('</body>', READ + '</body>'), 'utf8');
-const t2 = run(f2);
+const t2 = await run(f2);
 if (!/line=s1\//.test(t2)) fail('重新打开后读不到进度：' + t2);
 else ok('重新打开能读到进度：' + t2.match(/line=\S+/)[0]);
 if (!/resumeBtn=YES/.test(t2)) fail('标题页没有出现「接着上次玩」按钮：' + t2);
@@ -113,7 +108,7 @@ window.addEventListener('load', function () {
 </script>`;
 const f3 = join(profile, 'c.html');
 writeFileSync(f3, html.replace('</body>', RESUME + '</body>'), 'utf8');
-const t3 = run(f3);
+const t3 = await run(f3);
 if (!/screen=story/.test(t3) || !/scene=Y/.test(t3)) fail('点「接着上次玩」没回到游戏：' + t3);
 else ok('点「接着上次玩」直接回到游戏：' + t3.match(/line=\S+/)[0]);
 
@@ -143,7 +138,7 @@ window.addEventListener('load', function () {
 </script>`;
 const f4 = join(profile, 'd.html');
 writeFileSync(f4, html.replace('</body>', LAYOUT + '</body>'), 'utf8');
-const t4 = run(f4, ['--window-size=1366,768']);
+const t4 = await run(f4, ['--window-size=1366,768']);
 console.log('  · 1366×768：' + t4.replace(/^ACC /, ''));
 if (/hScroll=YES/.test(t4)) fail('1366×768 上出现了横向滚动');
 else ok('1366×768 上没有横向滚动');
@@ -157,11 +152,11 @@ if (pb > 768 || pb < 400) fail(`对话区下边界在 ${pb}px，超出或不合�
 else ok(`对话区在视口内（下边界 ${pb}px）`);
 
 // 窄一点的笔记本也要能用
-const t5 = run(f4, ['--window-size=1280,720']);
+const t5 = await run(f4, ['--window-size=1280,720']);
 console.log('  · 1280×720：' + t5.replace(/^ACC /, ''));
 if (/hScroll=YES/.test(t5)) fail('1280×720 上出现了横向滚动');
 else ok('1280×720 上没有横向滚动');
 
-rmSync(profile, { recursive: true, force: true });
+cleanupProfile(profile);
 console.log('\n' + (bad === 0 ? '验收通过 ✅' : `验收发现 ${bad} 个问题 ❌`));
 process.exit(bad === 0 ? 0 : 1);
