@@ -88,6 +88,7 @@
   X.stories = X.stories || {};
   if (X.storySci) X.stories[X.storySci.id] = X.storySci;
   if (X.storyAmp) X.stories[X.storyAmp.id] = X.storyAmp;
+  if (X.storyPain) X.stories[X.storyPain.id] = X.storyPain;
 
   /**
    * 解析跳转目标。

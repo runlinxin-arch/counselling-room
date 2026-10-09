@@ -811,9 +811,9 @@ XLZX.storySlots = [
     who: '周航 · 41 岁 · 右小腿截肢 · 伤后 5 个月',
   },
   {
-    id: 'pain', numeral: '三', title: '慢性疼痛', ready: false,
+    id: 'pain', numeral: '三', title: '慢性疼痛', ready: true,
     lead: '影像学看不出问题，不代表痛是假的',
-    who: '——',
+    who: '陈静 · 38 岁 · 慢性下背痛 · 三年',
   },
 ];
 

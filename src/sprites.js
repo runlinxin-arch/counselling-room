@@ -28,6 +28,13 @@ const PAL_EXT = {
   j: '#243b2c', // 墨绿上衣暗面
   Q: '#d9b04e', // 土黄裤（提亮过：原 #c19a4e 在木地板上偏棕）
   q: '#b08c3c', // 土黄裤暗面
+  // 陈静（故事线三）：砖红上衣 + 深灰裤 + 旧棕包。
+  // 砖红是三个角色里唯一的暖色上衣，和沙发蓝、卡其、墨绿都错得开。
+  R: '#9c5348', // 砖红上衣
+  r: '#7d3f36', // 砖红上衣暗面
+  M: '#5c5f66', // 深灰裤
+  m: '#45474d', // 深灰裤暗面
+  I: '#8a6a4f', // 包（旧棕）
 
 };
 
@@ -38,6 +45,45 @@ const PAL_EXT = {
 // 周航（故事线二）：41 岁，右小腿截肢。
 // 复用林越的骨架，但换配色与发型，避免两个人看起来是同一个。
 // 外套用土黄（Q/q），工装裤用深灰蓝（E/e 之外的 N/n 是卡其，这里用 g 系）。
+// 陈静（故事线三）：38 岁，慢性下背痛。
+// 骨架沿用，但换配色与发型：头发扎起来（两侧收窄、后脑鼓一点），
+// 与林越（厚发帘）和周航（短发）都能一眼分开。
+const CHENJING = [
+  '    YYYY       ',
+  '   YYYYYY      ',
+  '  HHHHHHHH     ',
+  '  HZZZZZZH     ',
+  '  ZXZZZZXZ     ',
+  '  ZZZZZZZZ     ',
+  '   ZZZZZZ      ',
+  '   ZzzzZ       ',
+  '  DRRRRRRD     ',
+  ' DRRRRRRRRD    ',
+  ' DRRRRRRRRD    ',
+  ' DRRRRRRRRD    ',
+  ' DRrRRRRrRD    ',
+  ' DRRRRRRRRD    ',
+  ' DRRRRRRRRD    ',
+  ' DMMMMMMMMD    ',
+  ' DMMMMMMMMD    ',
+  ' DMMMDDMMMD    ',
+  ' DMMMDDMMMD    ',
+  ' DMMMDDMMMD    ',
+  ' DmmmDDmmmD    ',
+  '  DDD  DDD     ',
+];
+
+// 她的包（8 × 7）：放在脚边，敞口，露出本子一角（w 是纸白）
+const BAG = [
+  '  IIII  ',
+  ' IIIIII ',
+  'IIwwIIII',
+  'IIwwIIII',
+  'IIIIIIII',
+  'IIIIIIII',
+  ' IIIIII ',
+];
+
 const ZHOUHANG = [
   '   DYYYYYD  ',
   '  DYYYYYYYD ',
@@ -261,6 +307,9 @@ if (typeof document !== 'undefined') {
 XLZX.PAL_EXT = PAL_EXT;
 XLZX.WHEELCHAIR = WHEELCHAIR;
 XLZX.CRUTCH = CRUTCH;
+XLZX.ZHOUHANG = ZHOUHANG;
+XLZX.CHENJING = CHENJING;
+XLZX.BAG = BAG;
 XLZX.REFERRAL = REFERRAL;
 XLZX.TISSUE = TISSUE;
 XLZX.LINYUE = LINYUE;

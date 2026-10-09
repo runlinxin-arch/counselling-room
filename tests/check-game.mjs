@@ -161,7 +161,7 @@ function extraProseOf(src) {
   }
   return out.join('\n');
 }
-const earlyProse = ['src/story.js', 'src/story-amp.js']
+const earlyProse = ['src/story.js', 'src/story-amp.js', 'src/story-pain.js']
   .map((f) => extraProseOf(readFileSync(f, 'utf8'))).join('\n');
 
 // 禁用词
@@ -211,7 +211,7 @@ function proseOf(src) {
   }
   return out.join('\n');
 }
-const STORY_FILES = ['src/story.js', 'src/story-amp.js'];
+const STORY_FILES = ['src/story.js', 'src/story-amp.js', 'src/story-pain.js'];
 const storySrc = STORY_FILES.map((f) => readFileSync(f, 'utf8')).join('\n');
 const prose = STORY_FILES.map((f) => proseOf(readFileSync(f, 'utf8'))).join('\n');
 
@@ -281,8 +281,9 @@ try {
   loadInto('src/sprites.js');
   loadInto('src/story.js');
   loadInto('src/story-amp.js');
+  loadInto('src/story-pain.js');
   loadInto('src/engine.js');
-  ok('sprites / 两条故事线 / engine 能在 vm 里加载');
+  ok('sprites / 三条故事线 / engine 能在 vm 里加载');
 } catch (e) {
   fail('加载源码失败：' + e.message);
 }
