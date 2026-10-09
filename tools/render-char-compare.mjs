@@ -7,7 +7,10 @@ import { encodePNG, hexToRgb } from '../tests/lib/png.mjs';
 const SCALE = 6, PAD = 6, GAP = 10;
 const js = readFileSync('src/sprites.js', 'utf8').replace(/^\s*\/\/.*$/gm, '');
 const { LINYUE, COUNSELOR, PAL_EXT } = vm.runInNewContext(js + ';({LINYUE, COUNSELOR, PAL_EXT})');
-const PAL = { ...JSON.parse(readFileSync('src/sprites.json', 'utf8')).pal, ...PAL_EXT };
+// 旧版立绘用到的字符（E/e/K/L/k）在这次换风格时已从 PAL_EXT 移除，
+// 对比图要单独补回来，否则渲染旧版会因缺色报错。
+const OLD_EXTRA = { L: '#c0c6cc', E: '#4f6478', e: '#3d4f60', K: '#5f707f', k: '#4a5a68' };
+const PAL = { ...JSON.parse(readFileSync('src/sprites.json', 'utf8')).pal, ...OLD_EXTRA, ...PAL_EXT };
 
 // 旧版（11 行高、无五官）硬编码进来，供对比
 const OLD = {
@@ -32,7 +35,8 @@ cols.forEach((c, ci) => {
   c.s.forEach((row, y) => {
     for (let x = 0; x < row.length; x++) {
       const ch2 = row[x]; if (ch2 === ' ') continue;
-      const col = hexToRgb(PAL[ch2] || '#ff00ff');
+      if (!(ch2 in PAL)) throw new Error('调色板缺字符 ' + JSON.stringify(ch2) + '（会画成品红，说明配色没接上）');
+      const col = hexToRgb(PAL[ch2]);
       for (let dy = 0; dy < SCALE; dy++) for (let dx = 0; dx < SCALE; dx++) {
         const px = ox + x*SCALE + dx, py = PAD + y*SCALE + dy;
         if (px >= W || py >= H) continue;

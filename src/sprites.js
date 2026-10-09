@@ -2,20 +2,33 @@
 // 方案 B 冻结的是「空房间」，没有画人；这里补上两个人和几处随剧情变的东西。
 //
 // 坐标系统一：和方案 B 一样，每个字符 = 1 个逻辑像素，空格 = 透明，106 × 60 的画布。
-// 渲染时不做缩放，所以人必须画在房间尺度的像素上——头大概 5–6 像素宽，跟沙发一个量级。
+// 渲染时不做缩放，所以人必须画在房间尺度的像素上。
+// 立绘风格参考《元气骑士》：头占比大、一圈深色描边、平涂色块、四肢短粗。
+// 头宽 10 px（原先 6 px）——头小的话五官没有落笔的地方。
 
-// 方案 B 的 39 色里没有肤色、发色、衣服色（原本只画家具）。补 6 个，语气保持一致：低饱和。
+// 方案 B 的 39 色只画家具，没有肤色/发色/服装色，这里补齐。
+// 服装用用户指定的配色：咨询师白上衣+卡其裤；来访者墨绿上衣+土黄裤。
+// 另加一个深色 D 作描边 —— 白上衣对墙面只有 1.21:1，没有描边会看不见人。
 const PAL_EXT = {
   H: '#2a2622', // 头发（黑）
   Y: '#3d3830', // 头发高光（顶光落在发顶，把"一团黑"打开）
   Z: '#bd8e6b', // 皮肤
-  z: '#9c7154', // 皮肤（暗面 / 下巴与颈部阴影）
-  X: '#221f1c', // 瞳 / 眼镜框（同一个深色，两种用途）
-  E: '#4f6478', // 来访者卫衣（灰蓝，压得比沙发暗一点，不抢）
-  e: '#3d4f60', // 来访者卫衣（暗面）
-  K: '#5f707f', // 咨询师针织衫（比沙发浅，坐左边那把沙发时能分开）
-  L: '#c0c6cc', // 咨询师内搭 T 恤（浅灰）
-  k: '#4a5a68', // 咨询师针织衫暗面
+  z: '#9c7154', // 皮肤暗面
+  X: '#221f1c', // 瞳
+  D: '#241f1a', // 描边（元气骑士式深色轮廓，兼作发色）
+
+  // 咨询师：白上衣 + 卡其裤（用户指定）
+  A: '#f2eee4', // 白上衣
+  a: '#d3ccbd', // 白上衣暗面
+  N: '#b99a63', // 卡其裤
+  n: '#967b4a', // 卡其裤暗面
+
+  // 来访者 林越：墨绿上衣 + 土黄裤（用户指定）
+  J: '#33513d', // 墨绿上衣
+  j: '#243b2c', // 墨绿上衣暗面
+  Q: '#c19a4e', // 土黄裤
+  q: '#9c7c3a', // 土黄裤暗面
+
 };
 
 // 轮椅（14 × 17）：大轮 + 小前轮 + 脚踏 + 推手。
@@ -43,55 +56,55 @@ const WHEELCHAIR = [
 ];
 // 林越：坐姿，深色头发、灰蓝卫衣、手搭在扶手上，腿朝右搁在脚踏上
 const LINYUE = [
-  '     YYYY       ',
-  '    YYYYYY      ',
-  '    HHHHHH      ',
-  '    ZZZZZZ      ',
-  '    ZXZZXZ      ',
-  '    ZZZZZZ      ',
-  '     zzzz       ',
-  '     ZZZZ       ',
-  '     EEEE       ',
-  '    EEEEEE      ',
-  ' Z  EEEEEE  Z   ',
-  ' Z  EEEEEE  Z   ',
-  ' z  eeeeee  z   ',
-  '    EEEEEE      ',
-  '    EEEEEE      ',
-  '   DDDDDDDD     ',
-  '   DDDDDDDDDD   ',
-  '   DDDD  DDDD   ',
-  '   DDD    DDD   ',
-  '  DDDD    DDD   ',
-  '  DDD      DD   ',
-  ' DDD        D   ',
+  '  DYYYYYYD  ',
+  ' DYYYYYYYYD ',
+  ' DHHHHHHHHD ',
+  ' DHHZZZZHHD ',
+  ' DHZXZZXZHD ',
+  ' DHZZZZZZHD ',
+  '  DZZZZZZD  ',
+  '  DzzzzzD   ',
+  '   DJJJJJD  ',
+  '  DJJJJJJJD ',
+  ' DJJJJJJJJJD',
+  ' DJJJJJJJJJD',
+  ' DJJJJJJJJJD',
+  ' DJJJJJJJJJD',
+  ' DjJJJJJJJjD',
+  ' DQQQQQQQQD ',
+  ' DQQQQQQQQD ',
+  ' DQQQDDQQQD ',
+  ' DQQQDDQQQD ',
+  ' DQQQDDQQQD ',
+  ' DqqqDDqqqD ',
+  '  DDD  DDD  ',
 ];
 
 // 咨询师（玩家）：坐在左边沙发上，面朝右，手里的笔和本子是玩家自己的视角，
 // 所以不画——画了会变成"看着自己"，很怪。
 const COUNSELOR = [
-  '    YYYY        ',
-  '   YYYYYY       ',
-  '   ZZZZZZ       ',
-  '   ZZZZZZ       ',
-  '   ZGXZXG       ',
-  '   ZZZZZZ       ',
-  '    zzzz        ',
-  '    ZZZZ        ',
-  '     KKKK       ',
-  '   KKKKKKKK     ',
-  '  ZKKLLLLKKZ    ',
-  '  ZKKLLLLKKZ    ',
-  '  zKKKKKKKKz    ',
-  '   kKKKKKKk     ',
-  '   kKKKKKKk     ',
-  '   DDDDDDDD     ',
-  '   DDDDDDDDDD   ',
-  '   DDDD  DDDD   ',
-  '   DDD    DDD   ',
-  '  DDDD    DDD   ',
-  '  DDD      DD   ',
-  ' DDD        D   ',
+  '   DYYYYYD  ',
+  '  DYYYYYYYD ',
+  '  DHHHHHHHD ',
+  '  DHZZZZZHD ',
+  '  DZXXZXXZD ',
+  '  DZZZZZZZD ',
+  '   DZZZZZD  ',
+  '   DzzzzD   ',
+  '   DAAAAAD  ',
+  '  DAAAAAAAD ',
+  ' DAAAAAAAAAD',
+  ' DAAaaaAAAD ',
+  ' DAAaaaAAAD ',
+  ' DAAAAAAAAD ',
+  ' DaAAAAAAaD ',
+  ' DNNNNNNNND ',
+  ' DNNNNNNNND ',
+  ' DNNNDDNNND ',
+  ' DNNNDDNNND ',
+  ' DNNNDDNNND ',
+  ' DnnnDDnnnD ',
+  '  DDD  DDD  ',
 ];
 
 // 人的画法分两种，别搞混：
