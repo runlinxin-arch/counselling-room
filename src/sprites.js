@@ -7,12 +7,17 @@
 // 方案 B 的 39 色里没有肤色、发色、衣服色（原本只画家具）。补 6 个，语气保持一致：低饱和。
 const PAL_EXT = {
   H: '#2a2622', // 头发（黑）
+  Y: '#3d3830', // 头发高光（顶光落在发顶，把"一团黑"打开）
+  V: '#191713', // 头发暗部（发帘下缘收一道，发际线才读得出来）
   Z: '#bd8e6b', // 皮肤
-  z: '#9c7154', // 皮肤（暗面）
+  z: '#9c7154', // 皮肤（暗面 / 下巴与颈部阴影）
+  X: '#221f1c', // 瞳（眼白与瞳分开，眉眼才读得出来）
+  W: '#f6f1ea', // 眼白
   E: '#4f6478', // 来访者卫衣（灰蓝，压得比沙发暗一点，不抢）
   e: '#3d4f60', // 来访者卫衣（暗面）
   K: '#5f707f', // 咨询师针织衫（比沙发浅，坐左边那把沙发时能分开）
   L: '#c0c6cc', // 咨询师内搭 T 恤（浅灰）
+  k: '#4a5a68', // 咨询师针织衫暗面
 };
 
 // 轮椅（14 × 17）：大轮 + 小前轮 + 脚踏 + 推手。
@@ -40,44 +45,53 @@ const WHEELCHAIR = [
 ];
 // 林越：坐姿，深色头发、灰蓝卫衣、手搭在扶手上，腿朝右搁在脚踏上
 const LINYUE = [
-  '    HHHH      ',
-  '   HHHHHH     ',
-  '   HZZZZH     ',
-  '   ZZZZZZ     ',
-  '    ZZZZ      ',
-  '    EEEE      ',
-  '   EEEEEE     ',
-  ' Z EEEEEE Z   ',
-  ' Z EEEEEE Z   ',
-  ' z eeeeee z   ',
-  '   EEEEEE     ',
-  '   EEEEEE     ',
-  '   DDDDDD     ',
-  '   DDDDDDDDD  ',
-  '   DDDD  DDDD ',
-  '   DDD    DDD ',
-  '  DDDD    DDD ',
+  '     YYYY        ',
+  '    YYYYYY       ',
+  '   HHHHHHH       ',
+  '   ZXZZXZ        ',
+  '   ZZZZZZ        ',
+  '    ZzZZ         ',
+  '     zz          ',
+  '     EEEE        ',
+  '    EEEEEE       ',
+  ' Z  EEEEEE  Z    ',
+  ' Z  EEEEEE  Z    ',
+  ' z  eeeeee  z    ',
+  '    EEEEEE       ',
+  '    EEEEEE       ',
+  '   DDDDDDDD      ',
+  '   DDDDDDDDDD    ',
+  '   DDDD  DDDD    ',
+  '   DDD    DDD    ',
+  '  DDDD    DDD    ',
+  '  DDD      DD    ',
+  ' DDD        D    ',
 ];
 
 // 咨询师（玩家）：坐在左边沙发上，面朝右，手里的笔和本子是玩家自己的视角，
 // 所以不画——画了会变成"看着自己"，很怪。
 const COUNSELOR = [
-  '   HHHHH      ',
-  '  HHHHHHH     ',
-  '  HHZZZZH     ',
-  '   ZZZZZ      ',
-  '   ZZZZ       ',
-  '   KKKK       ',
-  '  KKKKKK      ',
-  ' ZKKKKKK Z    ',
-  ' ZKLLLLKK Z   ',
-  ' zKKKKKK z    ',
-  '  KKKKKK      ',
-  '  KKKKKK      ',
-  '  DDDDDD      ',
-  '  DDDDDDDD    ',
-  '  DDDD DDDD   ',
-  ' DDDD   DDD   ',
+  '    YYYY         ',
+  '   YYYYYY        ',
+  '  HHHHHHH        ',
+  '  ZXZZXZ         ',
+  '  ZZZZZZ         ',
+  '   ZzZZ          ',
+  '    zz           ',
+  '    KKKK         ',
+  '  KKKKKKKK       ',
+  ' ZKKLLLLKKZ      ',
+  ' ZKKLLLLKKZ      ',
+  ' zKKKKKKKKz      ',
+  '  kKKKKKKk       ',
+  '  kKKKKKKk       ',
+  '  DDDDDDDD       ',
+  '  DDDDDDDDDD     ',
+  '  DDDD  DDDD     ',
+  '  DDD    DDD     ',
+  ' DDDD    DDD     ',
+  ' DDD      DD     ',
+  'DDD        D     ',
 ];
 
 // 人的画法分两种，别搞混：
@@ -89,10 +103,10 @@ const COUNSELOR = [
 // 头 y≈30–34，髋部 y≈41，腿 y≈42–45。
 const CHARS = {
   // 林越：靠门那把沙发（sofaR 在 x=56，坐垫 x=63–72）。
-  // 髋部要对上轮椅第 10 行的坐面（椅摆 y=33 → 画布 y=43），所以人摆在 y=31。
-  client: { chair: WHEELCHAIR, chairX: 63, chairY: 33, body: LINYUE, bodyX: 63, bodyY: 31 },
+  // 立绘从 11 行加高到 23 行，身体 y 下移 2 —— 否则发顶会顶进墙上的挂画。
+  client: { chair: WHEELCHAIR, chairX: 51, chairY: 34, body: LINYUE, bodyX: 63, bodyY: 33 },
   // 咨询师：左边那把（sofaL 在 x=20，坐垫 x=27–36），朝向画面右
-  counselor: { body: COUNSELOR, bodyX: 26, bodyY: 29 },
+  counselor: { body: COUNSELOR, bodyX: 25, bodyY: 31 },
 };
 
 // 钟针的时段变体。方案 B 的钟是「两点十分」，这里补另外两节要的时间。
