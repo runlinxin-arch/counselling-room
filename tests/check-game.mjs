@@ -544,6 +544,11 @@ if (!E || stories.length === 0) {
           walk(c);
         });
       })(svgA);
+      // 眨眼必须是"零位移"的（只切透明度）。一旦有人改回位移式，
+      // 眼睛行里夹着的发帘/描边像素就会露出来——额头裂缝。
+      if (/@keyframes xl-blink\{[^}]*translate/.test(css)) {
+        fail('眨眼用了位移（translate）——眼睛行里含发帘与描边，位移会在额头裂开缝；应改为只切换透明度');
+      }
       const need = ['xl-breathe', 'xl-blink', 'prefers-reduced-motion', 'step-end'];
       const missCss = need.filter((k) => css.indexOf(k) < 0);
       if (found.person !== 2 || found.eye !== 2) {

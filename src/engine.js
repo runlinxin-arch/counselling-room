@@ -328,67 +328,73 @@
     return -1;
   }
 
+  /** 把一行像素画进某个分组 */
+  function paintRow(line, ox, oy, parent) {
+    let x = 0;
+    while (x < line.length) {
+      const ch = line.charAt(x);
+      if (ch === ' ' || !PAL[ch]) { x++; continue; }
+      let w = 1;
+      while (line.charAt(x + w) === ch) w++;
+      const r = px(ox + x, oy, w, 1, PAL[ch]);
+      if (r) parent.appendChild(r);
+      x += w;
+    }
+  }
+
   /**
    * 画一个人。
    *
    * 结构：
    *   <g class="x-person">   整个人的刚体 —— 呼吸时头和躯干一起搬
-   *     <g>                  除眼睛外的所有像素（头 + 躯干 + 四肢）
-   *     <g class="x-eye">    眼睛那两行，眨眼时在自己带内下移 1 px
+   *     <g>                  全部像素原样画出（含眼睛，作为底）
+   *     <rect class="x-eye">  一块肤色"眼皮"，只盖住两眼之间那一段
    *   </g>
    *
-   * 为什么整个人必须在一个组里：头与躯干一旦分成两个各自动画的组，
-   * 它们的相位迟早会错开 1 px，接缝就会裂开（本项目真的踩到过，
-   * 表现为"头皮分离"）。眼睛是唯一可以单独动的部分，因为它在脸内部，
-   * 位移也只在自身那两行之内。
+   * 两个曾经踩过的坑，决定了现在这个形状：
+   *
+   * 1) 第一版把头和躯干拆成两个各自动画的组、周期还不同 → 相位错开 1px，
+   *    接缝裂开（"头皮分离"）。所以整个人必须是一个刚体。
+   *
+   * 2) 第二版让"眼睛那一行"整行下移 1px 来闭眼。但那一行里**不只有眼睛**，
+   *    还含着发帘下缘（H）与描边（D）：整行一动，发帘原位就露出空隙，
+   *    额头处裂开一条缝。所以现在**位移全部取消**，只在眼睛跨度上盖一块
+   *    肤色的矩形，用透明度切换来表示闭眼。位移为零 → 任何地方都不可能裂。
    */
   function paintPerson(map, ox, oy, parent, who) {
     if (!map) return;
-    const eyeRow = eyeRowOf(map);
-    const eyeTop = eyeRow;
-    const eyeBottom = eyeRow >= 0 ? eyeRow + 1 : -1;
-
     const person = el('g', { class: 'x-person x-' + who });
     const solid = el('g', {});
-    const eyes = el('g', { class: 'x-eye x-' + who });
 
-    map.forEach(function (line, dy) {
-      const isEyeBand = eyeTop >= 0 && (dy === eyeTop || dy === eyeBottom);
-      // 眼睛带从实体层剔除，改画到 .x-eye；其余全部进实体层
-      if (isEyeBand) return;
-      let x = 0;
-      while (x < line.length) {
-        const ch = line.charAt(x);
-        if (ch === ' ' || !PAL[ch]) { x++; continue; }
-        let w = 1;
-        while (line.charAt(x + w) === ch) w++;
-        const r = px(ox + x, oy + dy, w, 1, PAL[ch]);
-        if (r) solid.appendChild(r);
-        x += w;
-      }
-    });
+    // 全部像素原样画进实体层
+    map.forEach(function (line, dy) { paintRow(line, ox, oy + dy, solid); });
+    person.appendChild(solid);
 
-    // 眼睛副本
-    if (eyeTop >= 0) {
-      [eyeTop, eyeBottom].forEach(function (dy) {
-        const line = map[dy];
-        if (!line) return;
-        let x = 0;
-        while (x < line.length) {
-          const ch = line.charAt(x);
-          if (ch === ' ' || !PAL[ch]) { x++; continue; }
-          let w = 1;
-          while (line.charAt(x + w) === ch) w++;
-          const r = px(ox + x, oy + dy, w, 1, PAL[ch]);
-          if (r) eyes.appendChild(r);
-          x += w;
+    // 眼皮：只覆盖眼睛所在的那一段（从最左的瞳到最右的瞳）
+    const eyeRow = eyeRowOf(map);
+    if (eyeRow >= 0) {
+      const row = map[eyeRow];
+      const xs = [];
+      for (let i = 0; i < row.length; i++) if (row.charAt(i) === 'X') xs.push(i);
+      if (xs.length) {
+        const x0 = xs[0];
+        const x1 = xs[xs.length - 1];
+        // 眼皮颜色取这一行里"眼睛旁边"的肤色，保证和周围一致
+        let skin = null;
+        for (let i = 0; i < row.length; i++) {
+          const c = row.charAt(i);
+          if (c !== ' ' && c !== 'X' && (c === 'Z' || c === 'z')) { skin = c; break; }
         }
-      });
+        if (skin && PAL[skin]) {
+          const lid = px(ox + x0, oy + eyeRow, x1 - x0 + 1, 1, PAL[skin]);
+          if (lid) {
+            lid.setAttribute('class', 'x-eye x-' + who);
+            person.appendChild(lid);
+          }
+        }
+      }
     }
 
-    // 顺序：实体 → 眼睛（眼睛在最上，否则被头发盖住）
-    person.appendChild(solid);
-    if (eyeTop >= 0) person.appendChild(eyes);
     parent.appendChild(person);
   }
 
@@ -404,30 +410,34 @@
 
   // 人物待机动效：呼吸起伏 + 眨眼。
   //
-  // ⚠️ 两条硬约束，都是踩过坑之后定下的：
+  // ⚠️ 三条硬约束，每条都是踩过坑之后定下的：
   //
   // 1) **像素画不能用小数位移。**
-  //    SVG 里 translateY(-0.3px) 会把每一格边缘插值成半透明，6 倍放大后
-  //    整张脸发虚——比不做动效更糟。所以位移一律整像素，用 step-end 让
-  //    位置"跳"而不连续滑。
+  //    translateY(-0.3px) 会把每格边缘插值成半透明，6 倍放大后整张脸发虚。
+  //    所以位移一律整像素，用 step-end 让位置"跳"。
   //
-  // 2) **头和躯干必须同一个刚体，绝不能各动各的。**
-  //    第一版把 .x-head 和 .x-body 拆成两个组、给了不同周期（5.5s vs 4s），
-  //    结果两者相位必然错开：实测在 3.25–4.0s 出现 body=0/head=-1，
-  //    在 6.0s 出现 body=-1/head=0 —— 接缝处裂开一条缝，看起来就是"头皮分离"。
-  //    人的头和躯干是连在一起的，动效必须把它们当一个整体搬。
-  //    所以现在只有 .x-person 一个刚体组，眼睛作为它内部的子层单独眨眼。
+  // 2) **头和躯干必须同一个刚体。**
+  //    第一版把 .x-head / .x-body 拆开、给了不同周期（5.5s vs 4s），
+  //    相位错开 1px，接缝裂开（表现为"头皮分离"）。
+  //    人的头颈相连，动效必须把整个人当一个整体搬。
+  //
+  // 3) **眨眼不能移动像素，只能覆盖。**
+  //    第二版让"眼睛那两行"整行下移 1px 来闭眼。但眼睛行 r4 里还含着
+  //    发帘下缘的像素：整行下移后，发帘原位露出来了 —— 额头处裂开 1px 缝。
+  //    现在改成：眼睛行在实体层正常画（作为底），另起一层 .x-eye 把同一行
+  //    再画一遍并盖在上面；眨眼时把这一层藏起来，露出的就是底下那张脸。
+  //    位移为零，所以任何地方都不可能裂。
   const ANIM_RULES =
     '.hs{cursor:pointer}' +
     '.hs .art{animation:hs-b 1.9s ease-in-out infinite}' +
     '.hs:hover .art,.hs:focus-visible .art{animation:none;opacity:1}' +
     '@keyframes hs-b{0%,100%{opacity:1}50%{opacity:.6}}' +
-    // 整个人：呼吸。整像素抬起，抬起时头与躯干一起动，接缝不会裂。
+    // 整个人：呼吸。头与躯干一起动，接缝不会裂。
     '.x-person{animation:xl-breathe 4s step-end infinite;transform-box:fill-box;transform-origin:50% 100%}' +
     '@keyframes xl-breathe{0%,45%{transform:translateY(0)}46%,75%{transform:translateY(-1px)}76%,100%{transform:translateY(0)}}' +
-    // 眨眼：只有眼睛那两行动，幅度也在自身带内，不会露出脸。
-    '.x-eye{animation:xl-blink 6s step-end infinite;transform-box:fill-box}' +
-    '@keyframes xl-blink{0%,92%{transform:translateY(0)}93%,95%{transform:translateY(1px)}96%,97.5%{transform:translateY(0)}98%,99%{transform:translateY(1px)}100%{transform:translateY(0)}}' +
+    // 眨眼：眼睛覆盖层藏起来 = 闭眼。只动透明度，不动位置。
+    '.x-eye{animation:xl-blink 6s step-end infinite}' +
+    '@keyframes xl-blink{0%,92%{opacity:0}93%,95%{opacity:1}96%,97.5%{opacity:0}98%,99%{opacity:1}100%{opacity:0}}' +
     '@media (prefers-reduced-motion:reduce){' +
     '.hs .art,.x-person,.x-eye{animation:none;opacity:1;transform:none}}';
 
