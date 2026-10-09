@@ -209,15 +209,68 @@
   // 场景渲染
   // --------------------------------------------------------------------------
 
-  /** 和方案 B 完全一致：墙、踢脚线、地板 */
+  /**
+   * 背景：墙 / 护墙板 / 踢脚线 / 木地板。
+   *
+   * 这一层是「房间」而不是「家具」的骨架，所以它决定整幅画的**明度层次**：
+   *   亮墙（. ,）→ 中间调护墙板（-）→ 过渡踢脚线（=）→ 中深地板（# ｜ +）
+   * 早先地板和家具落在同一档明度上（都是近黑褐），两者糊成一片，
+   * 所以看起来像把家具"贴"在墙纸上，而不是站在房间里。
+   *
+   * 另一处刻意的选择：**靠窗一侧更亮**。同一面墙从左到右有一个很轻的
+   * 渐变，地板也一样——这是让"光从窗户进来"这件事在背景层就成立，
+   * 而不是只靠最后一层半透明暖色硬叠。
+   */
+  const FLOOR_TOP = 34;        // 踢脚线所在行
+  const WAINSCOT = 26;         // 护墙板分界：往上亮墙、往下略深
+
+  /** 便宜的确定性哈希（0..n-1）。用来做不规则木纹，别用随机——同一帧要可复现。 */
+  function hash2(x, y) {
+    let n = (x * 374761393 + y * 668265263) | 0;
+    n = (n ^ (n >> 13)) * 1274126177 | 0;
+    return Math.abs(n ^ (n >> 16));
+  }
+
   function bgChar(x, y) {
-    if (y <= 33) {
+    if (y < FLOOR_TOP) {
+      // ---- 墙 ----
+      // 靠窗（左侧）一带略亮，向右极轻微压暗：让"光从窗户进来"在背景层就成立
+      const shade = x >= 40;
+      if (y >= WAINSCOT) return shade ? '-' : ',';
+      // 细竖纹壁纸：每 5 px 一道。太密的话 6 倍放大后会跳。
       if (x % 5 === 0) return ',';
-      return y >= 26 ? '-' : '.';
+      return shade ? ',' : '.';
     }
-    if (y === 34) return '=';
-    if (x % 8 === 7) return '|';
-    return y % 4 === 0 ? '+' : '#';
+    if (y === FLOOR_TOP) return '=';   // 踢脚线
+
+    // ---- 木地板 ----
+    // 走过的两次弯路，记下来免得再犯：
+    //   1. 每 4 行横缝 + 每 13 列竖缝 → 读成瓷砖
+    //   2. 纯哈希散点 → 读成地面脏了
+    // 木头真正可读的特征是**方向性**：纹路顺着板长走。所以这里用"横向短纹"
+    // 加"稀疏板端竖缝"，两者错开，才有木地板的读感。
+    const h = hash2(x, y);
+    const course = y - FLOOR_TOP;
+
+    // 板端：稀疏的短竖缝（相邻层错开，且不通长）
+    const seamShift = (course & 1) ? 6 : 0;
+    if ((x + seamShift) % 19 === 0) return '|';
+
+    // 木纹：顺着板长方向的短横道。
+    // 关键是不能用"当前像素的哈希"决定自己画不画——那只会画出单点。
+    // 改为：每 6 px 放一个**锚点**，由锚点的哈希决定这一道的起点与长度。
+    const anchor = x - (((x % 11) + 11) % 11);
+    const ah = hash2(anchor, y);
+    if (ah % 9 === 0) {
+      const start = anchor + (ah % 3);
+      const len = 2 + (ah % 4);          // 2–5 px
+      if (x >= start && x < start + len) return '+';
+    }
+
+    // 极稀疏的木节，打破均匀（只要几个）
+    if (h % 211 === 0) return '|';
+
+    return '#';
   }
 
   const NS = 'http://www.w3.org/2000/svg';
@@ -350,7 +403,7 @@
     // --- 5) 暖光与四角压暗（整体叠一层）---
     const w = X.WARMTH[warmth] || X.WARMTH[1];
     svg.appendChild(el('rect', { x: 0, y: 0, width: GW, height: GH, fill: '#ffd9a0', opacity: w.glow }));
-    svg.appendChild(el('rect', { x: 0, y: 0, width: GW, height: GH, fill: '#06070a', opacity: w.vignette * 0.55 }));
+    svg.appendChild(el('rect', { x: 0, y: 0, width: GW, height: GH, fill: '#06070a', opacity: w.vignette * 0.38 }));
 
     // --- 6) 可点物件的热区。放最上层，保证不被人物挡住。---
     HOTSPOTS.forEach(function (hs) {
