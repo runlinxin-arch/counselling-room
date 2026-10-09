@@ -519,6 +519,37 @@ if (!E || stories.length === 0) {
   try {
     full = draw({ act: 1, warmth: 1, withPeople: true, clickable: ['clock', 'tissue', 'sofa', 'referral', 'wheelchair'] });
     ok('带全部热区也能画出来');
+
+    // 待机动效：人物必须被拆成 头/躯干/眼睛 三层，且 CSS 里有关键帧与
+    // prefers-reduced-motion 降级。否则哪天重构把层拆没了，静态检查发现不了
+    // ——画面照样出得来，只是不动了。
+    {
+      E.state.story = Object.values(X.stories)[0];
+      const svgA = E.renderScene({ act: 1, warmth: 1, withPeople: true, clickable: [] });
+      let css = '';
+      const found = { head: 0, body: 0, eye: 0 };
+      (function walk(n) {
+        (n.childNodes || []).forEach(function (c) {
+          if (c.nodeName === 'style') css += c.textContent || '';
+          const cls = c.attributes && c.attributes.class;
+          if (cls) {
+            if (cls.indexOf('x-head') >= 0) found.head++;
+            if (cls.indexOf('x-body') >= 0) found.body++;
+            if (cls.indexOf('x-eye') >= 0) found.eye++;
+          }
+          walk(c);
+        });
+      })(svgA);
+      const need = ['xl-breathe', 'xl-sway', 'xl-blink', 'prefers-reduced-motion', 'step-end'];
+      const missCss = need.filter((k) => css.indexOf(k) < 0);
+      if (found.head !== 2 || found.body !== 2 || found.eye !== 2) {
+        fail('人物待机动效分层缺失：head=' + found.head + ' body=' + found.body + ' eye=' + found.eye + '（应为各 2：来访者+咨询师）');
+      } else if (missCss.length) {
+        fail('动效 CSS 缺关键规则：' + missCss.join(' '));
+      } else {
+        ok('人物待机动效：头/躯干/眼三层齐备，含 reduced-motion 降级');
+      }
+    }
   } catch (e) {
     fail('带热区渲染抛错：' + e.message);
   }
