@@ -367,7 +367,7 @@
 
     const cur = E.save().current;
     if (cur && cur.story) {
-      const story = cur.story === 'sci' ? X.storySci : null;
+      const story = (X.stories || {})[cur.story] || null;
       const meta = story ? E.sectionMeta(story, cur.line) : null;
       const resume = make('button', {
         class: 'resume', type: 'button',
@@ -466,7 +466,7 @@
       card.appendChild(make('span', { class: 'badge', text: badgeText }));
 
       if (ready) {
-        card.addEventListener('click', function () { startStory(X.storySci); });
+        card.addEventListener('click', function () { startStory((X.stories || {})[slot.id]); });
       } else {
         // 剪影：没写的线用一条人的形状占位，不假装能玩
         card.appendChild(make('span', {
@@ -520,7 +520,7 @@
     const act = state.act;
     // 既有内容、又被这一段允许的，才是热的
     return allowed.filter(function (id) {
-      if (id === 'wheelchair') return true;
+      if (id === 'mobility') return true;
       const item = X.roomItems[id];
       return item && item.acts && item.acts[act];
     });
@@ -544,17 +544,12 @@
 
   function openRoomItem(id) {
     E.recordItem(id);
-    if (id === 'wheelchair') {
-      showPaper({
-        kind: 'science',
-        title: '他的轮椅',
-        lines: [
-          '轮椅停在沙发边上，离他很近，但不是"停好"的那种近——轮子还朝着门。',
-          '一个人坐着的时候，椅子朝向哪边，比他说什么更早说明他准备待多久。',
-          '第 1 节，他早到十分钟。椅子朝着门。',
-        ],
-        button: '继续聊',
-      });
+    if (id === 'mobility') {
+      // 文案来自故事数据：故事线一是轮椅，故事线二是双拐。
+      const m = (state.story && state.story.mobility) || null;
+      if (m) {
+        showPaper({ kind: 'science', title: m.title, lines: m.lines, button: '继续聊' });
+      }
       return;
     }
     const item = X.roomItems[id];
@@ -946,20 +941,19 @@
     panel.appendChild(make('div', { id: 'who' }));
     const h = make('div', {
       style: 'font-size:26px;letter-spacing:.06em;margin:0 0 14px',
-      text: '故事线一 · 完',
+      text: (state.story && state.story.end && state.story.end.heading) || '本节 · 完',
     });
     panel.appendChild(h);
 
     const text = make('div', {
       style: 'font-size:18px;line-height:1.95;color:#b9b5ac;max-width:38em',
-      text: '他把「等我能走了」往后挪了一格，腾出一小块地方，放了一件今天就能做的小事。' +
-        '这就是今天全部的成绩——不是痊愈，是带着工具继续生活。',
+      text: (state.story && state.story.end && state.story.end.closing) || '',
     });
     panel.appendChild(text);
 
     const row = make('div', { style: 'display:flex;gap:10px;margin-top:24px;flex-wrap:wrap' });
     const again = make('button', { class: 'btn primary', type: 'button', text: '再来一遍' });
-    again.addEventListener('click', function () { startStory(X.storySci); });
+    again.addEventListener('click', function () { startStory(state.story); });
     const home = make('button', { class: 'btn', type: 'button', text: '回标题页' });
     home.addEventListener('click', function () { state.screen = 'title'; render(); });
     const help = make('button', { class: 'btn', type: 'button', text: '求助资源' });

@@ -17,7 +17,7 @@
     { id: 'referral', sprite: 'referral', x: 43, y: 34, label: '茶几上的转介单' },
     { id: 'tissue',   sprite: 'tissue',   x: 49, y: 35, label: '茶几上的纸巾盒' },
     { id: 'sofa',     sprite: 'sofaR',    x: 56, y: 26, label: '两把沙发' },
-    { id: 'wheelchair', sprite: 'chair',  x: 63, y: 33, label: '他的轮椅' },
+    { id: 'mobility',  sprite: 'chair',  x: 63, y: 33, label: '他手边的东西' },
   ];
 
   // --------------------------------------------------------------------------
@@ -76,6 +76,20 @@
   function sectionOf(story, id) { return story.sections.find((s) => s.id === id); }
 
   /**
+   * 按 id 取故事对象。
+   * 原先这里写死成 'sci'，加第二条线就会静默失败（读档读不回来）。
+   * 现在从一份注册表里查，加线只要往 XLZX.stories 里放一份。
+   */
+  function storyById(id) {
+    return (X.stories || {})[id] || null;
+  }
+
+  // 故事注册表。加一条线只要往这里加一项，UI 不需要改。
+  X.stories = X.stories || {};
+  if (X.storySci) X.stories[X.storySci.id] = X.storySci;
+  if (X.storyAmp) X.stories[X.storyAmp.id] = X.storyAmp;
+
+  /**
    * 解析跳转目标。
    * 规则（和 docs/design 里写的一致）：
    *   'n2'      → 本节的 n2
@@ -123,7 +137,7 @@
 
   function restore(snap) {
     if (!snap || !snap.story) return false;
-    const story = snap.story === 'sci' ? X.storySci : null;
+    const story = storyById(snap.story);
     if (!story) return false;
     state.story = story;
     state.line = snap.line;
@@ -339,6 +353,9 @@
     const svg = el('svg', { id: 'scene', viewBox: '0 0 ' + S.size.w + ' ' + S.size.h });
     const GW = S.size.w;
     const GH = S.size.h;
+    // 随身物件与立绘由故事数据决定（故事线一是轮椅，二是双拐）。
+    // 必须提到函数级：下面画人和画热区两处都要用。
+    const art = (state.story && state.story.clientArt) || null;
 
     // --- 0) 动画规则写在 SVG 内部，用 class 选择器，别被页面的 CSS 覆盖 ---
     const style = el('style', {});
@@ -378,9 +395,16 @@
     });
 
     if (withPeople) {
-      const c = X.CHARS.client;
-      paint(X.WHEELCHAIR, c.chairX, c.chairY, svg);
-      paint(c.body, c.bodyX, c.bodyY, svg);
+      // 随身物件与立绘由故事数据决定：故事线一是轮椅，故事线二是双拐。
+      // 写死的话，第二条线会画出别人的轮椅。
+      if (art) {
+        paint(X[art.prop], art.propX, art.propY, svg);
+        paint(X[art.body], art.bodyX, art.bodyY, svg);
+      } else {
+        const c = X.CHARS.client;
+        paint(X.WHEELCHAIR, c.chairX, c.chairY, svg);
+        paint(c.body, c.bodyX, c.bodyY, svg);
+      }
       const k = X.CHARS.counselor;
       paint(k.body, k.bodyX, k.bodyY, svg);
     }
@@ -408,10 +432,10 @@
     // --- 6) 可点物件的热区。放最上层，保证不被人物挡住。---
     HOTSPOTS.forEach(function (hs) {
       if (clickable.indexOf(hs.id) < 0) return;
-      if (hs.id === 'wheelchair' && !withPeople) return;
+      if (hs.id === 'mobility' && !withPeople) return;
 
       let sprite;
-      if (hs.id === 'wheelchair') sprite = X.WHEELCHAIR;
+      if (hs.id === 'mobility') sprite = X[(art && art.prop) || 'WHEELCHAIR'];
       else if (hs.id === 'referral') sprite = X.REFERRAL;
       else if (hs.id === 'tissue') sprite = X.TISSUE || S.sprites.tissue;
       else if (hs.id === 'clock') sprite = X.CLOCK_VARIANTS['c' + act] || S.sprites.clock;
@@ -420,9 +444,10 @@
 
       const b = boundsOf(sprite, hs.x, hs.y);
       const g = el('g', { class: 'hs', tabindex: '0', role: 'button' });
-      const art = el('g', { class: 'art' });
-      paint(sprite, hs.x, hs.y, art);
-      g.appendChild(art);
+      // 名字别叫 art：外层那个 art 是故事数据，这里会把它遮住（TDZ 报错）。
+      const artG = el('g', { class: 'art' });
+      paint(sprite, hs.x, hs.y, artG);
+      g.appendChild(artG);
       const t = el('title', {});
       t.textContent = hs.label;
       g.appendChild(t);

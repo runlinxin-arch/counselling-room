@@ -147,6 +147,23 @@ for (const [needle, what] of [
 }
 if (!missing) ok('虚构声明 + 免责声明齐全');
 
+
+// ---- 玩家可见散文（提前算一份，供禁用词校验使用）----
+// 原则：只查玩家真正会读到的字段，不查注释、清单、参考文献。
+function extraProseOf(src) {
+  const out = [];
+  for (const raw of src.split('\n')) {
+    const line = raw.trim();
+    if (line.startsWith('//')) continue;
+    if (!/^(text|lines|label|lead|closing|footer|prompt|hint|title)\s*:/.test(line)) continue;
+    if (/依据|出处|et al|\(\d{4}\)/.test(line)) continue;
+    out.push(line);
+  }
+  return out.join('\n');
+}
+const earlyProse = ['src/story.js', 'src/story-amp.js']
+  .map((f) => extraProseOf(readFileSync(f, 'utf8'))).join('\n');
+
 // 禁用词
 const BANNED = [
   ['抑郁病', '术语应为「抑郁症 / 抑郁障碍」'],
@@ -159,27 +176,59 @@ const BANNED = [
   ['我诊断', '咨询师不下诊断'],
   ['悲伤五阶段是', '不能把五阶段当事实'],
 ];
+// 只在玩家看得见的散文里查。扫整份 HTML 会把这份清单自己也扫进去，
+// 于是每跑必报——这个检查之前一直处于"永远失败"的假状态。
+const bannedHits = [];
 for (const [needle, why] of BANNED) {
-  if (html.includes(needle)) fail(`出现禁用词「${needle}」——${why}`);
+  if (earlyProse.includes(needle)) bannedHits.push(needle + '（' + why + '）');
 }
-ok(`${BANNED.length} 个禁用词都没出现`);
+if (bannedHits.length) fail('出现禁用词：' + bannedHits.join('；'));
+else ok(`${BANNED.length} 个禁用词都没出现`);
 
-// 数字白名单：剧情里只允许这些数字（出处见 docs/design 第七节那张表）
+// 数字白名单：剧情里只允许这些数字（出处见 docs/design 第七节那张表）。
+//
+// 只扫**玩家看得见的散文**，不扫注释与参考文献年份：
+// 早先整份源码一起扫，2009/2016 这类引文年份和作者名里的数字全被算成
+// "剧情数字"，刷出一长串，真出问题时反而淹没在里面。
 const ALLOWED = new Set([
   '106', '60', '39', '5', '7', '9', '14', '16', '17', '18', '22', '26', '28',
   '66', '13', '10', '11', '24', '32', '50', '90', '120', '12356', '82951332', '010',
-  '0', '1', '2', '3', '4', '6', '8', '12', '15', '20',
+  '0', '1', '2', '3', '4', '6', '8', '12', '15', '20', '41',
+  // 故事线二用到的手册第 16 章数据（逐条已核）
+  '23.5', '2.9', '17.6', '19.1', '12.9', '32.7', '29.9', '12.6', '37.5', '35.5', '65',
 ]);
-const storySrc = readFileSync('src/story.js', 'utf8');
-const stranger = [...new Set([...storySrc.matchAll(/\d+/g)].map((m) => m[0]))]
-  .filter((n) => !ALLOWED.has(n));
+
+/** 收集玩家可见的散文（跳过注释与出处行） */
+function proseOf(src) {
+  const out = [];
+  for (const raw of src.split('\n')) {
+    const line = raw.trim();
+    if (line.startsWith('//')) continue;
+    if (!/^(text|lines|label|lead|closing|footer|prompt|hint|title)\s*:/.test(line)) continue;
+    // 出处行不计入：里面必然带年份与 et al
+    if (/依据|出处|et al|\(\d{4}\)/.test(line)) continue;
+    out.push(line);
+  }
+  return out.join('\n');
+}
+const STORY_FILES = ['src/story.js', 'src/story-amp.js'];
+const storySrc = STORY_FILES.map((f) => readFileSync(f, 'utf8')).join('\n');
+const prose = STORY_FILES.map((f) => proseOf(readFileSync(f, 'utf8'))).join('\n');
+
+// 先摘掉时刻（如 2:40）：那是记录时间，不是需要出处的统计数字
+const proseNoTime = prose.replace(/\d{1,2}:\d{2}/g, ' ');
+const nums = [...new Set([...proseNoTime.matchAll(/\d+(?:\.\d+)?/g)].map((m) => m[0]))];
+const stranger = nums.filter((n) => {
+  if (ALLOWED.has(n)) return false;
+  if (/^(19|20)\d{2}$/.test(n)) return false;   // 年份：出处，不是剧情数字
+  return true;
+});
 if (stranger.length) {
-  note(`剧情里出现白名单外的数字：${stranger.join(' ')}`);
-  note('  逐个确认在剧本文件第三节有出处；没有出处的就是 bug');
+  note("剧情里出现白名单外的数字：" + stranger.join(' '));
+  note("  逐个确认在剧本文件里有出处；没有出处的就是 bug");
 } else {
   ok('剧情里所有数字都在白名单内');
 }
-
 if (/自杀[^。]{0,20}\d+(\.\d+)?\s*%/.test(storySrc)) fail('写了自杀率数字——书里没给，不许编');
 else ok('没有编造自杀率数字');
 
@@ -231,19 +280,23 @@ try {
   sandbox.window.XLZX.sprites = spritesJson;
   loadInto('src/sprites.js');
   loadInto('src/story.js');
+  loadInto('src/story-amp.js');
   loadInto('src/engine.js');
-  ok('sprites / story / engine 能在 vm 里加载');
+  ok('sprites / 两条故事线 / engine 能在 vm 里加载');
 } catch (e) {
   fail('加载源码失败：' + e.message);
 }
 
 const X = sandbox.window.XLZX;
 const E = X.engine;
-const story = X.storySci;
+// 校验**所有**已注册的故事线（X.stories 由 engine.js 建）。
+// 只有一个 storySci 时，加进来的新线会完全绕过自检。
+const stories = Object.values(X.stories || {});
 
-if (!E || !story) {
-  fail('engine 或 story 没挂上');
+if (!E || stories.length === 0) {
+  fail('engine 或故事没挂上');
 } else {
+  for (const story of stories) {
   // ---- 节点图 ----
   const ids = new Set();
   for (const s of story.sections) for (const k of Object.keys(s.nodes)) ids.add(s.id + '/' + k);
@@ -327,16 +380,54 @@ if (!E || !story) {
   if (!deadEnds) ok(`逐个走完全部 ${totalOpts} 个选项，都能到终章`);
 
   // ---- 危机分支必须写死在数据里，且必然弹资源卡 ----
-  const cbCard = story.sections[0].nodes.cbCard;
-  if (!cbCard || cbCard.type !== 'card' || cbCard.kind !== 'resource') {
-    fail('危机关怀分支没有接到写死的资源卡');
+  // 不写死节点名：在整条线里找带 effect:'crisis' 的节点，
+  // 再确认它能走到一张 kind:'resource' 的卡。这样加线不用改测试。
+  const allNodes = {};
+  for (const sec of story.sections) for (const [k, n] of Object.entries(sec.nodes)) allNodes[sec.id + '/' + k] = n;
+
+  const crisisNodes = Object.entries(allNodes).filter(([, n]) => n.effect && n.effect.split('+').map((x) => x.trim()).includes('crisis'));
+  if (crisisNodes.length === 0) {
+    fail('找不到写死的危机分支节点（应有一个节点标 effect: crisis）');
   } else {
-    ok('危机分支写死在数据里，且必然弹出资源卡');
+    let toResource = 0;
+    for (const [id] of crisisNodes) {
+      const seen = reach(id);
+      for (const t of seen) {
+        const n = allNodes[t] || (story.endingNodes || {})[(t.split('/')[1] || '')];
+        if (n && n.type === 'card' && n.kind === 'resource') { toResource++; break; }
+      }
+    }
+    if (toResource !== crisisNodes.length) {
+      fail('危机关怀分支没有接到写死的资源卡');
+    } else {
+      ok('危机分支写死在数据里，且必然弹出资源卡');
+    }
   }
-  const c4 = story.sections[0].nodes.c4;
-  const aOpt = c4 && c4.options.find((o) => o.key === 'A');
-  if (!aOpt || E.resolve(story, 's1/c4', aOpt.next) !== 's1/cr1') fail('危机筛查「问」没通向后续');
-  else ok('危机筛查「问」通向关怀分支');
+  // 筛查点也自动找：一个 choice，其中一个选项（通常标 flag: screened / *Screened）
+  // 走不到危机分支以外的正常路径，就说明筛查没接上。
+  {
+    let screenOk = false, found = false;
+    for (const sec of story.sections) {
+      for (const [k, n] of Object.entries(sec.nodes)) {
+        if (n.type !== 'choice') continue;
+        const ask = n.options.find((o) => /screen/i.test(o.flag || '') && !/skip/i.test(o.flag || ''));
+        if (!ask) continue;
+        found = true;
+        const dest = E.resolve(story, sec.id + '/' + k, ask.next);
+        // 「问」这一支必须能走到一张资源卡
+        let hasRes = false;
+        for (const t of reach(dest)) {
+          const nn = allNodes[t] || (story.endingNodes || {})[(t.split('/')[1] || '')];
+          if (nn && nn.type === 'card' && nn.kind === 'resource') { hasRes = true; break; }
+        }
+        if (hasRes) screenOk = true;
+      }
+    }
+    if (!found) fail('找不到危机筛查选择点（选项 flag 里应含 screen）');
+    else if (!screenOk) fail('危机筛查「问」没通向后续');
+    else ok('危机筛查「问」通向关怀分支');
+  }
+
 
   // ---- 房间物件 ----
   let itemBad = 0;
@@ -347,7 +438,12 @@ if (!E || !story) {
   }
   if (!itemBad) ok('房间里 4 样可点物件都有第 1 节内容');
   if (!X.storySlots || X.storySlots.length !== 3) fail('storySlots 应有 3 条线');
-  else ok('选线页有 3 条线（1 条可玩 + 2 条剪影）');
+  else {
+    const ready = X.storySlots.filter((x) => x.ready).length;
+    const everyReadyHasStory = X.storySlots.every((x) => !x.ready || (X.stories || {})[x.id]);
+    if (!everyReadyHasStory) fail('有 storySlots 标了 ready，但 X.stories 里没有对应故事');
+    else ok(`选线页有 3 条线（${ready} 条可玩 + ${3 - ready} 条剪影）`);
+  }
 
   // ---- 存档 ----
   const empty = E.emptySave();
@@ -399,6 +495,7 @@ if (!E || !story) {
   } catch (e) {
     fail('状态机跑起来抛错：' + e.message + '  @' + String(e.stack || '').split('\n')[1]);
   }
+  }   // for (const story of stories)
 
   // =========================================================================
   head('E · 真跑一遍渲染');
@@ -435,7 +532,10 @@ if (!E || !story) {
   // 热区必须拿得到像素图，否则点上去了没反应
   let hsBad = 0;
   for (const hs of E.HOTSPOTS) {
-    const has = hs.id === 'wheelchair' ? !!X.WHEELCHAIR
+    // mobility 的像素图跟着故事走：故事线一是轮椅，二是双拐。
+    // 两条线各自的 clientArt.prop 都必须真的存在。
+    const has = hs.id === 'mobility'
+      ? Object.values(X.stories || {}).every((st) => !st.clientArt || !!X[st.clientArt.prop])
       : hs.id === 'referral' ? !!X.REFERRAL
         : hs.id === 'tissue' ? !!(X.TISSUE || X.sprites.sprites.tissue)
           : hs.id === 'clock' ? !!X.sprites.sprites.clock

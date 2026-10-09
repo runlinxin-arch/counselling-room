@@ -35,6 +35,58 @@ const PAL_EXT = {
 // 关键：**大轮要有浅色轮辋（s）**。全用深色框（D）的话，轮子会糊进沙发和地板的暗部，
 // 整把椅子就只剩一个悬空的小前轮，看起来像画错了。
 // 轮辐之间留空，让墙和地板透过轮子——读起来才是个"轮"。
+// 周航（故事线二）：41 岁，右小腿截肢。
+// 复用林越的骨架，但换配色与发型，避免两个人看起来是同一个。
+// 外套用土黄（Q/q），工装裤用深灰蓝（E/e 之外的 N/n 是卡其，这里用 g 系）。
+const ZHOUHANG = [
+  '   DYYYYYD  ',
+  '  DYYYYYYYD ',
+  '  DHHHHHHHD ',
+  '  DHZZZZZHD ',
+  '  DZXZZXZZD ',
+  '  DZZZZZZZD ',
+  '   DZZZZZD  ',
+  '   DzzzzD   ',
+  '  DQQQQQQD  ',
+  ' DQQQQQQQQD ',
+  ' DQQQQQQQQD ',
+  ' DQQQQQQQQD ',
+  ' DQqQQQQqQD ',
+  ' DQQQQQQQQD ',
+  ' DQQQQQQQQD ',
+  ' DNNNNNNNND ',
+  ' DNNNNNNNND ',
+  ' DNNNDDNNND ',
+  ' DNNNDDNNND ',
+  ' DNNNDDNNND ',
+  ' DnnnDDnnnD ',
+  '  DDD  DDD  ',
+];
+
+const CRUTCH = [
+  ' dddd  ',
+  'dddddd ',
+  ' dddd  ',
+  '  dd   ',
+  '  dd   ',
+  '  dd   ',
+  '  dd   ',
+  '  dd   ',
+  '  dd   ',
+  '  dd   ',
+  '  DD   ',
+  '  dd   ',
+  '  DD   ',
+  '  dd   ',
+  '  dd   ',
+  '  DD   ',
+  '  dd   ',
+  '  dd   ',
+  '  dd   ',
+  '  XX   ',
+  '  XX   ',
+];
+
 const WHEELCHAIR = [
   '  sSS         ',
   ' SsssS        ',
@@ -208,6 +260,7 @@ if (typeof document !== 'undefined') {
 
 XLZX.PAL_EXT = PAL_EXT;
 XLZX.WHEELCHAIR = WHEELCHAIR;
+XLZX.CRUTCH = CRUTCH;
 XLZX.REFERRAL = REFERRAL;
 XLZX.TISSUE = TISSUE;
 XLZX.LINYUE = LINYUE;

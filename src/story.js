@@ -772,8 +772,27 @@ XLZX.storySci = {
     { id: 's3', title: '第 3 节', subtitle: '「等我能走了」', nodes: SCI_S3 },
   ],
   endingNodes: SCI_END,
+  // 来访者随身的东西。写死成轮椅的话，第二条线就会串。
+  clientArt: {
+    prop: 'WHEELCHAIR', propX: 51, propY: 34,
+    body: 'LINYUE', bodyX: 63, bodyY: 33,
+  },
+  mobility: {
+    title: '他的轮椅',
+    lines: [
+      '轮椅停在沙发边上，离他很近，但不是「停好」的那种近——轮子还朝着门。',
+      '一个人坐着的时候，椅子朝向哪边，比他说什么更早说明他准备待多久。',
+      '第 1 节，他早到十分钟。椅子朝着门。',
+    ],
+  },
   start: 's1/n1',
   ending: 'end/1',
+  // 结束页文案。原先写死在 ui.js 里，加第二条线就串了，已挪到数据里。
+  end: {
+    heading: '故事线一 · 完',
+    closing: '他把「等我能走了」往后挪了一格，腾出一小块地方，放了一件今天就能做的小事。'
+      + '这就是今天全部的成绩——不是痊愈，是带着工具继续生活。',
+  },
 };
 
 XLZX.roomItems = ROOM_ITEMS;
@@ -787,9 +806,9 @@ XLZX.storySlots = [
     who: '林越 · 26 岁 · T6 完全性脊髓损伤 · 伤后 14 个月',
   },
   {
-    id: 'amp', numeral: '二', title: '截肢', ready: false,
+    id: 'amp', numeral: '二', title: '截肢', ready: true,
     lead: '身体意象、幻肢痛，和出院之后那一段情绪回落',
-    who: '——',
+    who: '周航 · 41 岁 · 右小腿截肢 · 伤后 5 个月',
   },
   {
     id: 'pain', numeral: '三', title: '慢性疼痛', ready: false,

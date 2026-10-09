@@ -11,7 +11,7 @@ const read = (p) => readFileSync(p, 'utf8');
 //   2. story.js    内容数据（自己会 var XLZX = window.XLZX || {}）
 //   3. engine.js   状态机 + 场景渲染
 //   4. ui.js       界面，最后 boot
-const JS_FILES = ['src/sprites.js', 'src/story.js', 'src/engine.js', 'src/ui.js'];
+const JS_FILES = ['src/sprites.js', 'src/story.js', 'src/story-amp.js', 'src/engine.js', 'src/ui.js'];
 
 const shell = read('src/shell.html');
 const css = read('src/styles.css');
