@@ -520,34 +520,40 @@ if (!E || stories.length === 0) {
     full = draw({ act: 1, warmth: 1, withPeople: true, clickable: ['clock', 'tissue', 'sofa', 'referral', 'wheelchair'] });
     ok('带全部热区也能画出来');
 
-    // 待机动效：人物必须被拆成 头/躯干/眼睛 三层，且 CSS 里有关键帧与
-    // prefers-reduced-motion 降级。否则哪天重构把层拆没了，静态检查发现不了
-    // ——画面照样出得来，只是不动了。
+    // 待机动效：每个人物必须是一个 .x-person 刚体组（内含 .x-eye 子层），
+    // 且 CSS 里有关键帧与 prefers-reduced-motion 降级。
+    //
+    // 特别要盯住"整个人只有一个组"这一点：曾经把头和躯干拆成两个各自动画的组，
+    // 相位错开 1 px，接缝裂开（表现为头皮分离）。所以这里断言
+    // .x-person 必须是 2 个（来访者+咨询师），而不存在独立的 .x-head/.x-body。
     {
       E.state.story = Object.values(X.stories)[0];
       const svgA = E.renderScene({ act: 1, warmth: 1, withPeople: true, clickable: [] });
       let css = '';
-      const found = { head: 0, body: 0, eye: 0 };
+      const found = { person: 0, eye: 0, head: 0, body: 0 };
       (function walk(n) {
         (n.childNodes || []).forEach(function (c) {
           if (c.nodeName === 'style') css += c.textContent || '';
           const cls = c.attributes && c.attributes.class;
           if (cls) {
+            if (cls.indexOf('x-person') >= 0) found.person++;
+            if (cls.indexOf('x-eye') >= 0) found.eye++;
             if (cls.indexOf('x-head') >= 0) found.head++;
             if (cls.indexOf('x-body') >= 0) found.body++;
-            if (cls.indexOf('x-eye') >= 0) found.eye++;
           }
           walk(c);
         });
       })(svgA);
-      const need = ['xl-breathe', 'xl-sway', 'xl-blink', 'prefers-reduced-motion', 'step-end'];
+      const need = ['xl-breathe', 'xl-blink', 'prefers-reduced-motion', 'step-end'];
       const missCss = need.filter((k) => css.indexOf(k) < 0);
-      if (found.head !== 2 || found.body !== 2 || found.eye !== 2) {
-        fail('人物待机动效分层缺失：head=' + found.head + ' body=' + found.body + ' eye=' + found.eye + '（应为各 2：来访者+咨询师）');
+      if (found.person !== 2 || found.eye !== 2) {
+        fail('人物待机动效分层缺失：person=' + found.person + ' eye=' + found.eye + '（应为各 2：来访者+咨询师）');
+      } else if (found.head || found.body) {
+        fail('出现了独立的 .x-head/.x-body —— 头和躯干各动各的会错位裂开（头皮分离），必须合成 .x-person');
       } else if (missCss.length) {
         fail('动效 CSS 缺关键规则：' + missCss.join(' '));
       } else {
-        ok('人物待机动效：头/躯干/眼三层齐备，含 reduced-motion 降级');
+        ok('人物待机动效：整个人一个刚体组 + 眼睛子层，含 reduced-motion 降级');
       }
     }
   } catch (e) {

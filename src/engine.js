@@ -329,39 +329,33 @@
   }
 
   /**
-   * 画一个人，并把他拆成三层以便做待机动效：
-   *   .x-head  头（含头发）——轻微微动
-   *   .x-body  躯干与四肢——呼吸起伏
-   *   .x-eye   眼睛那两行——眨眼时整体下移 1 px
+   * 画一个人。
    *
-   * 为什么要拆层：动效只作用在某一层上，层与层之间的位移都是整像素，
-   * 所以放大 6 倍后不会出现半透明的糊边。见 ANIM_RULES 的注释。
+   * 结构：
+   *   <g class="x-person">   整个人的刚体 —— 呼吸时头和躯干一起搬
+   *     <g>                  除眼睛外的所有像素（头 + 躯干 + 四肢）
+   *     <g class="x-eye">    眼睛那两行，眨眼时在自己带内下移 1 px
+   *   </g>
    *
-   * @param {string[]} map 像素图
-   * @param {number} ox,oy  画布坐标
-   * @param {Element} parent
-   * @param {string} who  'client' | 'counselor'（只用于 class 命名）
+   * 为什么整个人必须在一个组里：头与躯干一旦分成两个各自动画的组，
+   * 它们的相位迟早会错开 1 px，接缝就会裂开（本项目真的踩到过，
+   * 表现为"头皮分离"）。眼睛是唯一可以单独动的部分，因为它在脸内部，
+   * 位移也只在自身那两行之内。
    */
   function paintPerson(map, ox, oy, parent, who) {
     if (!map) return;
     const eyeRow = eyeRowOf(map);
-    // 眼睛那一行用"原行 + 下一行"做一份副本，眨眼时整体下移 1 px，
-    // 看起来就是眼皮压下来把眼睛盖住——比单纯把眼睛隐藏更像素化。
-    const eyeTop = eyeRow >= 0 ? eyeRow : -1;
-    const eyeBottom = eyeTop >= 0 ? eyeTop + 1 : -1;
+    const eyeTop = eyeRow;
+    const eyeBottom = eyeRow >= 0 ? eyeRow + 1 : -1;
 
-    const head = el('g', { class: 'x-head x-' + who });
-    const body = el('g', { class: 'x-body x-' + who });
+    const person = el('g', { class: 'x-person x-' + who });
+    const solid = el('g', {});
     const eyes = el('g', { class: 'x-eye x-' + who });
 
     map.forEach(function (line, dy) {
-      const isHead = eyeTop >= 0 && dy <= eyeBottom;
-      const isEyeBand = dy === eyeTop || dy === eyeBottom;
-      const target = isHead ? head : body;
-
-      // 眼睛带：从 head/body 图层里剔除，改画到 eyes 图层
+      const isEyeBand = eyeTop >= 0 && (dy === eyeTop || dy === eyeBottom);
+      // 眼睛带从实体层剔除，改画到 .x-eye；其余全部进实体层
       if (isEyeBand) return;
-
       let x = 0;
       while (x < line.length) {
         const ch = line.charAt(x);
@@ -369,15 +363,16 @@
         let w = 1;
         while (line.charAt(x + w) === ch) w++;
         const r = px(ox + x, oy + dy, w, 1, PAL[ch]);
-        if (r) target.appendChild(r);
+        if (r) solid.appendChild(r);
         x += w;
       }
     });
 
-    // 眼睛副本（覆盖那两行）
+    // 眼睛副本
     if (eyeTop >= 0) {
       [eyeTop, eyeBottom].forEach(function (dy) {
-        const line = map[dy] || '';
+        const line = map[dy];
+        if (!line) return;
         let x = 0;
         while (x < line.length) {
           const ch = line.charAt(x);
@@ -391,10 +386,10 @@
       });
     }
 
-    // 顺序：躯干 → 头 → 眼睛（眼睛必须在最上，否则被头发盖住）
-    parent.appendChild(body);
-    parent.appendChild(head);
-    if (eyeTop >= 0) parent.appendChild(eyes);
+    // 顺序：实体 → 眼睛（眼睛在最上，否则被头发盖住）
+    person.appendChild(solid);
+    if (eyeTop >= 0) person.appendChild(eyes);
+    parent.appendChild(person);
   }
 
   /** 物件在画布上的外框，给热区用 */
@@ -407,32 +402,34 @@
     };
   }
 
-  // 人物待机动效：呼吸（躯干起伏）+ 头部微动 + 眨眼。
+  // 人物待机动效：呼吸起伏 + 眨眼。
   //
-  // ⚠️ 一条硬约束：**像素画不能用小数位移。**
-  // 在 SVG 里 translateY(-0.3px) 会把每一格的边缘糊成两个半透明像素，
-  // 6 倍放大后整张脸会发虚——这比不做动效更糟。
-  // 所以这里的位移一律是整像素：用 step-end 让位移"跳"，而不是连续滑。
-  // （浏览器在整数位移 + crispEdges 下会吸附，不会插值出灰边。）
+  // ⚠️ 两条硬约束，都是踩过坑之后定下的：
   //
-  // transform-box:fill-box 让 transform-origin 相对每个分组自己的外框算，
-  // 这样头、躯干可以各有各的轴心。
+  // 1) **像素画不能用小数位移。**
+  //    SVG 里 translateY(-0.3px) 会把每一格边缘插值成半透明，6 倍放大后
+  //    整张脸发虚——比不做动效更糟。所以位移一律整像素，用 step-end 让
+  //    位置"跳"而不连续滑。
+  //
+  // 2) **头和躯干必须同一个刚体，绝不能各动各的。**
+  //    第一版把 .x-head 和 .x-body 拆成两个组、给了不同周期（5.5s vs 4s），
+  //    结果两者相位必然错开：实测在 3.25–4.0s 出现 body=0/head=-1，
+  //    在 6.0s 出现 body=-1/head=0 —— 接缝处裂开一条缝，看起来就是"头皮分离"。
+  //    人的头和躯干是连在一起的，动效必须把它们当一个整体搬。
+  //    所以现在只有 .x-person 一个刚体组，眼睛作为它内部的子层单独眨眼。
   const ANIM_RULES =
     '.hs{cursor:pointer}' +
     '.hs .art{animation:hs-b 1.9s ease-in-out infinite}' +
     '.hs:hover .art,.hs:focus-visible .art{animation:none;opacity:1}' +
     '@keyframes hs-b{0%,100%{opacity:1}50%{opacity:.6}}' +
-    // 躯干：2 秒一个周期，第 3 秒抬起
-    '.x-body{animation:xl-breathe 4s step-end infinite;transform-box:fill-box;transform-origin:50% 100%}' +
+    // 整个人：呼吸。整像素抬起，抬起时头与躯干一起动，接缝不会裂。
+    '.x-person{animation:xl-breathe 4s step-end infinite;transform-box:fill-box;transform-origin:50% 100%}' +
     '@keyframes xl-breathe{0%,45%{transform:translateY(0)}46%,75%{transform:translateY(-1px)}76%,100%{transform:translateY(0)}}' +
-    // 头：更慢、更轻，错开相位，免得像整体在抽动
-    '.x-head{animation:xl-sway 5.5s step-end infinite;transform-box:fill-box;transform-origin:50% 100%}' +
-    '@keyframes xl-sway{0%,30%{transform:translateY(0)}33%,70%{transform:translateY(-1px)}73%,100%{transform:translateY(0)}}' +
-    // 眨眼：眼白/瞳那一行整体下移 1 px，快速两次
+    // 眨眼：只有眼睛那两行动，幅度也在自身带内，不会露出脸。
     '.x-eye{animation:xl-blink 6s step-end infinite;transform-box:fill-box}' +
     '@keyframes xl-blink{0%,92%{transform:translateY(0)}93%,95%{transform:translateY(1px)}96%,97.5%{transform:translateY(0)}98%,99%{transform:translateY(1px)}100%{transform:translateY(0)}}' +
     '@media (prefers-reduced-motion:reduce){' +
-    '.hs .art,.x-body,.x-head,.x-eye{animation:none;opacity:1;transform:none}}';
+    '.hs .art,.x-person,.x-eye{animation:none;opacity:1;transform:none}}';
 
   /**
    * 画整个房间，按方案 B 的层级。
