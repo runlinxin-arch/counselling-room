@@ -815,3 +815,14 @@ body::before {
   font-size: 15px;
   line-height: 2;
 }
+
+/* 小节末的督导笔记：一条一行，带序号 */
+.tally.notes li { align-items: flex-start; }
+.tally.notes .n {
+  flex: 0 0 auto;
+  min-width: 1.4em;
+  color: #b08c3c;
+  font-size: 13px;
+  padding-top: 3px;
+}
+.tally.notes .v { line-height: 1.8; }

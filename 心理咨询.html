@@ -824,6 +824,17 @@ body::before {
   font-size: 15px;
   line-height: 2;
 }
+
+/* 小节末的督导笔记：一条一行，带序号 */
+.tally.notes li { align-items: flex-start; }
+.tally.notes .n {
+  flex: 0 0 auto;
+  min-width: 1.4em;
+  color: #b08c3c;
+  font-size: 13px;
+  padding-top: 3px;
+}
+.tally.notes .v { line-height: 1.8; }
 </style>
 </head>
 <body>
@@ -1653,12 +1664,12 @@ XLZX.WARMTH = WARMTH;
 // 这里只做三件事：拆行、挂跳转、挂科普卡。
 // **不改台词**——台词的问题应该在剧本文件里改，改完再同步到这里。
 //
-// 引擎只认识 say / choice / diary / card / end 五种节点，不认识"脊髓损伤"。
+// 引擎只认识 say / choice / diary / card / end 五种节点，不认识「脊髓损伤」。
 // 加第二条线只需要再写一份同样结构的数据。
 // ============================================================================
 
 // 全部挂在同一个命名空间上。产物只有一段脚本，但源码分文件写，
-// 用命名空间比靠"变量提升"更稳，顺序也随便调。
+// 用命名空间比靠「变量提升」更稳，顺序也随便调。
 var XLZX = (typeof window !== 'undefined' && window.XLZX) || {};
 if (typeof window !== 'undefined') window.XLZX = XLZX;
 
@@ -1855,7 +1866,7 @@ const SCI_S1 = {
     next: 'hw1',
   },
 
-  // ---- 危机关怀分支（写死，不给"再想想"的机会）----
+  // ---- 危机关怀分支（写死，不给「再想想」的机会）----
   'crisisBranch': {
     type: 'say', who: '咨询师', text: '谢谢你跟我说这个。能说出来，不容易。',
     effect: 'crisis',
@@ -2446,7 +2457,7 @@ XLZX.storySci = {
 XLZX.roomItems = ROOM_ITEMS;
 
 // 后两条线还没写。引擎已经支持，只是没有内容——
-// 所以选线页把它们画成剪影，而不是假装"正在加载"。
+// 所以选线页把它们画成剪影，而不是假装「正在加载」。
 XLZX.storySlots = [
   {
     id: 'sci', numeral: '一', title: '脊髓损伤', ready: true,
@@ -2510,7 +2521,7 @@ const AMP_S1 = {
     next: 'c1',
   },
 
-  // ---- 选项 1：怎么接"她跟着我，我说话不实在" ----
+  // ---- 选项 1：怎么接「她跟着我，我说话不实在」 ----
   'c1': {
     type: 'choice',
     prompt: '怎么接这一句',
@@ -2703,7 +2714,7 @@ const AMP_S1 = {
   // ---- 选项 2：他躺着不起来 ----
   'c3': {
     type: 'choice',
-    prompt: '怎么回应"我就是躺着"',
+    prompt: '怎么回应「我就是躺着」',
     options: [
       { key: 'A', label: '躺着的时候，脑子里都在想什么？', next: 'f1', flag: 'ampThoughts' },
       { key: 'B', label: '那咱先定一件小事：明天她想让你几点起？', next: 'g1', flag: 'ampGoalEarly' },
@@ -2723,7 +2734,7 @@ const AMP_S1 = {
   },
   'f4': {
     type: 'say', note: { kind: 'supervision' },
-    text: '他说"不敢想"。这不是回避，是那条思路走到头了。先别急着把它掰回正面。',
+    text: '他说「不敢想」。这不是回避，是那条思路走到头了。先别急着把它掰回正面。',
     next: 'i1',
   },
 
@@ -2735,7 +2746,7 @@ const AMP_S1 = {
   },
   'g3': {
     type: 'say', note: { kind: 'supervision' },
-    text: '你给了他一个具体到可以做的小目标。他改成了"跟她一块儿吃饭"——这是他自己找的意义，比你的那个准。',
+    text: '你给了他一个具体到可以做的小目标。他改成了「跟她一块儿吃饭」——这是他自己找的意义，比你的那个准。',
     next: 'i1',
   },
 
@@ -2789,7 +2800,7 @@ const AMP_S1 = {
   },
   'i8': {
     type: 'say', note: { kind: 'supervision' },
-    text: '"别人以为我脑子有毛病"——他先替你解释了。先把「这是常见的」说清楚，他才敢往下讲。',
+    text: '「别人以为我脑子有毛病」——他先替你解释了。先把「这是常见的」说清楚，他才敢往下讲。',
     next: 'card_phantom',
   },
   'card_phantom': {
@@ -2797,7 +2808,7 @@ const AMP_S1 = {
     title: '已经不在了的那只脚，为什么会痛',
     lines: [
       '这叫幻肢痛。痛的地方是已经不存在的部位，痛却是真的。',
-      '它很常见，不是幻觉，也不是"想出来的"。',
+      '它很常见，不是幻觉，也不是「想出来的」。',
       '需要说清楚的是：幻肢痛目前没有可靠根治的办法。',
       '有研究显示，镜像治疗对一部分人有效；但也有报告说，这个操作会让另一些人更难受。',
     ],
@@ -2843,12 +2854,12 @@ const AMP_S1 = {
   },
   'j6': {
     type: 'say', note: { kind: 'supervision' },
-    text: '他给你两个字「烦」，紧跟着就自己把话收回去。别顺着"为你好"往下走，也别批评这句话——先把那个"烦"留在屋里。',
+    text: '他给你两个字「烦」，紧跟着就自己把话收回去。别顺着「为你好」往下走，也别批评这句话——先把那个「烦」留在屋里。',
     next: 'j7',
   },
   'j7': {
     type: 'say', who: '咨询师',
-    text: '嗯，"为你好"我信。那个"烦"也是真的。',
+    text: '嗯，「为你好」我信。那个「烦」也是真的。',
     next: 'j8',
   },
   'j8': {
@@ -2868,7 +2879,7 @@ const AMP_S1 = {
   },
   'j11': {
     type: 'say', note: { kind: 'supervision' },
-    text: '他在用"证明"换空间。这条路很累，而且它说明家里现在缺一个更省事的说法。',
+    text: '他在用「证明」换空间。这条路很累，而且它说明家里现在缺一个更省事的说法。',
     next: 'k1',
   },
 
@@ -2905,7 +2916,7 @@ const AMP_S1 = {
   },
   'cr5': {
     type: 'say', who: '咨询师',
-    text: '谢谢你告诉我这个。这不丢人，也不代表你"想死"——但我要跟你把话说全。',
+    text: '谢谢你告诉我这个。这不丢人，也不代表你「想死」——但我要跟你把话说全。',
     // 危机关怀写死在数据里：引擎看到 effect:'crisis' 就置 crisisTriggered，
     // 不经过任何模型判断。
     effect: 'crisis',
@@ -3019,10 +3030,10 @@ const AMP_S2 = {
     next: 'c1',
   },
 
-  // ---- 选项 1：他说"治不好" ----
+  // ---- 选项 1：他说「治不好」 ----
   'c1': {
     type: 'choice',
-    prompt: '怎么接"治不好"',
+    prompt: '怎么接「治不好」',
     options: [
       { key: 'A', label: '是有这么一说。咱先别急着找治法，说说它晚上具体怎么折腾你。', next: 'a1', flag: 'ampDetail' },
       { key: 'B', label: '你查到的是哪篇？咱们一起看看它到底说了什么。', next: 'b1', flag: 'ampCheckedSource' },
@@ -3104,7 +3115,7 @@ const AMP_S2 = {
       {
         id: 'wed', day: '周三',
         lines: ['她端洗脚水进来。我说我自己来。她说你够不着。', '我没说话。'],
-        note: '这里没有一句抱怨，但记下来了。他记的是"说了也没用"。',
+        note: '这里没有一句抱怨，但记下来了。他记的是「说了也没用」。',
       },
       {
         id: 'fri', day: '周五',
@@ -3116,7 +3127,7 @@ const AMP_S2 = {
   },
   'e4': {
     type: 'say', who: '咨询师',
-    text: '周一那条。你说的"一辈子"，是当时就想到的？',
+    text: '周一那条。你说的「一辈子」，是当时就想到的？',
     next: 'e5',
   },
   'e5': {
@@ -3131,7 +3142,7 @@ const AMP_S2 = {
   },
   'e7': {
     type: 'say', who: '咨询师',
-    text: '那我想跟你较个真。你从"今晚两点四十很痛"，跳到"一辈子都这样"。中间那一段，是怎么过去的？',
+    text: '那我想跟你较个真。你从「今晚两点四十很痛」，跳到「一辈子都这样」。中间那一段，是怎么过去的？',
     next: 'e8',
   },
   'e8': {
@@ -3146,19 +3157,19 @@ const AMP_S2 = {
   },
   'card_cat': {
     type: 'card', kind: 'science',
-    title: '从"今晚很痛"到"这辈子完了"',
+    title: '从「今晚很痛」到「这辈子完了」',
     lines: [
       '这个跳跃有个名字：灾难化。指的是把一件事往最坏处想，并且认定那就是结局。',
       '研究里，灾难化能预测截肢者的疼痛干扰程度、抑郁症状、自评失能程度，以及社会功能受损。',
       '换句话说：痛有多痛是一回事，痛把人困住多少，灾难化在里面起了作用。',
-      '所以 CBT 处理疼痛时，重点常常不是"把痛想没"，而是盯着这类想法，检验它，同时把人重新推到活动里去。',
+      '所以 CBT 处理疼痛时，重点常常不是「把痛想没」，而是盯着这类想法，检验它，同时把人重新推到活动里去。',
     ],
     footer: '依据：第 16 章 · Pain（catastrophizing 段落；Hill et al., 1995；Jensen et al., 2002）',
     next: 'e10',
   },
   'e10': {
     type: 'say', who: '咨询师',
-    text: '我说清楚一点：我不是说你想错了，也不是让你"别这么想"。',
+    text: '我说清楚一点：我不是说你想错了，也不是让你「别这么想」。',
     next: 'e11',
   },
   'e11': {
@@ -3178,7 +3189,7 @@ const AMP_S2 = {
   },
   'e14': {
     type: 'say', note: { kind: 'supervision' },
-    text: '他说出了一个循环：痛 → "一辈子" → 躺下等 → 白天更没有力气。这是要处理的地方，不是那句想法本身对错。',
+    text: '他说出了一个循环：痛 → 「一辈子」 → 躺下等 → 白天更没有力气。这是要处理的地方，不是那句想法本身对错。',
     next: 'f1',
   },
 
@@ -3221,14 +3232,14 @@ const AMP_S2 = {
       '在各种心理干预里，镜像治疗是证据相对明确的一个例外。',
       '最早的报告显示，它对一部分人止痛有效，对另一部分人无效；后续研究看到了一些希望，',
       '但也有报告说，这个操作会让一些人的痛苦加重。',
-      '所以它值得一试，但不该被说成"很多人都好了"。',
+      '所以它值得一试，但不该被说成「很多人都好了」。',
     ],
     footer: '依据：第 16 章 · Pain（Ramachandran & Rogers-Ramachandran, 1996；Chan et al., 2007）',
     next: 'g4',
   },
   'g4': {
     type: 'say', who: '咨询师',
-    text: '我说这么细，是因为要是有人跟你保证"肯定好"，你试完没好，你会觉得是自己不行。',
+    text: '我说这么细，是因为要是有人跟你保证「肯定好」，你试完没好，你会觉得是自己不行。',
     next: 'g5',
   },
   'g5': {
@@ -3257,14 +3268,14 @@ const AMP_S2 = {
   },
   'i3': {
     type: 'say', note: { kind: 'supervision' },
-    text: '他好不容易自己找了一条路，你一句"别信"就关掉了。而且它不是偏方——它是这一章里少数几个有名字的干预。',
+    text: '他好不容易自己找了一条路，你一句「别信」就关掉了。而且它不是偏方——它是这一章里少数几个有名字的干预。',
     next: 'j1',
   },
 
   // ---- 妻子的过度照顾 ----
   'j1': {
     type: 'say', who: '咨询师',
-    text: '周三那条。她说"你够不着"。',
+    text: '周三那条。她说「你够不着」。',
     next: 'j2',
   },
   'j2': {
@@ -3294,11 +3305,11 @@ const AMP_S2 = {
   },
   'j7': {
     type: 'say', note: { kind: 'supervision' },
-    text: '"那行吧"是这一段的关键。她替他做了一件事，他就少做一件——这个循环会自己长大。',
+    text: '「那行吧」是这一段的关键。她替他做了一件事，他就少做一件——这个循环会自己长大。',
     next: 'c3',
   },
 
-  // ---- 选项 3：怎么跟他说"照顾"这件事 ----
+  // ---- 选项 3：怎么跟他说「照顾」这件事 ----
   'c3': {
     type: 'choice',
     prompt: '怎么跟他说照顾这件事',
@@ -3331,7 +3342,7 @@ const AMP_S2 = {
   },
   'k6': {
     type: 'say', note: { kind: 'supervision' },
-    text: '你把"她做得太多"说成了"我们俩的事"。所以他立刻想到的是妻子能松口气——这是同盟，不是指控。',
+    text: '你把「她做得太多」说成了「我们俩的事」。所以他立刻想到的是妻子能松口气——这是同盟，不是指控。',
     next: 'n1b',
   },
 
@@ -3350,7 +3361,7 @@ const AMP_S2 = {
   'm1': { type: 'say', who: '周航', text: '拒绝？', next: 'm2' },
   'm2': {
     type: 'say', who: '周航',
-    text: '她一伸手，我说"不用"，她那个脸色……',
+    text: '她一伸手，我说「不用」，她那个脸色……',
     next: 'm3',
   },
   'm3': {
@@ -3378,7 +3389,7 @@ const AMP_S2 = {
   'end1': {
     type: 'result',
     title: '第 2 节 · 完',
-    lead: '痛是真的，那句"一辈子"也是真的——但后面那句，是可以拿出来商量的。',
+    lead: '痛是真的，那句「一辈子」也是真的——但后面那句，是可以拿出来商量的。',
     button: '看这一节的成绩单',
     next: 'end2',
   },
@@ -3462,7 +3473,7 @@ const AMP_S3 = {
   },
   'b3': {
     type: 'say', note: { kind: 'supervision' },
-    text: '你把"互相指责"的框架换成了"共同处境"。她立刻说出了自己的那一半——这是能往下走的位置。',
+    text: '你把「互相指责」的框架换成了「共同处境」。她立刻说出了自己的那一半——这是能往下走的位置。',
     next: 'e1',
   },
 
@@ -3475,7 +3486,7 @@ const AMP_S3 = {
   'd3': { type: 'say', who: '周航', text: '我没说烦！', next: 'd4' },
   'd4': {
     type: 'say', who: '周航',
-    text: '我说的是"有时候"。',
+    text: '我说的是「有时候」。',
     next: 'd5',
   },
   'd5': {
@@ -3548,21 +3559,21 @@ const AMP_S3 = {
   },
   'card_schedule': {
     type: 'card', kind: 'science',
-    title: '为什么"各过各的猜测"会越滚越大',
+    title: '为什么「各过各的猜测」会越滚越大',
     lines: [
       '截肢之后，家务和照顾的分工往往会重新洗牌。',
       '研究提示，家人的支持对适应很重要；但过度照顾会替代掉本人练习的机会，',
-      '于是"他做不了—我来做—他更做不了"会自己转起来。',
+      '于是「他做不了—我来做—他更做不了」会自己转起来。',
       '解开的办法通常不是谁让步，而是把分工重新摆到桌面上谈。',
     ],
     footer: '依据：第 16 章 · Psychological Adjustment / Participation（家人支持与过度照顾；Williams et al., 2004）',
     next: 'f1',
   },
 
-  // ---- 定目标：不从"恢复"出发 ----
+  // ---- 定目标：不从「恢复」出发 ----
   'f1': {
     type: 'say', who: '咨询师',
-    text: '咱定个具体的事。不是"以后要怎么样"，是这周。',
+    text: '咱定个具体的事。不是「以后要怎么样」，是这周。',
     next: 'f2',
   },
   'f2': {
@@ -3660,7 +3671,7 @@ const AMP_S3 = {
   },
   'j5': {
     type: 'say', who: '咨询师',
-    text: '所以"回不去原来的岗"不等于"你没用"。这是这一群人的普遍情况。',
+    text: '所以「回不去原来的岗」不等于「你没用」。这是这一群人的普遍情况。',
     next: 'card_work',
   },
   'card_work': {
@@ -3701,7 +3712,7 @@ const AMP_S3 = {
   },
   'j11': {
     type: 'say', note: { kind: 'supervision' },
-    text: '你没有把"回不去"当成结局，而是去找他还剩什么。这是目标调整的落点。',
+    text: '你没有把「回不去」当成结局，而是去找他还剩什么。这是目标调整的落点。',
     next: 'k1',
   },
 
@@ -3794,7 +3805,7 @@ const AMP_S3 = {
       '截肢会改变身体意象和自我概念，对一部分人来说，也会影响性亲密。',
       '研究提示，性活动是整体生活质量的一部分，但这个领域在截肢者中研究得很少，',
       '临床上常常被跳过——不是因为它不重要，是因为没人问。',
-      '它不需要被解决成一个"问题"，但值得被提出来。',
+      '它不需要被解决成一个「问题」，但值得被提出来。',
     ],
     footer: '依据：第 16 章 · Sexual Functioning（Holzer et al., 2014；Geertzen et al., 2009）',
     next: 'l7',
@@ -5998,6 +6009,8 @@ XLZX.storyPain = {
     state.act = 1;
     state.warmth = 1;
     state.screen = 'story';
+    pendingNotes = [];          // 重开一条线，笔记收集箱也要清空
+    resultSeen = false;
     E.enter(state.node);
     render();
     renderNode();
@@ -6130,8 +6143,12 @@ XLZX.storyPain = {
     const role = node.who || '旁白';
     setWho(role === '旁白' ? '' : role, role);
 
-    // 督导笔记是挂在台词上的一张纸：先把话说出来，再弹纸
+    // 督导笔记不再跟着台词弹（太碎）。这里只记下来，本节结束时统一看。
     const hasNote = !!node.note;
+    if (hasNote) {
+      const t = (node.note && node.note.text) || node.text;
+      if (t && pendingNotes.indexOf(t) < 0) pendingNotes.push(t);
+    }
 
     if (typer) typer.skip();
 
@@ -6155,41 +6172,25 @@ XLZX.storyPain = {
     function hit() {
       if (advanced || paperOpen || awaitingChoice) return;
       if (typer && !typer.done()) { typer.skip(); return; }  // 第一下：把字补完
-      if (hasNote) return;                                  // 纸自己会推进
+      // 这里曾经是 `if (hasNote) return;`——因为那时笔记会弹一张纸、由纸来推进。
+      // 笔记改成"本节末统一看"之后，这句会让**每一个带笔记的节点卡死**
+      // （点不动，玩家走不下去）。笔记不再拦路，台词自己往下走。
       advanced = true;                                      // 第二下：往下走
       advance(node.next);
     }
-
-    // 纸上的标题由数据决定。督导笔记默认不写标题——左上角的类型标签
-    // 已经说明了这是什么，再写一遍"督导笔记"就是同一句话说两次。
-    var noteMeta = node.note || { kind: 'supervision' };
 
     // **必须在启动打字机之前就挂上**。
     // 打字机跑的时候每次都重建了 #text 的内容，但 _advance 要是这时候还没挂，
     // 玩家在头一两秒里点文字就完全没反应——看起来像卡住了。
     textEl.onclick = hit;
     textEl._advance = hit;
-    // 这一段答完之后会滑进来一张纸。纸自己会推进，所以这一小段时间里
-    // 点文字是"没反应"的——把这件事说出来，别让调用方以为卡住了。
-    textEl._awaitingNote = hasNote;
+    textEl._awaitingNote = false;
 
     typer = typewrite(textEl, node.text, {
       onEnd: function () {
         if (caret) caret.classList.remove('off');
         allowAdvance();
-        if (hasNote) {
-          // 话说完了，纸从右边滑进来
-          showPaper({
-            kind: noteMeta.kind || 'supervision',
-            title: noteMeta.title || '',
-            lines: [noteMeta.text || node.text],
-            button: '知道了',
-            slide: true,
-            write: true,
-            speed: 24,
-            onClose: function () { advance(node.next); },
-          });
-        }
+        // 笔记已收进 pendingNotes，不在这里弹纸
       },
     });
     if (caret) caret.classList.add('off');
@@ -6291,23 +6292,50 @@ XLZX.storyPain = {
     return state.story.title + ' · ' + meta.title + (meta.subtitle ? ' · ' + meta.subtitle : '');
   }
 
-  /** 推进到下一个节点并重画 */
-  function advance(target) {
+  /** 真正跳到目标节点（不做笔记拦截）。 */
+  function advanceNow(target) {
     if (state.screen !== 'story') return;
     const before = state.line;
     const node = E.go(target);
     if (!node) return;
-    const beforeSec = before.split('/')[0];
-    const afterSec = state.line.split('/')[0];
+    const changed = before.split('/')[0] !== state.line.split('/')[0];
     E.enter(node);
-
-    // 换小节：淡出淡入一次
-    if (beforeSec !== afterSec) {
-      transition(function () { renderNode(); });
-    } else {
-      renderNode();
-    }
+    if (changed) transition(function () { renderNode(); });
+    else renderNode();
     E.saveCurrent();
+  }
+
+  /**
+   * 推进到下一个节点。
+   *
+   * 如果这一步跨到了下一小节，先把**刚走完那一节**的督导笔记给出来，再进下一节。
+   *
+   * 为什么"节末"只能钩在这里：三条线的小节收尾写法并不一致 ——
+   *   线二、线三：节末是一个 result 节点（成绩单），按钮通向下一节；
+   *   线一：节末就是一个普通 say 节点，next 直接写 '@s2/n1'，**根本没有成绩单**。
+   * 所以把钩子挂在"成绩单的按钮"上只能覆盖前两条线，线一永远弹不出笔记
+   * （走查里的 assert-note 抓到的正是这个）。
+   *
+   * 还有个坑：必须先取快照再让 E.go 执行。E.go 一跑，state.line 就变了，
+   * 回头再按新的 line 去取上一节的笔记，只会取到空。
+   */
+  function advance(target) {
+    if (state.screen !== 'story') return;
+    const beforeSec = state.line.split('/')[0];
+    // 先用解析器探一下目标落在哪一节，别真的跳过去
+    let targetSec = '';
+    try {
+      const probe = E.resolve(state.story, state.line, target);
+      targetSec = String(probe || '').split('/')[0];
+    } catch (e) { targetSec = ''; }
+
+    if (targetSec && beforeSec && targetSec !== beforeSec) {
+      const snapshot = pendingNotes.slice();
+      pendingNotes = [];
+      showSectionNotes(target, snapshot);
+      return;
+    }
+    advanceNow(target);
   }
 
   function transition(mid) {
@@ -6324,6 +6352,95 @@ XLZX.storyPain = {
   // --------------------------------------------------------------------------
   /** 成绩单只看一次：看过之后按钮改成"继续"，别一直让人以为还有新东西 */
   let resultSeen = false;
+
+  /**
+   * 本节的督导笔记收集箱。
+   *
+   * 为什么改成"收集"而不是"跟着台词一张张弹"：
+   *   · 一条线有 18–32 条笔记，几乎每两句话就弹一张纸，把对话切得很碎；
+   *   · 一张张弹还引出一个 bug —— 那处 showPaper 没有把 paperOpen 置真，
+   *     玩家在纸滑进来的空档里点一下文字，笔记会再弹一次（跳两次）。
+   * 现在改成：笔记只记下来，等这一节结束时合成一张纸一次看完。
+   * 位置在成绩单之后——成绩单讲"你做了什么"，笔记讲"为什么"。
+   */
+  let pendingNotes = [];
+
+  /**
+   * 把一张纸放进浮层，并在按钮点下之后执行 next。
+   * 成绩单和"小节末的督导笔记"共用这个收尾。
+   */
+  function presentPaper(opts) {
+    const paper = make('div', { class: 'paper', 'data-kind': opts.kind || 'science' });
+    paper.appendChild(make('div', { class: 'head' }, [
+      make('span', { class: 'label', text: opts.label || '' }),
+      make('span', { class: 'rule' }),
+    ]));
+    if (opts.title) paper.appendChild(make('h2', { text: opts.title }));
+    if (opts.lead) {
+      paper.appendChild(make('p', { class: 'result-lead', text: opts.lead }));
+    }
+    const bodyWrap = make('div', { class: 'body' });
+    bodyWrap.appendChild(opts.body);
+    paper.appendChild(bodyWrap);
+
+    const actions = make('div', { class: 'actions' });
+    const btn = make('button', {
+      class: 'btn primary', type: 'button', text: opts.button || '继续',
+    });
+    actions.appendChild(btn);
+    paper.appendChild(actions);
+
+    overlayEl.innerHTML = '';
+    overlayEl.className = 'on';
+    overlayEl.appendChild(paper);
+    btn.focus({ preventScroll: true });
+    btn.addEventListener('click', function () {
+      closeOverlay();
+      paperOpen = false;
+      if (opts.onClose) opts.onClose();
+    });
+  }
+
+  /**
+   * 本节结束：把这一节里攒下的督导笔记一次性看完。
+   *
+   * 放在成绩单之后：成绩单回答"我做了什么"，笔记回答"为什么"。
+   * 一次看完而不是每两句弹一张——后者把对话切得太碎，还引发过重复弹出。
+   */
+  function showSectionNotes(nextTarget, snapshot) {
+    // snapshot 是"刚走完那一节"的笔记快照。
+    // 必须由调用方传入：换节那一刻 state.line 已经指向下一节，
+    // 这里再回去取只会取到空。
+    const notes = snapshot || [];
+    pendingNotes = [];
+
+    // 这一节一条笔记都没有：直接走
+    if (!notes.length) { advance(nextTarget); return; }
+
+    const body = make('div', {});
+    const ul = make('ul', { class: 'tally notes' });
+    notes.forEach(function (text, i) {
+      const li = make('li', {});
+      li.appendChild(make('span', { class: 'n', text: String(i + 1) }));
+      li.appendChild(make('span', { class: 'v', text: text }));
+      ul.appendChild(li);
+    });
+    body.appendChild(ul);
+    body.appendChild(make('p', {
+      style: 'color:#6d6250;font-size:13.5px;margin-top:14px',
+      text: '这些是刚才每一步背后的说法。不扣分，也不是唯一答案。',
+    }));
+
+    paperOpen = true;
+    presentPaper({
+      kind: 'supervision',
+      label: '督导笔记 · 本节',
+      title: '这一节的 ' + notes.length + ' 条旁注',
+      body: body,
+      button: '看完了',
+      onClose: function () { advanceNow(nextTarget); },
+    });
+  }
 
   function showResult(node) {
     const flags = state.flags;
@@ -6412,7 +6529,8 @@ XLZX.storyPain = {
     btn.addEventListener('click', function () {
       closeOverlay();
       paperOpen = false;
-      advance(node.next);
+      // 看完成绩单，接着把这一节的督导笔记一次性给出来
+      showSectionNotes(node.next);
     });
   }
 

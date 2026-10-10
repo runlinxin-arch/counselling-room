@@ -96,15 +96,86 @@ const DRIVE = (pick) => `
   if (t && t._awaitingNote) return 'waitNote';
   // 一句台词要点两下：第一下把打字机补完，第二下才真的往下走。
   // 两下之间隔开一点，让第一下真的把字写完。
-  if (t && t._advance) {
+  if (t && typeof t._advance === 'function') {
     var line0 = window.XLZX.engine.state.line;
     t._advance();
     setTimeout(function () {
-      if (window.XLZX.engine.state.line === line0) t._advance();
+      // 节点一换，_advance 就被清掉了（元素也可能已经销毁）。
+      // 不判一下就调，控制台会抛 TypeError，走查会把它算成错误。
+      if (window.XLZX.engine.state.line !== line0) return;
+      var t2 = document.getElementById('text');
+      if (t2 && typeof t2._advance === 'function') t2._advance();
     }, 60);
     return 'text';
   }
   return 'stuck';
+})()`;
+
+/**
+ * 推进一格；但遇到"节末纸"（成绩单）时点掉它 —— 点完就进本节督导笔记。
+ *
+ * 为什么不能直接 PLAY_UNTIL(PAPER_IS('督导'))：
+ *   · 成绩单自带按钮，驱动会顺手点掉，而它的按钮正是"接着看督导笔记"，
+ *     一圈下来笔记页被点过去了，搜索会一路跑到整条线结尾；
+ *   · 危机分支里会**中途**弹一张"求助资源"（节点 cbCard），
+ *     用"遇到求助资源就停"当条件会在中途误停，永远等不到笔记页。
+ * 所以这里只对"成绩"这张节末纸动手，其余照常推进。
+ */
+const TICK = `
+(function () {
+  var lab = document.querySelector('#overlay.on .label');
+  var name = lab ? lab.textContent : '';
+  if (name.indexOf('成绩') >= 0) {
+    var b = document.querySelector('#overlay.on .btn');
+    if (b) { b.click(); return 'endpaper'; }
+  }
+  var diary = document.querySelector('.diary .btn.primary');
+  if (diary) {
+    if (diary.disabled) {
+      var un = null, all = document.querySelectorAll('.entry');
+      for (var k = 0; k < all.length; k++) if (!all[k].classList.contains('open')) { un = all[k]; break; }
+      if (un) { un.click(); return 'diaryEntry'; }
+      return 'diaryStuck';
+    }
+    diary.click(); return 'diary';
+  }
+  var paper = document.querySelector('#overlay.on .btn');
+  if (paper) { paper.click(); return 'paper'; }
+  if (${AWAITING}) {
+    var opts = document.querySelectorAll('.choice');
+    if (opts[0]) { opts[0].click(); return 'choice'; }
+  }
+  var t = document.getElementById('text');
+  if (t && t._advance) {
+    var l0 = window.XLZX.engine.state.line;
+    t._advance();
+    setTimeout(function () {
+      // 节点已经换掉的话 _advance 就没了（甚至元素本身可能已销毁），
+      // 不判一下就调，会在控制台抛 TypeError，被走查当成错误。
+      if (window.XLZX.engine.state.line !== l0) return;
+      var t2 = document.getElementById('text');
+      if (t2 && typeof t2._advance === 'function') t2._advance();
+    }, 60);
+    return 'text';
+  }
+  return 'stuck';
+})()`;
+
+const NOTES_TICK = (max) => `
+(async function () {
+  var t0 = { text: 0, choice: 0, paper: 0, endpaper: 0, diary: 0, diaryEntry: 0 };
+  for (var i = 0; i < ${max}; i++) {
+    var l = document.querySelector('#overlay.on .label');
+    if (l && l.textContent.indexOf('督导') >= 0) return 'reached@' + i;
+    var did = ${TICK};
+    if (did === 'stuck' || did === 'diaryStuck') {
+      return 'STUCK@' + i + ' ' + JSON.stringify(t0) + ' line=' + window.XLZX.engine.state.line;
+    }
+    t0[did] = (t0[did] || 0) + 1;
+    // 点掉成绩单之后，紧接着要渲染笔记页；多给一点时间，别抢在前面判断。
+    await new Promise(function (r) { setTimeout(r, did === 'endpaper' ? 400 : 60); });
+  }
+  return 'MAXED ' + JSON.stringify(t0);
 })()`;
 
 /** 当前弹出的纸是不是某一类 */
@@ -126,7 +197,16 @@ const PLAY_UNTIL = (stopCond, pick, max) => `
   for (var i = 0; i < ${max}; i++) {
     if (${stopCond}) return 'reached@' + i;
     var did = ${DRIVE(pick)};
-    if (did === 'stuck') return 'STUCK@' + i + ' ' + JSON.stringify(tally);
+    if (did === 'stuck') {
+      var _n = window.XLZX.engine.state.node || {};
+      var _ov = document.querySelector('#overlay.on');
+      return 'STUCK@' + i + ' ' + JSON.stringify(tally)
+        + ' line=' + window.XLZX.engine.state.line
+        + ' type=' + _n.type + ' next=' + _n.next
+        + ' overlay=' + (_ov ? (_ov.querySelector('.label') ? _ov.querySelector('.label').textContent : 'on-nolabel') : 'off')
+        + ' txtAdv=' + !!(document.getElementById('text') && document.getElementById('text')._advance)
+        + ' choices=' + document.querySelectorAll('.choice').length;
+    }
     tally[did]++;
     // 每一步都要留够时间：纸的滑入、打字机补完后的重绘、小节之间的淡入淡出。
     // 给太短的话驱动会跑在界面前面，看起来像"走不动"。
@@ -230,22 +310,33 @@ const STEPS = [
     shot: null,
     check: 'note',
     after: `
-      // 督导笔记是整个界面唯一的记忆点（唯一的高亮物），必须看一眼。
-      // 这里从头重来，只推到第一张笔记为止。
+      // 督导笔记现在是**本节末统一看**（成绩单之后一张纸），不再跟着台词逐条弹。
+      // 所以这里要推完整个第 1 节：台词 → 选项 → 成绩单 → 笔记页。
+      // 步数要给足：一句话要点两下，一节有一百多句，再加上选项和几张纸。
       window.XLZX.ui.restart();
       document.querySelector('.start').click();
       document.querySelector('.line-card[data-ready="true"]').click();
       await new Promise(function (r) { setTimeout(r, 200); });
-      var a = await ${PLAY_UNTIL(PAPER_IS('督导'), 0, 300)};
+      // 注意：不能直接 PLAY_UNTIL(PAPER_IS('督导'))——这一节的成绩单本身带按钮，
+      // 驱动会顺手点掉，而成绩单的按钮正是"接着看督导笔记"。一圈循环下来
+      // 笔记页已经被点过去了，于是搜索一路跑到整条线的结尾（end/2）。
+      // 所以先定住"这一节的成绩单"，停在那里，再单独点它进笔记页。
+      var LABEL = function (w) {
+        var l = document.querySelector('#overlay.on .label');
+        return l ? l.textContent.indexOf(w) >= 0 : false;
+      };
+      // 推到本节督导笔记（会自动点掉前面的成绩单）。见 NOTES_TICK 的注释。
+      var a = await ${NOTES_TICK(900)};
       if (a.indexOf('reached') !== 0) {
         return 'NOTE_FAILED ' + a + ' papers=' + (window.__papers || []).join('/');
       }
-      // 让那行字写完：督导笔记是逐字"写"出来的，截图要等它写完
-      await new Promise(function (r) { setTimeout(r, 2600); });
       var ov = document.querySelector('#overlay.on');
       var body = ov ? ov.querySelector('.body') : null;
       var written = body ? body.textContent.replace(/\\s+/g, '').length : 0;
-      return 'NOTE_OK written=' + written;
+      var items = ov ? ov.querySelectorAll('.tally.notes li').length : 0;
+      // 这一节至少攒下几条旁注；一条都没有说明收集箱没接上
+      if (items < 3) return 'NOTE_EMPTY items=' + items;
+      return 'NOTE_OK items=' + items + ' written=' + written;
     `,
   },
   {
@@ -256,9 +347,8 @@ const STEPS = [
       document.querySelector('.start').click();
       document.querySelector('.line-card[data-ready="true"]').click();
       await new Promise(function (r) { setTimeout(r, 200); });
-      await ${PLAY_UNTIL(PAPER_IS('督导'), 0, 200)};
-      await new Promise(function (r) { setTimeout(r, 2600); });
-      return 'ok';
+      var r7 = await ${NOTES_TICK(900)};
+      return r7.indexOf('reached') === 0 ? 'ok' : 'note-shot ' + r7;
     `,
   },
   {

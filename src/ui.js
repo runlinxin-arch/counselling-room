@@ -502,6 +502,8 @@
     state.act = 1;
     state.warmth = 1;
     state.screen = 'story';
+    pendingNotes = [];          // 重开一条线，笔记收集箱也要清空
+    resultSeen = false;
     E.enter(state.node);
     render();
     renderNode();
@@ -634,8 +636,12 @@
     const role = node.who || '旁白';
     setWho(role === '旁白' ? '' : role, role);
 
-    // 督导笔记是挂在台词上的一张纸：先把话说出来，再弹纸
+    // 督导笔记不再跟着台词弹（太碎）。这里只记下来，本节结束时统一看。
     const hasNote = !!node.note;
+    if (hasNote) {
+      const t = (node.note && node.note.text) || node.text;
+      if (t && pendingNotes.indexOf(t) < 0) pendingNotes.push(t);
+    }
 
     if (typer) typer.skip();
 
@@ -659,41 +665,25 @@
     function hit() {
       if (advanced || paperOpen || awaitingChoice) return;
       if (typer && !typer.done()) { typer.skip(); return; }  // 第一下：把字补完
-      if (hasNote) return;                                  // 纸自己会推进
+      // 这里曾经是 `if (hasNote) return;`——因为那时笔记会弹一张纸、由纸来推进。
+      // 笔记改成"本节末统一看"之后，这句会让**每一个带笔记的节点卡死**
+      // （点不动，玩家走不下去）。笔记不再拦路，台词自己往下走。
       advanced = true;                                      // 第二下：往下走
       advance(node.next);
     }
-
-    // 纸上的标题由数据决定。督导笔记默认不写标题——左上角的类型标签
-    // 已经说明了这是什么，再写一遍"督导笔记"就是同一句话说两次。
-    var noteMeta = node.note || { kind: 'supervision' };
 
     // **必须在启动打字机之前就挂上**。
     // 打字机跑的时候每次都重建了 #text 的内容，但 _advance 要是这时候还没挂，
     // 玩家在头一两秒里点文字就完全没反应——看起来像卡住了。
     textEl.onclick = hit;
     textEl._advance = hit;
-    // 这一段答完之后会滑进来一张纸。纸自己会推进，所以这一小段时间里
-    // 点文字是"没反应"的——把这件事说出来，别让调用方以为卡住了。
-    textEl._awaitingNote = hasNote;
+    textEl._awaitingNote = false;
 
     typer = typewrite(textEl, node.text, {
       onEnd: function () {
         if (caret) caret.classList.remove('off');
         allowAdvance();
-        if (hasNote) {
-          // 话说完了，纸从右边滑进来
-          showPaper({
-            kind: noteMeta.kind || 'supervision',
-            title: noteMeta.title || '',
-            lines: [noteMeta.text || node.text],
-            button: '知道了',
-            slide: true,
-            write: true,
-            speed: 24,
-            onClose: function () { advance(node.next); },
-          });
-        }
+        // 笔记已收进 pendingNotes，不在这里弹纸
       },
     });
     if (caret) caret.classList.add('off');
@@ -795,23 +785,50 @@
     return state.story.title + ' · ' + meta.title + (meta.subtitle ? ' · ' + meta.subtitle : '');
   }
 
-  /** 推进到下一个节点并重画 */
-  function advance(target) {
+  /** 真正跳到目标节点（不做笔记拦截）。 */
+  function advanceNow(target) {
     if (state.screen !== 'story') return;
     const before = state.line;
     const node = E.go(target);
     if (!node) return;
-    const beforeSec = before.split('/')[0];
-    const afterSec = state.line.split('/')[0];
+    const changed = before.split('/')[0] !== state.line.split('/')[0];
     E.enter(node);
-
-    // 换小节：淡出淡入一次
-    if (beforeSec !== afterSec) {
-      transition(function () { renderNode(); });
-    } else {
-      renderNode();
-    }
+    if (changed) transition(function () { renderNode(); });
+    else renderNode();
     E.saveCurrent();
+  }
+
+  /**
+   * 推进到下一个节点。
+   *
+   * 如果这一步跨到了下一小节，先把**刚走完那一节**的督导笔记给出来，再进下一节。
+   *
+   * 为什么"节末"只能钩在这里：三条线的小节收尾写法并不一致 ——
+   *   线二、线三：节末是一个 result 节点（成绩单），按钮通向下一节；
+   *   线一：节末就是一个普通 say 节点，next 直接写 '@s2/n1'，**根本没有成绩单**。
+   * 所以把钩子挂在"成绩单的按钮"上只能覆盖前两条线，线一永远弹不出笔记
+   * （走查里的 assert-note 抓到的正是这个）。
+   *
+   * 还有个坑：必须先取快照再让 E.go 执行。E.go 一跑，state.line 就变了，
+   * 回头再按新的 line 去取上一节的笔记，只会取到空。
+   */
+  function advance(target) {
+    if (state.screen !== 'story') return;
+    const beforeSec = state.line.split('/')[0];
+    // 先用解析器探一下目标落在哪一节，别真的跳过去
+    let targetSec = '';
+    try {
+      const probe = E.resolve(state.story, state.line, target);
+      targetSec = String(probe || '').split('/')[0];
+    } catch (e) { targetSec = ''; }
+
+    if (targetSec && beforeSec && targetSec !== beforeSec) {
+      const snapshot = pendingNotes.slice();
+      pendingNotes = [];
+      showSectionNotes(target, snapshot);
+      return;
+    }
+    advanceNow(target);
   }
 
   function transition(mid) {
@@ -828,6 +845,95 @@
   // --------------------------------------------------------------------------
   /** 成绩单只看一次：看过之后按钮改成"继续"，别一直让人以为还有新东西 */
   let resultSeen = false;
+
+  /**
+   * 本节的督导笔记收集箱。
+   *
+   * 为什么改成"收集"而不是"跟着台词一张张弹"：
+   *   · 一条线有 18–32 条笔记，几乎每两句话就弹一张纸，把对话切得很碎；
+   *   · 一张张弹还引出一个 bug —— 那处 showPaper 没有把 paperOpen 置真，
+   *     玩家在纸滑进来的空档里点一下文字，笔记会再弹一次（跳两次）。
+   * 现在改成：笔记只记下来，等这一节结束时合成一张纸一次看完。
+   * 位置在成绩单之后——成绩单讲"你做了什么"，笔记讲"为什么"。
+   */
+  let pendingNotes = [];
+
+  /**
+   * 把一张纸放进浮层，并在按钮点下之后执行 next。
+   * 成绩单和"小节末的督导笔记"共用这个收尾。
+   */
+  function presentPaper(opts) {
+    const paper = make('div', { class: 'paper', 'data-kind': opts.kind || 'science' });
+    paper.appendChild(make('div', { class: 'head' }, [
+      make('span', { class: 'label', text: opts.label || '' }),
+      make('span', { class: 'rule' }),
+    ]));
+    if (opts.title) paper.appendChild(make('h2', { text: opts.title }));
+    if (opts.lead) {
+      paper.appendChild(make('p', { class: 'result-lead', text: opts.lead }));
+    }
+    const bodyWrap = make('div', { class: 'body' });
+    bodyWrap.appendChild(opts.body);
+    paper.appendChild(bodyWrap);
+
+    const actions = make('div', { class: 'actions' });
+    const btn = make('button', {
+      class: 'btn primary', type: 'button', text: opts.button || '继续',
+    });
+    actions.appendChild(btn);
+    paper.appendChild(actions);
+
+    overlayEl.innerHTML = '';
+    overlayEl.className = 'on';
+    overlayEl.appendChild(paper);
+    btn.focus({ preventScroll: true });
+    btn.addEventListener('click', function () {
+      closeOverlay();
+      paperOpen = false;
+      if (opts.onClose) opts.onClose();
+    });
+  }
+
+  /**
+   * 本节结束：把这一节里攒下的督导笔记一次性看完。
+   *
+   * 放在成绩单之后：成绩单回答"我做了什么"，笔记回答"为什么"。
+   * 一次看完而不是每两句弹一张——后者把对话切得太碎，还引发过重复弹出。
+   */
+  function showSectionNotes(nextTarget, snapshot) {
+    // snapshot 是"刚走完那一节"的笔记快照。
+    // 必须由调用方传入：换节那一刻 state.line 已经指向下一节，
+    // 这里再回去取只会取到空。
+    const notes = snapshot || [];
+    pendingNotes = [];
+
+    // 这一节一条笔记都没有：直接走
+    if (!notes.length) { advance(nextTarget); return; }
+
+    const body = make('div', {});
+    const ul = make('ul', { class: 'tally notes' });
+    notes.forEach(function (text, i) {
+      const li = make('li', {});
+      li.appendChild(make('span', { class: 'n', text: String(i + 1) }));
+      li.appendChild(make('span', { class: 'v', text: text }));
+      ul.appendChild(li);
+    });
+    body.appendChild(ul);
+    body.appendChild(make('p', {
+      style: 'color:#6d6250;font-size:13.5px;margin-top:14px',
+      text: '这些是刚才每一步背后的说法。不扣分，也不是唯一答案。',
+    }));
+
+    paperOpen = true;
+    presentPaper({
+      kind: 'supervision',
+      label: '督导笔记 · 本节',
+      title: '这一节的 ' + notes.length + ' 条旁注',
+      body: body,
+      button: '看完了',
+      onClose: function () { advanceNow(nextTarget); },
+    });
+  }
 
   function showResult(node) {
     const flags = state.flags;
@@ -916,7 +1022,8 @@
     btn.addEventListener('click', function () {
       closeOverlay();
       paperOpen = false;
-      advance(node.next);
+      // 看完成绩单，接着把这一节的督导笔记一次性给出来
+      showSectionNotes(node.next);
     });
   }
 
