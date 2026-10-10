@@ -125,23 +125,23 @@ const SCI_S1 = {
   },
 
   // ---- 伦理抉择：走廊里的王医生 ----
-  'eth1': {
-    type: 'say', who: '旁白',
+  'eth1': { scene: 'hallway',
+    type: 'say', who: '旁白', 
     text: '中间休息，你去走廊接水。迎面碰见康复科的王医生。',
     next: 'eth2',
   },
-  'eth2': { type: 'say', who: '王医生', text: '哎，你见着他了吧？', next: 'eth3' },
-  'eth3': {
-    type: 'say', who: '王医生',
+  'eth2': { type: 'say', who: '王医生', scene: 'hallway', text: '哎，你见着他了吧？', next: 'eth3' },
+  'eth3': { scene: 'hallway',
+    type: 'say', who: '王医生', 
     text: '那孩子就是得有人在后面推一把。你跟他说说，让他好好练。你说话他听。',
     next: 'eth4',
   },
-  'eth4': {
-    type: 'say', who: '旁白',
+  'eth4': { scene: 'hallway',
+    type: 'say', who: '旁白', 
     text: '（说完拍拍你肩膀，走了）',
     next: 'c3',
   },
-  'c3': {
+  'c3': { scene: 'hallway',
     type: 'choice',
     prompt: '怎么回他',
     options: [
@@ -150,31 +150,31 @@ const SCI_S1 = {
       { key: 'C', label: '他这种情况站不起来的，这么说他更不愿意练。', next: 'e3c1', flag: 'ethC' },
     ],
   },
-  'e3a1': {
+  'e3a1': { scene: 'hallway',
     type: 'say', note: { kind: 'supervision' },
     text: '你答应了一件做不到、也不该做的事。下回你开口，他听到的会是你，还是「他们」？',
     next: 'crisis1',
   },
-  'e3b1': { type: 'say', who: '王医生', text: '……也行。你们有你们的做法。', next: 'e3b2' },
-  'e3b2': {
+  'e3b1': { scene: 'hallway', type: 'say', who: '王医生', text: '……也行。你们有你们的做法。', next: 'e3b2' },
+  'e3b2': { scene: 'hallway',
     type: 'say', note: { kind: 'supervision' },
     text: '你没当面驳他，也没替来访者做主。「目标得他自己定」是伦理要求，不是客气话。\n\n【依据：第 7 章 · 尊重人的权利与尊严、忠诚与责任】',
     next: 'crisis1',
   },
-  'e3c1': { type: 'say', who: '王医生', text: '（有点尴尬）我知道，我就随口一说。', next: 'e3c2' },
-  'e3c2': {
+  'e3c1': { scene: 'hallway', type: 'say', who: '王医生', text: '（有点尴尬）我知道，我就随口一说。', next: 'e3c2' },
+  'e3c2': { scene: 'hallway',
     type: 'say', note: { kind: 'supervision' },
     text: '医学上你说得对，但这句话里没有来访者。而且他能不能站起来，不该由你在走廊里替他定调。\n\n【依据：第 7 章 · 尊重人的权利与尊严、忠诚与责任】',
     next: 'crisis1',
   },
 
   // ---- 危机筛查（可以不问）----
-  'crisis1': {
+  'crisis1': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '还有个事，问得有点直接。你要是不想答，可以不答。',
     next: 'c4',
   },
-  'c4': {
+  'c4': { scene: 'hallway',
     type: 'choice',
     prompt: '问不问',
     options: [
@@ -182,25 +182,25 @@ const SCI_S1 = {
       { key: 'B', label: '不问。今天第一次见，先不碰这个。', next: 'cn1', flag: 'screenSkipped' },
     ],
   },
-  'cr1': { type: 'say', who: '旁白', text: '（他没说话，过了会儿）', next: 'cr2' },
-  'cr2': { type: 'say', who: '林越', text: '……有吧。', next: 'cr3' },
-  'cr3': { type: 'say', who: '林越', text: '也不是说要干啥。', next: 'cr4' },
-  'cr4': {
+  'cr1': { scene: 'hallway', type: 'say', who: '旁白', text: '（他没说话，过了会儿）', next: 'cr2' },
+  'cr2': { scene: 'hallway', type: 'say', who: '林越', text: '……有吧。', next: 'cr3' },
+  'cr3': { scene: 'hallway', type: 'say', who: '林越', text: '也不是说要干啥。', next: 'cr4' },
+  'cr4': { scene: 'hallway',
     type: 'say', who: '林越',
     text: '就是晚上躺那儿，有时候想，要是睡过去不醒了，好像也行。',
     next: 'cr5',
   },
-  'cr5': { type: 'say', who: '咨询师', text: '谢谢你跟我说这个。', next: 'cr6' },
-  'cr6': {
+  'cr5': { scene: 'hallway', type: 'say', who: '咨询师', text: '谢谢你跟我说这个。', next: 'cr6' },
+  'cr6': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '我想多问一句——是觉得累，还是不想活了？',
     next: 'crisisBranch',
   },
 
-  'cn1': {
+  'cn1': { scene: 'hallway',
     type: 'say', who: '林越', text: '（把轮椅往前挪了挪）那今天先这样？', next: 'cn2',
   },
-  'cn2': {
+  'cn2': { scene: 'hallway',
     type: 'say', note: { kind: 'supervision' },
     text: '第一次见不问，可以。\n\n但记住一件事：脊髓损伤的人里，抑郁很容易被漏掉。而「睡过去不醒」这种念头，不会自己冒出来。下一次，得问。',
     effect: 'markScreenMissed',
@@ -208,51 +208,51 @@ const SCI_S1 = {
   },
 
   // ---- 危机关怀分支（写死，不给「再想想」的机会）----
-  'crisisBranch': {
+  'crisisBranch': { scene: 'hallway',
     type: 'say', who: '咨询师', text: '谢谢你跟我说这个。能说出来，不容易。',
     effect: 'crisis',
     next: 'cb2',
   },
-  'cb2': { type: 'say', who: '咨询师', text: '我想跟你多聊几句，行吗？', next: 'cb3' },
-  'cb3': {
+  'cb2': { scene: 'hallway', type: 'say', who: '咨询师', text: '我想跟你多聊几句，行吗？', next: 'cb3' },
+  'cb3': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '你刚说「睡过去不醒也挺省事」。我想分清楚一件事——是觉得活着太累了，还是不想活了？',
     next: 'cb4',
   },
-  'cb4': { type: 'say', who: '林越', text: '……累。', next: 'cb5' },
-  'cb5': { type: 'say', who: '林越', text: '也不是想死。', next: 'cb6' },
-  'cb6': {
+  'cb4': { scene: 'hallway', type: 'say', who: '林越', text: '……累。', next: 'cb5' },
+  'cb5': { scene: 'hallway', type: 'say', who: '林越', text: '也不是想死。', next: 'cb6' },
+  'cb6': { scene: 'hallway',
     type: 'say', who: '林越',
     text: '就是每天醒过来，发现还是这样。然后又要过一天。',
     next: 'cb7',
   },
-  'cb7': { type: 'say', who: '咨询师', text: '我明白了。', next: 'cb8' },
-  'cb8': {
+  'cb7': { scene: 'hallway', type: 'say', who: '咨询师', text: '我明白了。', next: 'cb8' },
+  'cb8': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '这种累是真的。我不打算劝你「会好的」。',
     next: 'cb9',
   },
-  'cb9': {
+  'cb9': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '但有三件事，我现在得跟你说清楚。',
     next: 'cb10',
   },
-  'cb10': {
+  'cb10': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '第一，这种念头要是变强了，或者你开始想具体怎么做，一定要马上告诉人。告诉我、告诉王医生，或者打下面这个电话。这不是「麻烦别人」，这是你现在该做的事。',
     next: 'cb11',
   },
-  'cb11': {
+  'cb11': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '第二，你不是一个人。脊髓损伤之后有这种感受的人不少。这跟你「够不够坚强」没关系。',
     next: 'cb12',
   },
-  'cb12': {
+  'cb12': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '第三，接下来这段时间，我想跟你见得勤一点。',
     next: 'cbCard',
   },
-  'cbCard': {
+  'cbCard': { scene: 'hallway',
     type: 'card', kind: 'resource',
     title: '如果你或你身边的人正在经历这些',
     lines: [
@@ -266,28 +266,28 @@ const SCI_S1 = {
   },
 
   // ---- 留作业 ----
-  'hw1': {
+  'hw1': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '今天先到这儿。给你留个小东西，不用给谁看。',
     next: 'hw2',
   },
-  'hw2': {
+  'hw2': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '记一下每天啥时候最难受。一句话就行，写手机上。',
     next: 'hw3',
   },
-  'hw3': { type: 'say', who: '林越', text: '记这干啥？', next: 'hw4' },
-  'hw4': {
+  'hw3': { scene: 'hallway', type: 'say', who: '林越', text: '记这干啥？', next: 'hw4' },
+  'hw4': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '下回带来，咱一块看看。我想知道啥时候、因为啥事，你最不好受。',
     next: 'hw5',
   },
-  'hw5': {
+  'hw5': { scene: 'hallway',
     type: 'say', who: '林越', text: '……行吧。',
     effect: 'unlockDiary',
     next: 's1end',
   },
-  's1end': {
+  's1end': { scene: 'hallway',
     type: 'say', who: '旁白',
     text: '他把手机揣回兜里，轮椅转到门口，停了一下才出去。',
     next: '@s2/n1',
@@ -775,7 +775,7 @@ XLZX.storySci = {
   // 来访者随身的东西。写死成轮椅的话，第二条线就会串。
   clientArt: {
     prop: 'WHEELCHAIR', propX: 51, propY: 34,
-    body: 'LINYUE', bodyX: 63, bodyY: 33,
+    body: 'LINYUE_SEATED', bodyX: 51, bodyY: 30,
   },
   mobility: {
     title: '他的轮椅',

@@ -69,6 +69,7 @@
     diaryRead: [],
     warmth: 1,
     act: 1,
+    scene: 'room',        // room | hallway —— 中场休息去走廊时换场景
     screenMode: 'title',
   };
 
@@ -133,6 +134,7 @@
       diaryRead: state.diaryRead.slice(),
       warmth: state.warmth,
       act: state.act,
+      scene: state.scene,
     };
   }
 
@@ -149,6 +151,7 @@
     state.diaryRead = snap.diaryRead || [];
     state.warmth = snap.warmth || 1;
     state.act = snap.act || 1;
+    state.scene = snap.scene || 'room';
     state.node = getNode(story, state.line);
     return !!state.node;
   }
@@ -187,6 +190,9 @@
     if (!node) return;
     if (typeof node.act === 'number') state.act = node.act;
     if (typeof node.warmth === 'number') state.warmth = node.warmth;
+    // scene 是"当前所处场景"。默认回到咨询室，只有节点明确写 scene 才换。
+    // （否则走廊场景会一直留在状态里，回到咨询室还显示空房间。）
+    state.scene = node.scene || 'room';
     applyEffects(node);
     // 副作用是"存档状态"的一部分，进节点就落盘。
     // 不落的话：走到危机关怀分支时关掉页面，或者从标题页看上次进度，
@@ -455,6 +461,7 @@
     const warmth = opts.warmth || 1;
     const clickable = opts.clickable || [];
     const withPeople = opts.withPeople !== false;
+    const hallway = !!opts.hallway;
     const svg = el('svg', { id: 'scene', viewBox: '0 0 ' + S.size.w + ' ' + S.size.h });
     const GW = S.size.w;
     const GH = S.size.h;
@@ -531,8 +538,11 @@
 
     // --- 5) 暖光与四角压暗（整体叠一层）---
     const w = X.WARMTH[warmth] || X.WARMTH[1];
-    svg.appendChild(el('rect', { x: 0, y: 0, width: GW, height: GH, fill: '#ffd9a0', opacity: w.glow }));
-    svg.appendChild(el('rect', { x: 0, y: 0, width: GW, height: GH, fill: '#06070a', opacity: w.vignette * 0.38 }));
+    // 走廊：冷白光、更暗一点，和暖调的咨询室区分开
+    const glowFill = hallway ? '#cfe0ff' : '#ffd9a0';
+    const glowOp = hallway ? 0.10 : w.glow;
+    svg.appendChild(el('rect', { x: 0, y: 0, width: GW, height: GH, fill: glowFill, opacity: glowOp }));
+    svg.appendChild(el('rect', { x: 0, y: 0, width: GW, height: GH, fill: '#06070a', opacity: w.vignette * (hallway ? 0.62 : 0.38) }));
 
     // --- 6) 可点物件的热区。放最上层，保证不被人物挡住。---
     HOTSPOTS.forEach(function (hs) {

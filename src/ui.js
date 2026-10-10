@@ -532,11 +532,14 @@
     if (!host) return;
     host.innerHTML = '';
     const clickable = currentClickable();
+    // 中场休息（走廊）场景里屋里不该还坐着人：走廊场景用空房间。
+    const inHallway = state.scene === 'hallway';
     const svg = E.renderScene({
       act: state.act,
       warmth: state.warmth,
-      withPeople: true,
-      clickable: clickable,
+      withPeople: !inHallway,
+      hallway: inHallway,
+      clickable: inHallway ? [] : clickable,
       onItem: openRoomItem,
     });
     host.appendChild(svg);
@@ -986,8 +989,9 @@
     // 这里再回去取只会取到空。
     const notes = snapshot || [];
 
-    // 这一节一条笔记都没有：直接走
-    if (!notes.length) { advance(nextTarget); return; }
+    // 这一节一条笔记都没有：直接跳，别再走 advance——那会再次触发
+    // "跨节"判断、又回到这里，形成死循环（第一次见面结束点不动就是这么来的）。
+    if (!notes.length) { advanceNow(nextTarget); return; }
 
     const body = make('div', {});
     const ul = make('ul', { class: 'tally notes' });

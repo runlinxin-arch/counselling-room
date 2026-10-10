@@ -180,6 +180,34 @@ const LINYUE = [
 
 // 咨询师（玩家）：坐在左边沙发上，面朝右，手里的笔和本子是玩家自己的视角，
 // 所以不画——画了会变成"看着自己"，很怪。
+// 林越 · 坐姿版：上半身与原立绘一致，下半身改成"坐在轮椅上"。
+// 原立绘是站姿（双腿竖直），坐在轮椅上会两条直腿戳到脚踏下面去。
+// 这里把大腿压平（落在座垫上）、小腿下垂（落到脚踏），膝盖在座沿处弯。
+const LINYUE_SEATED = [
+  '  DYYYYYYD  ',
+  ' DYYYYYYYYD ',
+  ' DHHHHHHHHD ',
+  ' DHHZZZZHHD ',
+  ' DHZXZZXZHD ',
+  ' DHZZZZZZHD ',
+  '  DZZZZZZD  ',
+  '  DzzzzzD   ',
+  '   DJJJJJD  ',
+  '  DJJJJJJJD ',
+  ' DJJJJJJJJJD',
+  ' DJJJJJJJJJD',
+  ' DJJJJJJJJJD',
+  ' DJJJJJJJJJD',
+  // 大腿：平铺在座垫上（占座垫宽度）
+  ' DQQQQQQQQD ',
+  ' DQQQQQQQQD ',
+  // 膝盖折下来：小腿 + 脚，落在脚踏上
+  '  DQQQQQD   ',
+  '  DQQQQQD   ',
+  '  Dq qQD    ',
+  '  DDD DDD   ',
+];
+
 const COUNSELOR = [
   '   DYYYYYD  ',
   '  DYYYYYYYD ',
@@ -215,7 +243,7 @@ const COUNSELOR = [
 const CHARS = {
   // 林越：靠门那把沙发（sofaR 在 x=56，坐垫 x=63–72）。
   // 立绘从 11 行加高到 23 行，身体 y 下移 2 —— 否则发顶会顶进墙上的挂画。
-  client: { chair: WHEELCHAIR, chairX: 51, chairY: 34, body: LINYUE, bodyX: 63, bodyY: 33 },
+  client: { chair: WHEELCHAIR, chairX: 51, chairY: 34, body: LINYUE_SEATED, bodyX: 51, bodyY: 30 },
   // 咨询师：左边那把（sofaL 在 x=20，坐垫 x=27–36），朝向画面右
   counselor: { body: COUNSELOR, bodyX: 25, bodyY: 31 },
 };
@@ -313,6 +341,7 @@ XLZX.BAG = BAG;
 XLZX.REFERRAL = REFERRAL;
 XLZX.TISSUE = TISSUE;
 XLZX.LINYUE = LINYUE;
+XLZX.LINYUE_SEATED = LINYUE_SEATED;
 XLZX.COUNSELOR = COUNSELOR;
 XLZX.CHARS = CHARS;
 XLZX.CLOCK_VARIANTS = CLOCK_VARIANTS;

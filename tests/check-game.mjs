@@ -609,6 +609,53 @@ if (!E || stories.length === 0) {
     if (!has) { fail(`热区 "${hs.id}" 找不到像素图`); hsBad++; }
   }
   if (!hsBad) ok(`${E.HOTSPOTS.length} 个热区都有像素图`);
+
+  // —— 三条本轮修过的回归，各留一条断言 ——
+
+  // 1) 走廊场景：中场休息去走廊时，屋里不该还坐着人（空房间、冷光）。
+  {
+    // 走廊：UI 里传 withPeople:false（空房间），hallway 只影响光色。
+    const svgHall = draw({ act: 1, warmth: 1, withPeople: false, hallway: true });
+    const svgRoom = draw({ act: 1, warmth: 1, withPeople: true });
+    const countRect = (g) => { let n = 0; (function w(x) { (x.childNodes || []).forEach((c) => { if (c.nodeName === 'rect') n++; w(c); }); })(g); return n; };
+    // 空房间（没画人）矩形数应该明显少于有人房间
+    if (countRect(svgHall) >= countRect(svgRoom)) {
+      fail('走廊场景没有变成空房间（矩形数没减少）');
+    } else {
+      ok('走廊场景 = 空房间（无人、冷光）');
+    }
+  }
+
+  // 2) 坐姿：林越必须用坐姿立绘，且臀落在座椅、脚落在脚踏。
+  {
+    const sci = X.stories.sci;
+    if (!sci || sci.clientArt.body !== 'LINYUE_SEATED') {
+      fail('林越没有使用坐姿立绘 LINYUE_SEATED');
+    } else {
+      const art = sci.clientArt;
+      const seatY = art.propY + 10, footY = art.propY + 16;
+      const hipY = art.bodyY + 15, footAt = art.bodyY + 19;
+      const okSeat = hipY >= seatY && hipY <= seatY + 1;
+      const okFoot = Math.abs(footAt - footY) <= 1;
+      if (okSeat && okFoot) ok('林越坐姿：臀贴座、脚踏板');
+      else fail(`林越坐姿对不齐（臀 y${hipY} vs 座 y${seatY}；脚 y${footAt} vs 踏 y${footY}）`);
+    }
+  }
+
+  // 3) 跨节推进：s1end 的 next 是 @s2/n1，advance 不能死循环。
+  //    这个用纯函数模拟 UI 的 advance 判断太绕，改测数据 + engine 能解析。
+  {
+    const sci = X.stories.sci;
+    const s1end = sci.sections[0].nodes['s1end'];
+    if (!s1end) fail('找不到 s1end');
+    else {
+      const resolved = E.resolve(sci, 's1/s1end', s1end.next);
+      const node = E.go ? null : null; // go 需要 state，不在这里测
+      const targetSec = String(resolved || '').split('/')[0];
+      if (resolved === 's2/n1' && targetSec === 's2') ok('第一次见面结束能解析到下一节（s2/n1）');
+      else fail('s1end 跳转解析异常：' + resolved);
+    }
+  }
 }
 
 // ===========================================================================

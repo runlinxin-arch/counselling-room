@@ -1607,6 +1607,34 @@ const LINYUE = [
 
 // 咨询师（玩家）：坐在左边沙发上，面朝右，手里的笔和本子是玩家自己的视角，
 // 所以不画——画了会变成"看着自己"，很怪。
+// 林越 · 坐姿版：上半身与原立绘一致，下半身改成"坐在轮椅上"。
+// 原立绘是站姿（双腿竖直），坐在轮椅上会两条直腿戳到脚踏下面去。
+// 这里把大腿压平（落在座垫上）、小腿下垂（落到脚踏），膝盖在座沿处弯。
+const LINYUE_SEATED = [
+  '  DYYYYYYD  ',
+  ' DYYYYYYYYD ',
+  ' DHHHHHHHHD ',
+  ' DHHZZZZHHD ',
+  ' DHZXZZXZHD ',
+  ' DHZZZZZZHD ',
+  '  DZZZZZZD  ',
+  '  DzzzzzD   ',
+  '   DJJJJJD  ',
+  '  DJJJJJJJD ',
+  ' DJJJJJJJJJD',
+  ' DJJJJJJJJJD',
+  ' DJJJJJJJJJD',
+  ' DJJJJJJJJJD',
+  // 大腿：平铺在座垫上（占座垫宽度）
+  ' DQQQQQQQQD ',
+  ' DQQQQQQQQD ',
+  // 膝盖折下来：小腿 + 脚，落在脚踏上
+  '  DQQQQQD   ',
+  '  DQQQQQD   ',
+  '  Dq qQD    ',
+  '  DDD DDD   ',
+];
+
 const COUNSELOR = [
   '   DYYYYYD  ',
   '  DYYYYYYYD ',
@@ -1642,7 +1670,7 @@ const COUNSELOR = [
 const CHARS = {
   // 林越：靠门那把沙发（sofaR 在 x=56，坐垫 x=63–72）。
   // 立绘从 11 行加高到 23 行，身体 y 下移 2 —— 否则发顶会顶进墙上的挂画。
-  client: { chair: WHEELCHAIR, chairX: 51, chairY: 34, body: LINYUE, bodyX: 63, bodyY: 33 },
+  client: { chair: WHEELCHAIR, chairX: 51, chairY: 34, body: LINYUE_SEATED, bodyX: 51, bodyY: 30 },
   // 咨询师：左边那把（sofaL 在 x=20，坐垫 x=27–36），朝向画面右
   counselor: { body: COUNSELOR, bodyX: 25, bodyY: 31 },
 };
@@ -1740,6 +1768,7 @@ XLZX.BAG = BAG;
 XLZX.REFERRAL = REFERRAL;
 XLZX.TISSUE = TISSUE;
 XLZX.LINYUE = LINYUE;
+XLZX.LINYUE_SEATED = LINYUE_SEATED;
 XLZX.COUNSELOR = COUNSELOR;
 XLZX.CHARS = CHARS;
 XLZX.CLOCK_VARIANTS = CLOCK_VARIANTS;
@@ -1873,23 +1902,23 @@ const SCI_S1 = {
   },
 
   // ---- 伦理抉择：走廊里的王医生 ----
-  'eth1': {
-    type: 'say', who: '旁白',
+  'eth1': { scene: 'hallway',
+    type: 'say', who: '旁白', 
     text: '中间休息，你去走廊接水。迎面碰见康复科的王医生。',
     next: 'eth2',
   },
-  'eth2': { type: 'say', who: '王医生', text: '哎，你见着他了吧？', next: 'eth3' },
-  'eth3': {
-    type: 'say', who: '王医生',
+  'eth2': { type: 'say', who: '王医生', scene: 'hallway', text: '哎，你见着他了吧？', next: 'eth3' },
+  'eth3': { scene: 'hallway',
+    type: 'say', who: '王医生', 
     text: '那孩子就是得有人在后面推一把。你跟他说说，让他好好练。你说话他听。',
     next: 'eth4',
   },
-  'eth4': {
-    type: 'say', who: '旁白',
+  'eth4': { scene: 'hallway',
+    type: 'say', who: '旁白', 
     text: '（说完拍拍你肩膀，走了）',
     next: 'c3',
   },
-  'c3': {
+  'c3': { scene: 'hallway',
     type: 'choice',
     prompt: '怎么回他',
     options: [
@@ -1898,31 +1927,31 @@ const SCI_S1 = {
       { key: 'C', label: '他这种情况站不起来的，这么说他更不愿意练。', next: 'e3c1', flag: 'ethC' },
     ],
   },
-  'e3a1': {
+  'e3a1': { scene: 'hallway',
     type: 'say', note: { kind: 'supervision' },
     text: '你答应了一件做不到、也不该做的事。下回你开口，他听到的会是你，还是「他们」？',
     next: 'crisis1',
   },
-  'e3b1': { type: 'say', who: '王医生', text: '……也行。你们有你们的做法。', next: 'e3b2' },
-  'e3b2': {
+  'e3b1': { scene: 'hallway', type: 'say', who: '王医生', text: '……也行。你们有你们的做法。', next: 'e3b2' },
+  'e3b2': { scene: 'hallway',
     type: 'say', note: { kind: 'supervision' },
     text: '你没当面驳他，也没替来访者做主。「目标得他自己定」是伦理要求，不是客气话。\n\n【依据：第 7 章 · 尊重人的权利与尊严、忠诚与责任】',
     next: 'crisis1',
   },
-  'e3c1': { type: 'say', who: '王医生', text: '（有点尴尬）我知道，我就随口一说。', next: 'e3c2' },
-  'e3c2': {
+  'e3c1': { scene: 'hallway', type: 'say', who: '王医生', text: '（有点尴尬）我知道，我就随口一说。', next: 'e3c2' },
+  'e3c2': { scene: 'hallway',
     type: 'say', note: { kind: 'supervision' },
     text: '医学上你说得对，但这句话里没有来访者。而且他能不能站起来，不该由你在走廊里替他定调。\n\n【依据：第 7 章 · 尊重人的权利与尊严、忠诚与责任】',
     next: 'crisis1',
   },
 
   // ---- 危机筛查（可以不问）----
-  'crisis1': {
+  'crisis1': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '还有个事，问得有点直接。你要是不想答，可以不答。',
     next: 'c4',
   },
-  'c4': {
+  'c4': { scene: 'hallway',
     type: 'choice',
     prompt: '问不问',
     options: [
@@ -1930,25 +1959,25 @@ const SCI_S1 = {
       { key: 'B', label: '不问。今天第一次见，先不碰这个。', next: 'cn1', flag: 'screenSkipped' },
     ],
   },
-  'cr1': { type: 'say', who: '旁白', text: '（他没说话，过了会儿）', next: 'cr2' },
-  'cr2': { type: 'say', who: '林越', text: '……有吧。', next: 'cr3' },
-  'cr3': { type: 'say', who: '林越', text: '也不是说要干啥。', next: 'cr4' },
-  'cr4': {
+  'cr1': { scene: 'hallway', type: 'say', who: '旁白', text: '（他没说话，过了会儿）', next: 'cr2' },
+  'cr2': { scene: 'hallway', type: 'say', who: '林越', text: '……有吧。', next: 'cr3' },
+  'cr3': { scene: 'hallway', type: 'say', who: '林越', text: '也不是说要干啥。', next: 'cr4' },
+  'cr4': { scene: 'hallway',
     type: 'say', who: '林越',
     text: '就是晚上躺那儿，有时候想，要是睡过去不醒了，好像也行。',
     next: 'cr5',
   },
-  'cr5': { type: 'say', who: '咨询师', text: '谢谢你跟我说这个。', next: 'cr6' },
-  'cr6': {
+  'cr5': { scene: 'hallway', type: 'say', who: '咨询师', text: '谢谢你跟我说这个。', next: 'cr6' },
+  'cr6': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '我想多问一句——是觉得累，还是不想活了？',
     next: 'crisisBranch',
   },
 
-  'cn1': {
+  'cn1': { scene: 'hallway',
     type: 'say', who: '林越', text: '（把轮椅往前挪了挪）那今天先这样？', next: 'cn2',
   },
-  'cn2': {
+  'cn2': { scene: 'hallway',
     type: 'say', note: { kind: 'supervision' },
     text: '第一次见不问，可以。\n\n但记住一件事：脊髓损伤的人里，抑郁很容易被漏掉。而「睡过去不醒」这种念头，不会自己冒出来。下一次，得问。',
     effect: 'markScreenMissed',
@@ -1956,51 +1985,51 @@ const SCI_S1 = {
   },
 
   // ---- 危机关怀分支（写死，不给「再想想」的机会）----
-  'crisisBranch': {
+  'crisisBranch': { scene: 'hallway',
     type: 'say', who: '咨询师', text: '谢谢你跟我说这个。能说出来，不容易。',
     effect: 'crisis',
     next: 'cb2',
   },
-  'cb2': { type: 'say', who: '咨询师', text: '我想跟你多聊几句，行吗？', next: 'cb3' },
-  'cb3': {
+  'cb2': { scene: 'hallway', type: 'say', who: '咨询师', text: '我想跟你多聊几句，行吗？', next: 'cb3' },
+  'cb3': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '你刚说「睡过去不醒也挺省事」。我想分清楚一件事——是觉得活着太累了，还是不想活了？',
     next: 'cb4',
   },
-  'cb4': { type: 'say', who: '林越', text: '……累。', next: 'cb5' },
-  'cb5': { type: 'say', who: '林越', text: '也不是想死。', next: 'cb6' },
-  'cb6': {
+  'cb4': { scene: 'hallway', type: 'say', who: '林越', text: '……累。', next: 'cb5' },
+  'cb5': { scene: 'hallway', type: 'say', who: '林越', text: '也不是想死。', next: 'cb6' },
+  'cb6': { scene: 'hallway',
     type: 'say', who: '林越',
     text: '就是每天醒过来，发现还是这样。然后又要过一天。',
     next: 'cb7',
   },
-  'cb7': { type: 'say', who: '咨询师', text: '我明白了。', next: 'cb8' },
-  'cb8': {
+  'cb7': { scene: 'hallway', type: 'say', who: '咨询师', text: '我明白了。', next: 'cb8' },
+  'cb8': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '这种累是真的。我不打算劝你「会好的」。',
     next: 'cb9',
   },
-  'cb9': {
+  'cb9': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '但有三件事，我现在得跟你说清楚。',
     next: 'cb10',
   },
-  'cb10': {
+  'cb10': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '第一，这种念头要是变强了，或者你开始想具体怎么做，一定要马上告诉人。告诉我、告诉王医生，或者打下面这个电话。这不是「麻烦别人」，这是你现在该做的事。',
     next: 'cb11',
   },
-  'cb11': {
+  'cb11': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '第二，你不是一个人。脊髓损伤之后有这种感受的人不少。这跟你「够不够坚强」没关系。',
     next: 'cb12',
   },
-  'cb12': {
+  'cb12': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '第三，接下来这段时间，我想跟你见得勤一点。',
     next: 'cbCard',
   },
-  'cbCard': {
+  'cbCard': { scene: 'hallway',
     type: 'card', kind: 'resource',
     title: '如果你或你身边的人正在经历这些',
     lines: [
@@ -2014,28 +2043,28 @@ const SCI_S1 = {
   },
 
   // ---- 留作业 ----
-  'hw1': {
+  'hw1': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '今天先到这儿。给你留个小东西，不用给谁看。',
     next: 'hw2',
   },
-  'hw2': {
+  'hw2': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '记一下每天啥时候最难受。一句话就行，写手机上。',
     next: 'hw3',
   },
-  'hw3': { type: 'say', who: '林越', text: '记这干啥？', next: 'hw4' },
-  'hw4': {
+  'hw3': { scene: 'hallway', type: 'say', who: '林越', text: '记这干啥？', next: 'hw4' },
+  'hw4': { scene: 'hallway',
     type: 'say', who: '咨询师',
     text: '下回带来，咱一块看看。我想知道啥时候、因为啥事，你最不好受。',
     next: 'hw5',
   },
-  'hw5': {
+  'hw5': { scene: 'hallway',
     type: 'say', who: '林越', text: '……行吧。',
     effect: 'unlockDiary',
     next: 's1end',
   },
-  's1end': {
+  's1end': { scene: 'hallway',
     type: 'say', who: '旁白',
     text: '他把手机揣回兜里，轮椅转到门口，停了一下才出去。',
     next: '@s2/n1',
@@ -2523,7 +2552,7 @@ XLZX.storySci = {
   // 来访者随身的东西。写死成轮椅的话，第二条线就会串。
   clientArt: {
     prop: 'WHEELCHAIR', propX: 51, propY: 34,
-    body: 'LINYUE', bodyX: 63, bodyY: 33,
+    body: 'LINYUE_SEATED', bodyX: 51, bodyY: 30,
   },
   mobility: {
     title: '他的轮椅',
@@ -5049,6 +5078,7 @@ XLZX.storyPain = {
     diaryRead: [],
     warmth: 1,
     act: 1,
+    scene: 'room',        // room | hallway —— 中场休息去走廊时换场景
     screenMode: 'title',
   };
 
@@ -5113,6 +5143,7 @@ XLZX.storyPain = {
       diaryRead: state.diaryRead.slice(),
       warmth: state.warmth,
       act: state.act,
+      scene: state.scene,
     };
   }
 
@@ -5129,6 +5160,7 @@ XLZX.storyPain = {
     state.diaryRead = snap.diaryRead || [];
     state.warmth = snap.warmth || 1;
     state.act = snap.act || 1;
+    state.scene = snap.scene || 'room';
     state.node = getNode(story, state.line);
     return !!state.node;
   }
@@ -5167,6 +5199,9 @@ XLZX.storyPain = {
     if (!node) return;
     if (typeof node.act === 'number') state.act = node.act;
     if (typeof node.warmth === 'number') state.warmth = node.warmth;
+    // scene 是"当前所处场景"。默认回到咨询室，只有节点明确写 scene 才换。
+    // （否则走廊场景会一直留在状态里，回到咨询室还显示空房间。）
+    state.scene = node.scene || 'room';
     applyEffects(node);
     // 副作用是"存档状态"的一部分，进节点就落盘。
     // 不落的话：走到危机关怀分支时关掉页面，或者从标题页看上次进度，
@@ -5435,6 +5470,7 @@ XLZX.storyPain = {
     const warmth = opts.warmth || 1;
     const clickable = opts.clickable || [];
     const withPeople = opts.withPeople !== false;
+    const hallway = !!opts.hallway;
     const svg = el('svg', { id: 'scene', viewBox: '0 0 ' + S.size.w + ' ' + S.size.h });
     const GW = S.size.w;
     const GH = S.size.h;
@@ -5511,8 +5547,11 @@ XLZX.storyPain = {
 
     // --- 5) 暖光与四角压暗（整体叠一层）---
     const w = X.WARMTH[warmth] || X.WARMTH[1];
-    svg.appendChild(el('rect', { x: 0, y: 0, width: GW, height: GH, fill: '#ffd9a0', opacity: w.glow }));
-    svg.appendChild(el('rect', { x: 0, y: 0, width: GW, height: GH, fill: '#06070a', opacity: w.vignette * 0.38 }));
+    // 走廊：冷白光、更暗一点，和暖调的咨询室区分开
+    const glowFill = hallway ? '#cfe0ff' : '#ffd9a0';
+    const glowOp = hallway ? 0.10 : w.glow;
+    svg.appendChild(el('rect', { x: 0, y: 0, width: GW, height: GH, fill: glowFill, opacity: glowOp }));
+    svg.appendChild(el('rect', { x: 0, y: 0, width: GW, height: GH, fill: '#06070a', opacity: w.vignette * (hallway ? 0.62 : 0.38) }));
 
     // --- 6) 可点物件的热区。放最上层，保证不被人物挡住。---
     HOTSPOTS.forEach(function (hs) {
@@ -6128,11 +6167,14 @@ XLZX.storyPain = {
     if (!host) return;
     host.innerHTML = '';
     const clickable = currentClickable();
+    // 中场休息（走廊）场景里屋里不该还坐着人：走廊场景用空房间。
+    const inHallway = state.scene === 'hallway';
     const svg = E.renderScene({
       act: state.act,
       warmth: state.warmth,
-      withPeople: true,
-      clickable: clickable,
+      withPeople: !inHallway,
+      hallway: inHallway,
+      clickable: inHallway ? [] : clickable,
       onItem: openRoomItem,
     });
     host.appendChild(svg);
@@ -6582,8 +6624,9 @@ XLZX.storyPain = {
     // 这里再回去取只会取到空。
     const notes = snapshot || [];
 
-    // 这一节一条笔记都没有：直接走
-    if (!notes.length) { advance(nextTarget); return; }
+    // 这一节一条笔记都没有：直接跳，别再走 advance——那会再次触发
+    // "跨节"判断、又回到这里，形成死循环（第一次见面结束点不动就是这么来的）。
+    if (!notes.length) { advanceNow(nextTarget); return; }
 
     const body = make('div', {});
     const ul = make('ul', { class: 'tally notes' });
