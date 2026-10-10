@@ -161,11 +161,11 @@ body::before {
 /* 布局比例：像素动画区（#stage）: 文字选项区（#panel）= 7 : 3。
    flex 比例是"内容盒"的占比；padding 属于各自那一份里，所以两块的
    实际高度（含 padding）保持 7:3。 */
+/* 像素动画区：拿"文字区之外"的全部空间。
+   文字区按内容定高（有下限），房间则按剩余空间缩放——这样短窗口下
+   房间会缩一缩，而不是把文字/选项/提示裁掉。长窗口下自然接近 7:3。 */
 #stage {
-  /* 像素动画区严格占屏幕高度的 70%（页头不进这一份）。
-     用 vh 而不是 flex 比例：flex 会把页头也算进去，导致舞台只拿到
-     "页头之外"的七成，实际约 62%。7:3 要的是整个屏幕的占比。 */
-  flex: 0 0 70vh;
+  flex: 1 1 auto;
   min-height: 0;
   display: flex;
   justify-content: center;
@@ -208,8 +208,10 @@ body::before {
    ========================================================================== */
 
 #panel {
-  flex: 1 1 auto;
-  min-height: 0;
+  /* 文字选项区按内容定高，但给一个下限：太低的话房间会占到 8 成以上，
+     文字反而显得孤零零。台词/选项/提示永远完整可见（绝不裁掉）。 */
+  flex: 0 0 auto;
+  min-height: 30vh;
   display: flex;
   flex-direction: column;
   padding: 18px var(--pad) 16px;
@@ -229,8 +231,9 @@ body::before {
 #who[data-role="旁白"]        { color: var(--who-narrator); }
 
 #text {
-  flex: 1 1 auto;
-  min-height: 3.8em;
+  /* 保持自然高度，不参与伸缩压缩：被压到 0 会整段台词消失。
+     空间不够时由 #panel 整体滚动，而不是把正文挤没。 */
+  flex: 0 0 auto;
   font-size: 19px;
   line-height: 1.85;
   letter-spacing: .01em;
@@ -362,14 +365,19 @@ body::before {
 /* ---- 底部提示 ---- */
 #hint {
   flex: 0 0 auto;
+  position: sticky;
+  bottom: 0;
   min-height: 1.5em;
   margin-top: 12px;
+  padding-top: 4px;
   font-size: 12.5px;
   color: var(--ink-faint);
   letter-spacing: .04em;
   display: flex;
   align-items: center;
   gap: 8px;
+  /* 垫一块和面板一致的底色，滚动时别让文字透过来叠在一起 */
+  background: linear-gradient(to bottom, rgba(27,20,15,0), #241b14 40%);
 }
 #hint .dot {
   width: 6px; height: 6px;
