@@ -307,6 +307,29 @@ const STEPS = [
       })();`,
   },
   {
+    shot: 'game-06b-counselor-bubble',
+    // 第一个选择点选 C（「最近怎么样？」）。它后面的 d2 是一句典型的
+    // "咨询师对玩家说的话"，现在以聊天气泡的形式出现。
+    // 这条路径是确定的：选 C → d1（旁白）→ d2（气泡）。
+    after: `
+      window.XLZX.ui.restart();
+      document.querySelector('.start').click();
+      document.querySelector('.line-card[data-ready="true"]').click();
+      await new Promise(function (r) { setTimeout(r, 200); });
+      var a = await ${PLAY_UNTIL(AWAITING, 2, 60)};
+      if (a.indexOf('reached') !== 0) return 'bubble ' + a;
+      var opts = document.querySelectorAll('.choice');
+      if (!opts[2]) return 'bubble 没有第三个选项';
+      opts[2].click();
+      var b = await ${PLAY_UNTIL(
+        "document.getElementById('chat') && getComputedStyle(document.getElementById('chat')).display !== 'none' && document.getElementById('chat').textContent.length > 8",
+        0, 60)};
+      if (b.indexOf('reached') !== 0) return 'bubble ' + b;
+      await new Promise(function (r) { setTimeout(r, 500); });
+      return 'ok';
+    `,
+  },
+  {
     shot: null,
     check: 'note',
     after: `
@@ -334,7 +357,8 @@ const STEPS = [
       var body = ov ? ov.querySelector('.body') : null;
       var written = body ? body.textContent.replace(/\\s+/g, '').length : 0;
       var items = ov ? ov.querySelectorAll('.tally.notes li').length : 0;
-      // 这一节至少攒下几条旁注；一条都没有说明收集箱没接上
+      // 汇总页现在直接从数据里取本节所有 note，所以条数是确定的；
+      // 太少说明 collectNotes 没接上或取错了小节。
       if (items < 3) return 'NOTE_EMPTY items=' + items;
       return 'NOTE_OK items=' + items + ' written=' + written;
     `,

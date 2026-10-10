@@ -294,8 +294,8 @@ try {
     const ui = readFileSync('src/ui.js', 'utf8');
     const uiNoComment = ui.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
     const problems = [];
-    if (uiNoComment.indexOf('pendingNotes') < 0) problems.push('没有 pendingNotes 收集箱');
-    if (uiNoComment.indexOf('showSectionNotes') < 0) problems.push('没有 showSectionNotes 统一展示');
+    if (uiNoComment.indexOf('showSectionNotes') < 0) problems.push('没有 showSectionNotes 汇总展示');
+    if (uiNoComment.indexOf('showChat') < 0) problems.push('没有聊天气泡 showChat');
     // say 节点里不得出现"打字结束就弹纸"的写法
     const sayBlock = uiNoComment.slice(
       uiNoComment.indexOf('function renderSay'),
@@ -305,7 +305,7 @@ try {
       problems.push('renderSay 里仍在直接 showPaper —— 笔记会逐条弹且可能跳两次');
     }
     if (problems.length) fail('督导笔记：' + problems.join('；'));
-    else ok('督导笔记：本节末统一展示，且 say 节点内不再弹纸（不会跳两次）');
+    else ok('笔记：逐条走聊天气泡，本节末再汇总一张；say 节点内不再弹纸（不会跳两次）');
   }
 } catch (e) {
   fail('加载源码失败：' + e.message);

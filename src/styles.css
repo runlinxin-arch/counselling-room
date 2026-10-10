@@ -214,6 +214,70 @@ body::before {
 #text[data-role="旁白"],
 #text[data-role="咨询师（内心）"] { color: #b9b5ac; font-style: italic; }
 
+/* ---------------------------------------------------------------------------
+   咨询师的聊天气泡
+   ---------------------------------------------------------------------------
+   有些节点整句就是"咨询师对玩家说的话"（第二人称，"你一上来就复述它，
+   他就把你归到「他们」那边去了"）。这类话不是剧情台词，摆在台词区会读成
+   游戏在后台点评。放进一个带说话人的气泡里，就变成"咨询师在跟你说话"——
+   玩家本来就是扮演这位咨询师的人。
+
+   排版：名字在气泡上方（和台词区的 #who 一致），气泡本身靠左、带小尾巴。
+   气泡只长到需要的宽度，不铺满整行——"一句话"和"一段旁白"要能一眼分开。
+--------------------------------------------------------------------------- */
+/* 气泡节点会把 #text 藏起来，正文区就空出一块。
+   #panel 是纵向 flex：让气泡从顶部开始排，它就落在
+   "台词本来该出现的位置"，不需要任何负 margin 去凑。 */
+#panel.bubble-mode { justify-content: flex-start; }
+
+#chat {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-height: 40vh;
+  overflow: auto;
+}
+
+#chat .bubble {
+  position: relative;
+  max-width: min(86%, 46em);
+  background: rgba(91, 129, 153, .16);
+  border: 1px solid rgba(143, 188, 214, .34);
+  border-radius: 12px;
+  padding: 9px 13px 10px;
+}
+
+/* 左上角的小尾巴，指向"咨询师"这个名字 */
+#chat .bubble::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: -6px;
+  width: 10px;
+  height: 10px;
+  background: rgba(91, 129, 153, .16);
+  border-left: 1px solid rgba(143, 188, 214, .34);
+  border-top: 1px solid rgba(143, 188, 214, .34);
+  transform: rotate(45deg);
+}
+
+#chat .who {
+  font-size: 11.5px;
+  letter-spacing: .12em;
+  color: var(--who-counselor);
+  margin-bottom: 3px;
+}
+
+#chat .say {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+/* 气泡里提到来访者原话的那部分：和台词区一样用暖色挑出来 */
+#chat .say .q { color: var(--who-client); }
+
 /* 光标：对话推进的提示，也是一个明确的"可点"信号 */
 .caret {
   display: inline-block;

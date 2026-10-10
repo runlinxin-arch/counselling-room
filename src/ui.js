@@ -502,7 +502,6 @@
     state.act = 1;
     state.warmth = 1;
     state.screen = 'story';
-    pendingNotes = [];          // 重开一条线，笔记收集箱也要清空
     resultSeen = false;
     E.enter(state.node);
     render();
@@ -636,12 +635,34 @@
     const role = node.who || '旁白';
     setWho(role === '旁白' ? '' : role, role);
 
-    // 督导笔记不再跟着台词弹（太碎）。这里只记下来，本节结束时统一看。
-    const hasNote = !!node.note;
-    if (hasNote) {
-      const t = (node.note && node.note.text) || node.text;
-      if (t && pendingNotes.indexOf(t) < 0) pendingNotes.push(t);
+    // 带 note 的节点：整句就是"咨询师对玩家说的话"。
+    // 用聊天气泡回一句——不拦路、不用点击；正文区让位，这句话只出现一次。
+    // （否则同一句会大字号说一遍、气泡里又说一遍。）
+    const chatText = node.note ? ((node.note && node.note.text) || node.text) : '';
+    if (chatText) {
+      if (typer) typer.skip();
+      hideChat();
+      showChat(chatText);
+      // 正文区让位给气泡。点击/空格仍然照常推进——
+      // textEl 虽然 display:none，但键盘那条路径是直接调 _advance 的。
+      textEl.textContent = '';
+      textEl.style.display = 'none';
+      setWho('', '');
+      setHint('');
+      const r = $('#hint .right');
+      if (r) r.textContent = '空格 / 点文字继续';
+      const goNext = function () {
+        if (paperOpen || awaitingChoice) return;
+        textEl._advance = null;
+        advance(node.next);
+      };
+      textEl.onclick = goNext;
+      textEl._advance = goNext;
+      return;
     }
+    textEl.style.display = '';
+    hideChat();
+    const hasNote = false;   // 笔记不再进"本节末"清单（气泡已经说过一次）
 
     if (typer) typer.skip();
 
@@ -683,7 +704,7 @@
       onEnd: function () {
         if (caret) caret.classList.remove('off');
         allowAdvance();
-        // 笔记已收进 pendingNotes，不在这里弹纸
+        // note 节点改用聊天气泡回复（见 renderSay 开头），这里不弹纸
       },
     });
     if (caret) caret.classList.add('off');
@@ -708,6 +729,7 @@
     const choicesEl = $('#choices');
     choicesEl.innerHTML = '';
     choicesEl.style.display = '';
+    hideChat();          // 选项一出来，上一条气泡就该收了
     awaitingChoice = true;
 
     node.options.forEach(function (opt, i) {
@@ -785,6 +807,64 @@
     return state.story.title + ' · ' + meta.title + (meta.subtitle ? ' · ' + meta.subtitle : '');
   }
 
+  /**
+   * 咨询师发来的一条「聊天气泡」。
+   *
+   * 为什么用气泡而不是台词区：这些文字是**对玩家说的**（第二人称，
+   * 「你一上来就复述它，他就把你归到『他们』那边去了」），不是剧情里的台词。
+   * 直接当旁白摆在台词区，读起来像游戏在后台点评；放进气泡、挂上咨询师的名字，
+   * 就变成"咨询师在跟你说话"——玩家本来就是扮演这位咨询师的人。
+   *
+   * 它是「回一句」不是「弹一张纸」：立刻出现、不用点击、不拦路。
+   * 选项正文已经把玩家刚才那句话带出来了，所以这里不再重复台词。
+   */
+  function showChat(text) {
+    const host = $('#chat');
+    if (!host) return null;
+    host.innerHTML = '';
+    host.style.display = '';
+    // 让 #panel 从顶部排，气泡就落在台词该出现的位置
+    if (host.parentNode) host.parentNode.classList.add('bubble-mode');
+    const bubble = make('div', { class: 'bubble' });
+    bubble.appendChild(make('div', { class: 'who', text: '咨询师' }));
+    const body = make('div', { class: 'say' });
+    bubble.appendChild(body);
+    host.appendChild(bubble);
+    // 窗口偏矮时气泡会落到看不见的地方（#text 藏着，那个空位把气泡顶下去了）。
+    // 主动把它滚进视野——这是给玩家看的一句话，不能要他先滚动才看得到。
+    // 放在计时器里：此刻还在布局，立即量位置会拿到旧值。
+    window.setTimeout(function () {
+      try { bubble.scrollIntoView({ block: 'nearest' }); } catch (e) { /* 老浏览器忽略 */ }
+    }, 0);
+    // 逐字写出来，和台词一个节奏，但用气泡的样式
+    return typewrite(body, text, { speed: 22 });
+  }
+
+  function hideChat() {
+    const host = $('#chat');
+    if (!host) return;
+    host.innerHTML = '';
+    host.style.display = 'none';
+    if (host.parentNode) host.parentNode.classList.remove('bubble-mode');
+  }
+
+  /** 取某一小节里所有带 note 的文字（按节点顺序）。 */
+  function collectNotes(secId) {
+    const story = state.story;
+    if (!story || !story.sections) return [];
+    const sec = story.sections.filter(function (x) { return x.id === secId; })[0];
+    if (!sec) return [];
+    const out = [];
+    Object.keys(sec.nodes).forEach(function (k) {
+      const n = sec.nodes[k];
+      if (n && n.note) {
+        const t = (n.note && n.note.text) || n.text;
+        if (t && out.indexOf(t) < 0) out.push(t);
+      }
+    });
+    return out;
+  }
+
   /** 真正跳到目标节点（不做笔记拦截）。 */
   function advanceNow(target) {
     if (state.screen !== 'story') return;
@@ -823,9 +903,10 @@
     } catch (e) { targetSec = ''; }
 
     if (targetSec && beforeSec && targetSec !== beforeSec) {
-      const snapshot = pendingNotes.slice();
-      pendingNotes = [];
-      showSectionNotes(target, snapshot);
+      // 本节所有带 note 的节点，就是要给玩家看的"本节笔记"。
+      // 直接从数据取，不依赖"玩家走到过哪些节点"——这样清单是完整的，
+      // 与他在节内看到的那些气泡一致（气泡是一次一条，这里是汇总）。
+      showSectionNotes(target, collectNotes(beforeSec));
       return;
     }
     advanceNow(target);
@@ -846,17 +927,6 @@
   /** 成绩单只看一次：看过之后按钮改成"继续"，别一直让人以为还有新东西 */
   let resultSeen = false;
 
-  /**
-   * 本节的督导笔记收集箱。
-   *
-   * 为什么改成"收集"而不是"跟着台词一张张弹"：
-   *   · 一条线有 18–32 条笔记，几乎每两句话就弹一张纸，把对话切得很碎；
-   *   · 一张张弹还引出一个 bug —— 那处 showPaper 没有把 paperOpen 置真，
-   *     玩家在纸滑进来的空档里点一下文字，笔记会再弹一次（跳两次）。
-   * 现在改成：笔记只记下来，等这一节结束时合成一张纸一次看完。
-   * 位置在成绩单之后——成绩单讲"你做了什么"，笔记讲"为什么"。
-   */
-  let pendingNotes = [];
 
   /**
    * 把一张纸放进浮层，并在按钮点下之后执行 next。
@@ -905,7 +975,6 @@
     // 必须由调用方传入：换节那一刻 state.line 已经指向下一节，
     // 这里再回去取只会取到空。
     const notes = snapshot || [];
-    pendingNotes = [];
 
     // 这一节一条笔记都没有：直接走
     if (!notes.length) { advance(nextTarget); return; }
@@ -1098,8 +1167,12 @@
     const choices = make('div', { id: 'choices' });
     choices.style.display = 'none';
     const hint = make('div', { id: 'hint' });
+    // 「咨询师对玩家说」的聊天气泡。放在选项下面：玩家刚点完一个选项，
+    // 咨询师就在这儿回一句——像聊天窗口里对方发来的一条消息。
+    const chat = make('div', { id: 'chat' });
+    chat.style.display = 'none';
     panel.appendChild(who); panel.appendChild(text);
-    panel.appendChild(choices); panel.appendChild(hint);
+    panel.appendChild(choices); panel.appendChild(chat); panel.appendChild(hint);
 
     // stage 放在 panel 之前：DOM 顺序决定上下位置
     panel.parentNode.insertBefore(stage, panel);
