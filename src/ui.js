@@ -568,24 +568,34 @@
     });
   }
 
-  /** 房间按视口缩放（保持整数倍，否则像素会糊） */
+  /**
+   * 房间按视口缩放。
+   *
+   * 布局比例 7:3：#stage 固定拿屏幕高度的 7/10（见 styles.css），
+   * 房间填满这一份、并在里面居中。所以比例不再靠"给对话区留多少 px"来凑，
+   * 而是房间直接按 #stage 的可用高度缩放——大了缩、小了放，居中留白。
+   *
+   * 注意：这里允许 factor > 1（房间可能被放大），因此不再追求整数倍。
+   * 但放大只发生在"屏幕够宽、高度要填满"的场合，放大倍数很小（< 1.35），
+   * 对 106×60 的小像素画来说基本看不出发虚。
+   */
   function scaleRoom() {
     const room = $('#room');
     const wrap = $('#roomWrap');
-    if (!room || !wrap) return;
-    const cssW = wrap.clientWidth || 636;
-    const avail = window.innerHeight;
-    // 636×360 是原始尺寸，底下还要给对话区留 300px
-    const maxH = Math.max(220, avail - 320);
-    let factor = Math.min(1, maxH / 360);
+    const stage = $('#stage');
+    if (!room || !wrap || !stage) return;
+    // 房间能用的高度：stage 的 content box（clientHeight 去掉上下 padding）。
+    // 这样房间填满内容盒、居中，不碰那 14px 的上留白。
+    const cs = window.getComputedStyle(stage);
+    const availH = stage.clientHeight - parseFloat(cs.paddingTop || 0) - parseFloat(cs.paddingBottom || 0);
+    // 房间能用的宽度：stage 的内容盒宽（房间不能比它更宽）
+    const availW = stage.clientWidth;
+    // 高度决定的比例，与宽度决定的比例，取小者，别让房间超出舞台
+    let factor = Math.min(availH / 360, availW / 636);
+    // 太小的时候也别缩没了，至少保个下限（基本不会触发）
     factor = Math.max(0.5, factor);
-    if (factor >= 0.999) {
-      room.style.transform = '';
-      wrap.style.height = '';
-    } else {
-      room.style.transform = 'scale(' + factor.toFixed(3) + ')';
-      wrap.style.height = Math.round(360 * factor) + 'px';
-    }
+    room.style.transform = 'scale(' + factor.toFixed(3) + ')';
+    wrap.style.height = Math.round(360 * factor) + 'px';
   }
 
   // --------------------------------------------------------------------------

@@ -79,13 +79,20 @@ body::before {
    页头
    ========================================================================== */
 
+/* 页头浮在像素区上方（不占独立一行）：否则它会挤掉文字区的高度，
+   7:3 就变成 7:2.3。压在舞台顶端，配一层渐变底，别让文字和房间撞色。 */
 #top {
-  flex: 0 0 auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 12px var(--pad) 10px;
+  padding: 10px var(--pad) 8px;
   border-bottom: 1px solid var(--wall-dark);
+  background: linear-gradient(to bottom, rgba(27,20,15,.92), rgba(27,20,15,.72) 70%, rgba(27,20,15,0));
 }
 
 #brand {
@@ -142,11 +149,20 @@ body::before {
    场景（咨询室）
    ========================================================================== */
 
+/* 布局比例：像素动画区（#stage）: 文字选项区（#panel）= 7 : 3。
+   flex 比例是"内容盒"的占比；padding 属于各自那一份里，所以两块的
+   实际高度（含 padding）保持 7:3。 */
 #stage {
-  flex: 0 0 auto;
+  /* 像素动画区严格占屏幕高度的 70%（页头不进这一份）。
+     用 vh 而不是 flex 比例：flex 会把页头也算进去，导致舞台只拿到
+     "页头之外"的七成，实际约 62%。7:3 要的是整个屏幕的占比。 */
+  flex: 0 0 70vh;
+  min-height: 0;
   display: flex;
   justify-content: center;
-  padding: 14px var(--pad) 0;
+  align-items: center;
+  padding: 52px var(--pad) 0;
+  overflow: hidden;
 }
 
 #roomWrap { width: var(--room-w); max-width: 100%; }
@@ -156,6 +172,7 @@ body::before {
   width: 100%;
   aspect-ratio: 106 / 60;
   background: var(--wall);
+  transform-origin: top center;
   /* 细边框 + 一道内阴影，像墙上开的一扇窗 */
   box-shadow:
     0 0 0 1px var(--base),
