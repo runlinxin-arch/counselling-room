@@ -477,6 +477,85 @@ const STEPS = [
     `,
   },
   {
+    shot: 'game-12-recap', fresh: true,
+    after: `
+      // 剧情回顾长什么样（截图用）：走到第一个选择点，选一条，再走两句，打开回顾
+      document.querySelector('.start').click();
+      document.querySelector('.line-card[data-ready="true"]').click();
+      await new Promise(function (r) { setTimeout(r, 220); });
+      for (var i = 0; i < 80; i++) {
+        var chs = document.querySelectorAll('.choice');
+        if (chs.length) { chs[1].click(); break; }
+        var t = document.getElementById('text');
+        if (t && t._advance) t._advance();
+        await new Promise(function (r) { setTimeout(r, 60); });
+      }
+      await new Promise(function (r) { setTimeout(r, 220); });
+      for (var j = 0; j < 4; j++) {
+        var d = ${TICK};
+        if (d === 'stuck') break;
+        await new Promise(function (r) { setTimeout(r, 60); });
+      }
+      document.querySelector('#recapBtn').click();
+      // 纸的进场动画 0.34s：等够再截，否则拍到半透明的一帧（底下选项会透出来）
+      await new Promise(function (r) { setTimeout(r, 900); });
+      return 'ok';
+    `,
+  },
+  {
+    shot: null, fresh: true, check: 'recap',
+    after: `
+      // 剧情回顾：能翻到台词和"你选了哪条"；换节之后必须清空重记。
+      document.querySelector('.start').click();
+      document.querySelector('.line-card[data-ready="true"]').click();
+      await new Promise(function (r) { setTimeout(r, 220); });
+
+      // 说几句 + 做一个选择
+      for (var i = 0; i < 80; i++) {
+        var chs = document.querySelectorAll('.choice');
+        if (chs.length) { chs[0].click(); break; }
+        var t = document.getElementById('text');
+        if (t && t._advance) t._advance();
+        await new Promise(function (r) { setTimeout(r, 60); });
+      }
+      await new Promise(function (r) { setTimeout(r, 200); });
+      for (var j = 0; j < 6; j++) {
+        var d = ${TICK};
+        if (d === 'stuck') break;
+        await new Promise(function (r) { setTimeout(r, 60); });
+      }
+
+      document.querySelector('#recapBtn').click();
+      await new Promise(function (r) { setTimeout(r, 220); });
+      var paper = document.querySelector('#overlay.on .paper');
+      if (!paper) return 'RECAP_NO_PAPER';
+      var items = paper.querySelectorAll('.recap-list li').length;
+      var picked = paper.querySelectorAll('.opt.picked').length;
+      if (items < 3) return 'RECAP_TOO_FEW items=' + items;
+      if (!picked) return 'RECAP_NO_PICK';
+      if (paper.textContent.indexOf('第一次咨询') < 0) return 'RECAP_NO_SECTION_NAME';
+
+      var btn = document.querySelector('#overlay.on .btn');
+      if (btn) btn.click();
+      await new Promise(function (r) { setTimeout(r, 180); });
+
+      // 走到第二次咨询：回顾必须清空重记
+      for (var k = 0; k < 1200; k++) {
+        if ((window.XLZX.engine.state.line || '').indexOf('s2/') === 0) break;
+        var d2 = ${TICK};
+        if (d2 === 'stuck') return 'RECAP_STUCK line=' + window.XLZX.engine.state.line;
+        await new Promise(function (r) { setTimeout(r, 40); });
+      }
+      document.querySelector('#recapBtn').click();
+      await new Promise(function (r) { setTimeout(r, 220); });
+      var p2 = document.querySelector('#overlay.on .paper');
+      if (!p2) return 'RECAP2_NO_PAPER';
+      var items2 = p2.querySelectorAll('.recap-list li').length;
+      if (items2 >= items) return 'RECAP_NOT_RESET before=' + items + ' after=' + items2;
+      return 'RECAP_OK items=' + items + ' picked=' + picked + ' afterReset=' + items2;
+    `,
+  },
+  {
     shot: 'game-07-supervision-note', fresh: true,
     // 同样的路径，但这次把纸留在屏幕上截图（上面那一步是断言，不截图）
     after: `
@@ -691,6 +770,9 @@ try {
       }
       if (step.check === 'keys' && !/^KEYS_OK/.test(stepResult)) {
         assertBad = '键盘操作断了（' + stepResult + '）';
+      }
+      if (step.check === 'recap' && !/^RECAP_OK/.test(stepResult)) {
+        assertBad = '剧情回顾不对（' + stepResult + '）';
       }
     } else if (stepResult && !/^(ok|reached@\d+)$/.test(stepResult)) {
       // 截图步骤：ok / reached 之外都不是好结果

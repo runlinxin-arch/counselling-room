@@ -211,6 +211,31 @@ body::before {
 #who[data-role="王医生"]      { color: var(--who-doctor); }
 #who[data-role="旁白"]        { color: var(--who-narrator); }
 
+/* 幕首牌：第 n 次咨询 */
+#plate {
+  flex: 0 0 auto;
+  margin: 0 0 16px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid rgba(255, 255, 255, .09);
+  animation: plateIn .55s cubic-bezier(.16, .84, .3, 1);
+}
+#plate .k {
+  font-family: var(--serif);
+  font-size: 25px;
+  letter-spacing: .2em;
+  color: var(--ink);
+}
+#plate .s {
+  margin-top: 5px;
+  font-size: 12.5px;
+  letter-spacing: .16em;
+  color: var(--dim);
+}
+@keyframes plateIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
 #text {
   /* 保持自然高度，不参与伸缩压缩：被压到 0 会整段台词消失。
      空间不够时由 #panel 整体滚动，而不是把正文挤没。 */
@@ -525,6 +550,18 @@ body::before {
   line-height: 1.95;
   color: #3a3227;
 }
+/* 剧情回顾 */
+.paper[data-kind="recap"] .head .label { color: #6d6250; }
+.paper[data-kind="recap"] .body { font-family: var(--sans); font-size: 15px; line-height: 1.8; }
+.recap-list { list-style: none; margin: 0; padding: 0; }
+.recap-list li { padding: 9px 0; border-bottom: 1px dashed rgba(58, 50, 39, .18); }
+.recap-list li:last-child { border-bottom: none; }
+.recap-list .who { color: #8a5a20; font-size: 13px; margin-right: 6px; }
+.recap-list .who::after { content: "："; }
+.recap-list li.recap-choice .q { font-size: 13px; color: #8a5a20; margin-bottom: 5px; letter-spacing: .04em; }
+.recap-list .opt { font-size: 14px; color: #8b8172; padding: 1px 0; }
+.recap-list .opt.picked { color: #2e281f; font-weight: 600; }
+
 .tally { list-style: none; margin: 0 0 16px; padding: 0; }
 .tally li {
   display: flex;

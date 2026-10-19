@@ -1134,9 +1134,11 @@ const STORY_XU = {
     line3: '下肢功能障碍 · 伤后 5 个月',
   },
   sections: [
-    { id: 's1', title: '第 1 节', subtitle: '第一次见面', nodes: XU_S1 },
-    { id: 's2', title: '第 2 节', subtitle: '一周后', nodes: XU_S2 },
-    { id: 's3', title: '第 3 节', subtitle: '准备回学校', nodes: XU_S3 },
+    // title 就是幕首牌上那行字，也是顶栏里的场次——所以写成「第 n 次咨询」，
+    // subtitle 保留这一节在剧情里的名字。
+    { id: 's1', title: '第一次咨询', subtitle: '第一次见面', nodes: XU_S1 },
+    { id: 's2', title: '第二次咨询', subtitle: '一周后', nodes: XU_S2 },
+    { id: 's3', title: '第三次咨询', subtitle: '准备回学校', nodes: XU_S3 },
   ],
   endingNodes: XU_END,
   // 来访者随身的东西。写死成轮椅的话，换线就会画出别人的轮椅。

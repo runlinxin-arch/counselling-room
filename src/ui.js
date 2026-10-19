@@ -347,6 +347,14 @@
       back.style.color = '#9d9a92';
       back.style.borderColor = '#3d3e4d';
       back.addEventListener('click', function () { openCrisisHelp(); });
+      // 剧情回顾：把这一节出现过的台词和做过的选择摊开给玩家看
+      const recapBtn = make('button', { id: 'recapBtn', type: 'button', text: '剧情回顾' });
+      recapBtn.style.cssText = 'font-family:inherit;font-size:13px;color:#9d9a92;background:transparent;' +
+        'border:1px solid #3d3e4d;border-radius:2px;padding:5px 12px;cursor:pointer;letter-spacing:.06em';
+      recapBtn.addEventListener('click', function () { showRecap(); });
+      top.appendChild(recapBtn);
+      top.appendChild(make('span', { style: 'width:8px' }));
+
       // 回标题
       const home = make('button', { id: 'homeBtn', type: 'button', text: '回标题' });
       home.style.cssText = 'font-family:inherit;font-size:13px;color:#6f6c66;background:transparent;' +
@@ -595,6 +603,8 @@
     state.warmth = 1;
     state.screen = 'story';
     resultSeen = false;
+    recapReset();
+    platePending = true;
     E.enter(state.node);
     render();
     renderNode();
@@ -753,6 +763,8 @@
     }
     textEl.style.display = '';
     hideChat();
+    // 笔记节点是"反馈"，不算对话——专家模式没有反馈，回顾里也不该冒出教学文本
+    recapSay(node, role);
     const hasNote = false;   // 笔记不再进"本节末"清单（气泡已经说过一次）
 
     if (typer) typer.skip();
@@ -839,9 +851,31 @@
       if (btns.length) btns[0].focus({ preventScroll: true });
     }, 30);
 
+    recapChoice(node);
+
     setHint(node.hint || '');
     const right = $('#hint .right');
     if (right) right.textContent = '↑↓ 选 · 回车确认（或 1–' + node.options.length + '）';
+  }
+
+  /**
+   * 幕首牌：进入新的一幕（每次咨询）后，第一句台词上方给一块「第一次咨询」。
+   * 由状态驱动、不用定时器——定时器在快进的浏览器里不可靠，也会让截图拍到一半。
+   */
+  function renderPlate() {
+    const el = $('#plate');
+    if (!el) return;
+    if (!platePending) {
+      if (el.style.display !== 'none') { el.style.display = 'none'; el.innerHTML = ''; }
+      return;
+    }
+    platePending = false;
+    const meta = E.sectionMeta(state.story, state.line);
+    el.innerHTML = '';
+    el.appendChild(make('div', { class: 'k', text: meta ? meta.title : '' }));
+    if (meta && meta.subtitle) el.appendChild(make('div', { class: 's', text: meta.subtitle }));
+    el.style.display = '';
+    void el.offsetWidth;   // 强制一次布局，进场动画才会真的跑
   }
 
   /** 总入口：按节点类型分派 */
@@ -849,6 +883,7 @@
     if (state.screen !== 'story') return;
     const node = state.node;
     if (!node) return;
+    renderPlate();
 
     if (node.type === 'choice') return renderChoice(node);
     if (node.type === 'say') return renderSay(node);
@@ -1003,6 +1038,9 @@
     } catch (e) { targetSec = ''; }
 
     if (targetSec && beforeSec && targetSec !== beforeSec) {
+      // 换节：回顾清空，进新的一幕要给一张「第 n 次咨询」的牌
+      recapReset();
+      platePending = true;
       // 本节所有带 note 的节点，就是要给玩家看的"本节笔记"。
       // 直接从数据取，不依赖"玩家走到过哪些节点"——这样清单是完整的，
       // 与他在节内看到的那些气泡一致（气泡是一次一条，这里是汇总）。
@@ -1276,6 +1314,10 @@
     stage.appendChild(make('div', { id: 'roomWrap' }, [
       make('div', { id: 'room' }),
     ]));
+    // 幕首：「第 n 次咨询」。只在新的一幕第一句时出现，下一句自动收起。
+    const plate = make('div', { id: 'plate' });
+    plate.style.display = 'none';
+
     // 对话区
     const who = make('div', { id: 'who' });
     const text = make('div', { id: 'text' });
@@ -1286,6 +1328,7 @@
     // 咨询师就在这儿回一句——像聊天窗口里对方发来的一条消息。
     const chat = make('div', { id: 'chat' });
     chat.style.display = 'none';
+    panel.appendChild(plate);
     panel.appendChild(who); panel.appendChild(text);
     panel.appendChild(choices); panel.appendChild(chat); panel.appendChild(hint);
 
@@ -1326,10 +1369,92 @@
     const opt = node.options[index];
     if (!opt) return;
     E.recordChoice(state.line, opt);
+    recapPick(opt.label);
     awaitingChoice = false;
     clearChoices();
     advance(opt.next);
   };
+
+  // --------------------------------------------------------------------------
+  // 剧情回顾
+  // --------------------------------------------------------------------------
+  // 这一节演过什么，玩家自己能翻回去看：台词按顺序记，选择点连选项带"你选了哪条"一起记。
+  // **每节清空**——回顾是"这一次咨询里发生了什么"，不是整部剧的流水账。
+  let recap = [];
+  let recapLastNode = null;
+  let recapPendingChoice = null;
+  let platePending = false;
+
+  function recapReset() {
+    recap = [];
+    recapLastNode = null;
+    recapPendingChoice = null;
+  }
+
+  function recapSay(node, who) {
+    if (!node || !node.text) return;
+    if (recapLastNode === state.line) return;   // 同一个节点重绘，不重复记
+    recapLastNode = state.line;
+    recap.push({ type: 'say', who: who === '旁白' ? '' : who, text: node.text });
+  }
+
+  function recapChoice(node) {
+    recapPendingChoice = {
+      type: 'choice', prompt: node.prompt || '（没有提示语）',
+      options: node.options.map(function (o) { return o.label; }), picked: null,
+    };
+    recap.push(recapPendingChoice);
+  }
+
+  function recapPick(label) {
+    if (recapPendingChoice) recapPendingChoice.picked = label;
+  }
+
+  function showRecap() {
+    const meta = E.sectionMeta(state.story, state.line);
+    const body = make('div', {});
+    if (!recap.length) {
+      body.appendChild(make('p', {
+        style: 'color:#6d6250',
+        text: '这一节还没记下什么。从存档续玩的话，回顾从你落下的那一句开始记。',
+      }));
+    } else {
+      const ol = make('ol', { class: 'recap-list' });
+      recap.forEach(function (en) {
+        // 注意：不能用 class="choice"——全局 .choice 是选项按钮的样式（深底、flex），
+        // 会把回顾里这条记录渲染成一个横着的按钮条。
+        const li = make('li', { class: 'recap-' + en.type });
+        if (en.type === 'choice') {
+          li.appendChild(make('div', { class: 'q', text: en.prompt }));
+          en.options.forEach(function (label, i) {
+            li.appendChild(make('div', {
+              class: 'opt' + (label === en.picked ? ' picked' : ''),
+              text: (label === en.picked ? '✓ ' : '　 ') + (i + 1) + '. ' + label,
+            }));
+          });
+        } else {
+          if (en.who) li.appendChild(make('span', { class: 'who', text: en.who }));
+          li.appendChild(make('span', { class: 'line', text: en.text }));
+        }
+        ol.appendChild(li);
+      });
+      body.appendChild(ol);
+      body.appendChild(make('p', {
+        style: 'color:#6d6250;font-size:13px;margin-top:12px',
+        text: '这里只记这一节。换到下一节会清空——回顾是「这次咨询里发生了什么」，不是整部剧的流水账。',
+      }));
+    }
+
+    paperOpen = true;
+    presentPaper({
+      kind: 'recap',
+      label: '剧情回顾',
+      title: (meta ? meta.title + ' · ' : '') + '到目前为止',
+      body: body,
+      button: '关上',
+      onClose: function () { paperOpen = false; },
+    });
+  }
 
   // --------------------------------------------------------------------------
   // 键盘

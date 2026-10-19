@@ -456,6 +456,15 @@ if (!E || stories.length === 0) {
   }
 
 
+  // ---- 幕首：「第 n 次咨询」----
+  // 每一幕（每一节）的 title 就是幕首牌和顶栏上那行字，所以必须是"第 n 次咨询"。
+  {
+    const CN = ['一', '二', '三', '四', '五', '六', '七', '八', '九'];
+    const bad = story.sections.filter((s, i) => s.title !== '第' + CN[i] + '次咨询');
+    if (bad.length) fail('幕首标题应是「第 n 次咨询」：' + bad.map((s) => s.title).join(' / '));
+    else ok(story.sections.length + ' 幕都有「第 n 次咨询」标题');
+  }
+
   // ---- 难度分级（v2.1）：同一份数据要能供三档读法 ----
   // 新手版必须存在、而且不许堆术语——它是给没学过心理学的人看的。
   {
