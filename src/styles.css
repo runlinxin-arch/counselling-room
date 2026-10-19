@@ -333,6 +333,17 @@ body::before {
 .choice:active:not(:disabled) { transform: translateX(2px) scale(.995); }
 .choice:disabled { cursor: default; opacity: .5; }
 
+/* 键盘（和鼠标悬停共用）的"当前选中"。
+   不能只靠 :focus-visible——programmatic focus 不一定触发它，
+   键盘玩家就看不见自己选中了哪一条。所以显式加一个 is-current。 */
+.choice.is-current {
+  background: #232838;
+  border-left: 3px solid var(--lamp);
+  padding-left: 13px;
+  transform: translateX(2px);
+}
+.choice.is-current .key { color: var(--lamp); }
+
 .choice .key {
   flex: 0 0 auto;
   font-family: var(--mono);

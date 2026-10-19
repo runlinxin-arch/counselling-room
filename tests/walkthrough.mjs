@@ -420,6 +420,63 @@ const STEPS = [
     `,
   },
   {
+    shot: null, fresh: true, check: 'keys',
+    after: `
+      // 键盘路径：↑↓ 选、回车确认、空格继续、点文字继续。
+      // 四条都是玩家真会按的键，任何一条断了都只用键盘玩不下去。
+      document.querySelector('.start').click();
+      document.querySelector('.line-card[data-ready="true"]').click();
+      await new Promise(function (r) { setTimeout(r, 200); });
+      for (var i = 0; i < 300; i++) {
+        if (document.querySelectorAll('.choice').length) break;
+        var t0 = document.getElementById('text');
+        if (t0 && t0._advance) t0._advance();
+        await new Promise(function (r) { setTimeout(r, 60); });
+      }
+      if (!document.querySelectorAll('.choice').length) return 'KEYS_NO_CHOICE';
+
+      var fire = function (key) {
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: key, bubbles: true, cancelable: true }));
+      };
+      var btns;
+
+      // 1) ↓ 应该把"当前选中"移到第二项
+      btns = document.querySelectorAll('.choice');
+      fire('ArrowDown');
+      await new Promise(function (r) { setTimeout(r, 50); });
+      var idx = Array.prototype.indexOf.call(btns, document.querySelector('.choice.is-current'));
+      if (idx !== 1) return 'KEYS_ARROW_FAIL current=' + idx;
+
+      // 2) 回车确认 → 走到第一个选项之外的分支（c1 的 B → b1）
+      var before = window.XLZX.engine.state.line;
+      fire('Enter');
+      await new Promise(function (r) { setTimeout(r, 150); });
+      var mid = window.XLZX.engine.state.line;
+      if (mid === before) return 'KEYS_ENTER_FAIL still=' + mid;
+
+      // 3) 空格继续（第一下可能只是把打字机补完，多按两下）
+      for (var s = 0; s < 4; s++) {
+        fire(' ');
+        await new Promise(function (r) { setTimeout(r, 120); });
+        if (window.XLZX.engine.state.line !== mid) break;
+      }
+      var afterSpace = window.XLZX.engine.state.line;
+      if (afterSpace === mid) return 'KEYS_SPACE_FAIL still=' + afterSpace;
+
+      // 4) 点文字继续
+      for (var c = 0; c < 4; c++) {
+        var tt = document.getElementById('text');
+        if (tt) tt.click();
+        await new Promise(function (r) { setTimeout(r, 120); });
+        if (window.XLZX.engine.state.line !== afterSpace) break;
+      }
+      var afterClick = window.XLZX.engine.state.line;
+      if (afterClick === afterSpace) return 'KEYS_CLICK_FAIL still=' + afterClick;
+
+      return 'KEYS_OK ' + before + ' >' + mid + ' >' + afterSpace + ' >' + afterClick;
+    `,
+  },
+  {
     shot: 'game-07-supervision-note', fresh: true,
     // 同样的路径，但这次把纸留在屏幕上截图（上面那一步是断言，不截图）
     after: `
@@ -631,6 +688,9 @@ try {
       }
       if (step.check === 'teaching' && !/^TEACHING_OK/.test(stepResult)) {
         assertBad = '教学模式给的不是术语版（' + stepResult + '）';
+      }
+      if (step.check === 'keys' && !/^KEYS_OK/.test(stepResult)) {
+        assertBad = '键盘操作断了（' + stepResult + '）';
       }
     } else if (stepResult && !/^(ok|reached@\d+)$/.test(stepResult)) {
       // 截图步骤：ok / reached 之外都不是好结果

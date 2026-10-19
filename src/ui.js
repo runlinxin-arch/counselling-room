@@ -734,7 +734,7 @@
       setWho('', '');
       setHint('');
       const r = $('#hint .right');
-      if (r) r.textContent = '空格 / 点文字继续';
+      if (r) r.textContent = '空格 / 点气泡继续';
       const goNext = function () {
         if (paperOpen || awaitingChoice) return;
         textEl._advance = null;
@@ -742,6 +742,13 @@
       };
       textEl.onclick = goNext;
       textEl._advance = goNext;
+      // 气泡节点把正文区藏了，没字可点——那就让气泡本身可点。
+      // （以前提示写着"点文字继续"，可那行字是 display:none，点了没反应。）
+      const host = $('#chat');
+      if (host) {
+        host.onclick = function () { goNext(); };
+        host.style.cursor = 'pointer';
+      }
       return;
     }
     textEl.style.display = '';
@@ -819,14 +826,22 @@
       const btn = make('button', { class: 'choice', type: 'button' });
       btn.appendChild(make('span', { class: 'key', text: String(i + 1) }));
       btn.appendChild(make('span', { class: 'label', text: opt.label }));
+      // 鼠标移上来也算"当前选中"，键盘和鼠标共用同一个高亮
+      btn.addEventListener('mouseenter', function () { markCurrent(i); });
       btn.addEventListener('click', function () { X.ui.chooseOption(i); });
       choicesEl.appendChild(btn);
-      if (i === 0) window.setTimeout(function () { btn.focus({ preventScroll: true }); }, 30);
     });
+    // 第一项默认选中：键盘玩家不用先按方向键。
+    // 标记必须**同步**打上——放进定时器里，截图和第一帧都会拍到一个"没有选中"的空状态。
+    markCurrent(0);
+    window.setTimeout(function () {
+      const btns = choiceButtons();
+      if (btns.length) btns[0].focus({ preventScroll: true });
+    }, 30);
 
     setHint(node.hint || '');
     const right = $('#hint .right');
-    if (right) right.textContent = '按 1–' + node.options.length + ' 也能选';
+    if (right) right.textContent = '↑↓ 选 · 回车确认（或 1–' + node.options.length + '）';
   }
 
   /** 总入口：按节点类型分派 */
@@ -928,6 +943,8 @@
     if (!host) return;
     host.innerHTML = '';
     host.style.display = 'none';
+    host.onclick = null;
+    host.style.cursor = '';
     if (host.parentNode) host.parentNode.classList.remove('bubble-mode');
   }
 
@@ -1317,6 +1334,48 @@
   // --------------------------------------------------------------------------
   // 键盘
   // --------------------------------------------------------------------------
+
+  /** 当前显示着的选项按钮 */
+  function choiceButtons() {
+    return Array.prototype.slice.call(document.querySelectorAll('.choice'));
+  }
+
+  /** 哪一项是"当前选中"：先看标记，再看焦点，都没有就是 -1 */
+  function currentChoiceIndex() {
+    const btns = choiceButtons();
+    for (let i = 0; i < btns.length; i++) {
+      if (btns[i].classList.contains('is-current')) return i;
+    }
+    const at = btns.indexOf(document.activeElement);
+    return at;
+  }
+
+  let choiceAt = 0;
+  function markCurrent(i) {
+    const btns = choiceButtons();
+    if (!btns.length) return;
+    choiceAt = Math.max(0, Math.min(i, btns.length - 1));
+    btns.forEach(function (b, k) { b.classList.toggle('is-current', k === choiceAt); });
+  }
+
+  /**
+   * 上下移动选中项。d 可以是 ±1，也可以是 ±Infinity（Home / End）。
+   * 到头绕回去：三个选项时按两下下 = 回到第一个，不用记得按几下。
+   */
+  function moveChoice(d) {
+    const btns = choiceButtons();
+    if (!btns.length) return;
+    const from = currentChoiceIndex();
+    let i;
+    if (!isFinite(d)) i = d > 0 ? btns.length - 1 : 0;
+    else i = from < 0 ? 0 : (from + d + btns.length) % btns.length;
+    markCurrent(i);
+    if (btns[i]) {
+      btns[i].focus({ preventScroll: true });
+      try { btns[i].scrollIntoView({ block: 'nearest' }); } catch (e) { /* 老浏览器忽略 */ }
+    }
+  }
+
   document.addEventListener('keydown', function (ev) {
     if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
 
@@ -1342,6 +1401,27 @@
       if (n >= 1 && n <= 9) {
         ev.preventDefault();
         X.ui.chooseOption(n - 1);
+        return;
+      }
+      // ↑ ↓ 在选项之间移动，回车 / 空格确认。
+      // 用"当前项"而不是依赖浏览器焦点：programmatic focus 不一定触发
+      // :focus-visible，高亮会看不见——那键盘玩家就完全不知道自己选中了哪条。
+      if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+        ev.preventDefault();
+        moveChoice(ev.key === 'ArrowDown' ? 1 : -1);
+        return;
+      }
+      if (ev.key === 'Home' || ev.key === 'End') {
+        ev.preventDefault();
+        moveChoice(ev.key === 'Home' ? -Infinity : Infinity);
+        return;
+      }
+      if (ev.key === 'Enter' || ev.key === ' ') {
+        ev.preventDefault();
+        const btns = choiceButtons();
+        const cur = currentChoiceIndex();
+        const btn = btns[cur >= 0 ? cur : 0];
+        if (btn) btn.click();
       }
       return;
     }
