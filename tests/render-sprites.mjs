@@ -84,7 +84,7 @@ function bgChar(x, y) {
  * 画一帧房间。层级必须和 engine.js 的 renderScene 一致：
  * 背景 → 家具 → 人 → 茶几 → 茶几上的东西 → 钟 → 暖光
  */
-function drawRoom({ withPeople = true, act = 1, warmth = 1, client = CLIENT_SCI } = {}) {
+function drawRoom({ withPeople = true, act = 1, warmth = 1, client = CLIENT_XU } = {}) {
   const cv = makeCanvas(GW, GH);
 
   for (let y = 0; y < GH; y++) {

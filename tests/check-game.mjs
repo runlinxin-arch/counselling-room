@@ -99,6 +99,21 @@ const allSprites = {
 for (const [n, rows] of Object.entries(allSprites)) auditSprite(n, rows);
 if (!spriteBad) ok(`${Object.keys(allSprites).length} 个物件行宽一致、颜色都在调色板内（${Object.keys(PAL).length} 色）`);
 
+// 墙上的钟必须真的在场景里。
+// 它曾经只存在于数据里、没进 scene —— 于是"墙上的钟"那个箭头指着一片白墙，
+// 而所有断言都是绿的（标注文案在数据里，检查只看文案）。
+{
+  const row = spritesJson.scene.find((r) => r[0] === 'clock');
+  const spr = spritesJson.sprites.clock;
+  if (!row) fail('场景里没有 clock——墙上的钟没画出来');
+  else if (!spr) fail('sprites.json 里没有 clock 这个物件');
+  else {
+    const w = spr[0].length, h = spr.length;
+    if (row[2] + h > 34) fail(`钟画到墙外面去了（y${row[2]}+${h} > 墙脚 34）`);
+    else ok(`墙上有钟：(${row[1]},${row[2]}) ${w}×${h}`);
+  }
+}
+
 // 摆位不越界
 const GW = spritesJson.size.w, GH = spritesJson.size.h;
 let oob = 0;
@@ -663,6 +678,20 @@ if (!E || stories.length === 0) {
     // 背景 106×60 就该有几百个矩形；太少说明整间房没画出来
     if (rects < 1000) fail(`房间只画了 ${rects} 个矩形，太少（背景一层就该有几百）`);
     else ok(`房间画了 ${rects} 个矩形`);
+  }
+
+  // 「墙上的钟」那条箭头必须真指在钟上——不能指空白墙。
+  {
+    const row = spritesJson.scene.find((r) => r[0] === 'clock');
+    const geo = (E.CALLOUTS || []).find((c) => c.id === 'clock');
+    if (row && geo && geo.anchor) {
+      const spr = spritesJson.sprites.clock;
+      const [ax, ay] = geo.anchor;
+      const inX = ax >= row[1] && ax <= row[1] + spr[0].length;
+      const inY = ay >= row[2] && ay <= row[2] + spr.length + 1;
+      if (!inX || !inY) fail(`「墙上的钟」的箭头没指在钟上（锚点 ${ax},${ay}，钟在 ${row[1]},${row[2]}）`);
+      else ok('「墙上的钟」的箭头指在钟上');
+    }
   }
 
   // 箭头标注：锚点必须在画面里、文案必须齐。
