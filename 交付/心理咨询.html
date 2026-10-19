@@ -674,6 +674,68 @@ body::before {
 }
 .title-main .pitch em { font-style: normal; color: var(--ink); }
 
+/* ---------------------------------------------------------------------------
+   难度分级
+   ---------------------------------------------------------------------------
+   三档不是"游戏多难"，是"反馈给到哪一层"。所以每档都写清它给什么、不给什么，
+   别用「简单 / 普通 / 困难」这种说法——玩家不知道自己失去了什么。
+--------------------------------------------------------------------------- */
+.mode-badge {
+  font-size: 13px;
+  color: var(--dim);
+  margin: 10px 0 0;
+  letter-spacing: .02em;
+}
+.mode-badge::before {
+  content: "";
+  display: inline-block;
+  width: 6px; height: 6px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--blue);
+  vertical-align: middle;
+}
+
+.modes { margin: 26px 0 22px; }
+.modes-title {
+  font-size: 12px;
+  letter-spacing: .16em;
+  color: var(--dim);
+  margin-bottom: 10px;
+}
+.mode-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.mode {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  font-family: inherit;
+  background: rgba(255, 255, 255, .03);
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 3px;
+  padding: 8px 14px 9px;
+  cursor: pointer;
+  transition: background .16s, border-color .16s;
+}
+.mode:hover { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .18); }
+.mode[data-on="true"] {
+  background: rgba(127, 169, 191, .14);
+  border-color: rgba(127, 169, 191, .55);
+  box-shadow: inset 3px 0 0 var(--blue);
+}
+.mode .n { grid-area: n; font-size: 15px; color: var(--ink); letter-spacing: .04em; }
+.mode .n { font-size: 15px; color: var(--ink); letter-spacing: .04em; }
+.mode .t { font-size: 11.5px; letter-spacing: .1em; color: var(--dim); }
+.mode[data-on="true"] .t { color: var(--blue); }
+.mode-desc {
+  margin: 9px 0 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #a9a49b;
+  max-width: 44em;
+}
+.modes { margin: 20px 0 18px; }
+
 .start {
   align-self: flex-start;
   display: inline-flex;
@@ -1899,6 +1961,7 @@ const XU_S1 = {
   'a3': {
     type: 'say', note: { kind: 'supervision' },
     text: '转介单上那句是别人写的判断。你一上来就复述它，他就得先花力气反驳那句话，而不是说自己的事。',
+    basic: '转介单上那句是别人写的，不是他自己说的。你照着念一遍，他第一件事就得替你证明这话不对，反而没机会讲自己的事。开场别用别人的评价，用你自己的话。',
     next: 'setup1',
   },
 
@@ -1907,6 +1970,7 @@ const XU_S1 = {
   'b3': {
     type: 'say', note: { kind: 'supervision' },
     text: '「不知道说啥」不是拒绝，是等你先开口。这时候别急着替他把话填满。',
+    basic: '他说「不知道说啥」，不是不想聊，是在等你先开口。这时候别急着把话填满，留一下子空，他反而会接着说。',
     next: 'setup1',
   },
 
@@ -1914,6 +1978,7 @@ const XU_S1 = {
   'd2': {
     type: 'say', note: { kind: 'supervision' },
     text: '第一次见面问「怎么样」，一般只能换回「挺好的」。他给你的是安全答案。',
+    basic: '「最近怎么样」这种问法，几乎只会换回「挺好的」。问得越具体越好：「今天来这儿路上花了多久？」',
     next: 'setup1',
   },
 
@@ -1947,6 +2012,7 @@ const XU_S1 = {
   'c2a2': {
     type: 'say', note: { kind: 'supervision' },
     text: '他答「嗯」，但你没确认他到底听懂没有。保密例外是拉近关系的东西，不是免责声明。',
+    basic: '他答「嗯」，可这个「嗯」什么都保证不了。可以补一句：「我再说一遍最要紧的一条——真遇上危险，我不能瞒着。这句你听着怎么样？」',
     next: 'room1',
   },
   'c2b1': { type: 'say', who: '许予安', text: '（停了停）那个……「做点事」是啥意思？', next: 'c2b2' },
@@ -1957,11 +2023,13 @@ const XU_S1 = {
   'c2b6': {
     type: 'say', note: { kind: 'supervision' },
     text: '他问的是边界。问出来，说明他听进去了，也说明他在考虑「要不要跟这个人说实话」。',
+    basic: '他追问「告诉我爸妈？」——这是好事，说明他在认真想「要不要跟你说实话」。把这条讲清楚，比说十句「你可以信我」管用。',
     next: 'room1',
   },
   'c2c1': {
     type: 'say', note: { kind: 'supervision' },
     text: '跳过设置直接往下：你还不知道他听懂了没有。这条以后会回来找你。',
+    basic: '规则讲完你直接往下走了，没问他听懂没有。真出事那一次，他会说「你又没告诉我」。',
     next: 'room1',
   },
 
@@ -1997,6 +2065,7 @@ const XU_S1 = {
   'va3': {
     type: 'say', note: { kind: 'supervision' },
     text: '他记得声音、记得地上烫、记得躺着——不记得前因。这不是回避，创伤后的记忆本来就是碎的。',
+    basic: '他记得声音、记得地上烫、记得自己躺着，却记不清怎么被撞的。这不是他不想说，是那一段记忆本来就是断的。别追问「你怎么会走到马路中间」，他是真不知道。',
     next: 'vd',
   },
   'vb1': { type: 'say', who: '许予安', text: '（想了想）当时就是糊的。', next: 'vb2' },
@@ -2004,12 +2073,14 @@ const XU_S1 = {
   'vb3': {
     type: 'say', note: { kind: 'supervision' },
     text: '「我妈讲了好多遍」——他对那天的记忆是别人转述的。这很常见，也很要紧：他手上没有自己的版本。',
+    basic: '他对那天的记忆是从妈妈嘴里听来的——「我妈跟我讲了好多遍」。所以他讲的版本里，其实没有他自己。这很常见，也值得留意。',
     next: 'vd',
   },
   'vc1': { type: 'say', who: '许予安', text: '……嗯。', next: 'vc2' },
   'vc2': {
     type: 'say', note: { kind: 'supervision' },
     text: '「没关系」把门关上了，但没锁。后面还能再敲一次，只是别在这儿敲。',
+    basic: '你说「不记得也没关系」，这个话题就关上了。门没锁，以后还能再敲，只是今天别再敲这一下。',
     next: 'vd',
   },
   'vd': {
@@ -2021,6 +2092,7 @@ const XU_S1 = {
   'vf': {
     type: 'say', note: { kind: 'supervision' },
     text: '他把整件事说成了一份经过。你听不到一句「我难受」——第一次见面，这很正常，别急着要。',
+    basic: '他把事故讲成了一份经过：几点、哪家医院、做了几次手术。整段里没有一句「我难受」。第一次见面这样很正常，先让他把事说完，别急着要情绪。',
     next: 'sc1',
   },
   'sc1': {
@@ -2057,6 +2129,7 @@ const XU_S1 = {
   'f3': {
     type: 'say', note: { kind: 'supervision' },
     text: '先接住再谈，他才会往下说。「没事干」这三个字后面藏着东西。',
+    basic: '他说「在家也没事干」。先接住这句（「是挺熬人的」），他才肯往下讲。你要是直接问「怎么不干点别的」，他会觉得你在挑他的不是。',
     next: 'i1',
   },
   'g1': { type: 'say', who: '许予安', text: '（很快）就是……快期末了。', next: 'g2' },
@@ -2064,6 +2137,7 @@ const XU_S1 = {
   'g3': {
     type: 'say', note: { kind: 'supervision' },
     text: '他答得很快。太快了——这是准备好的答案，不是想出来的答案。',
+    basic: '你问「为什么急着回去」，他答得又快又顺：「快期末了，落太多补不回来」。太顺的答案，一般是早就准备好的说法。',
     next: 'i1',
   },
   'h1': { type: 'say', who: '许予安', text: '……', next: 'h2' },
@@ -2071,6 +2145,7 @@ const XU_S1 = {
   'h3': {
     type: 'say', note: { kind: 'supervision' },
     text: '你说得没错，但他听见的是「你被看穿了」。第一次见面就点破，关系容易僵。',
+    basic: '你说「你从头到尾只问了这一件事」，这话没错，但他听到的是「你被我看穿了」。第一次见面就被点破，他下次就不来了。',
     next: 'i1',
   },
 
@@ -2095,17 +2170,20 @@ const XU_S1 = {
   'j3': {
     type: 'say', note: { kind: 'supervision' },
     text: '他说「我妈」的时候没停顿，说「阿姨」之前停了一下。停顿的位置比话本身有用。',
+    basic: '他说「我妈」时一点没停，说「还有个阿姨」之前停了一下。这个停顿比话本身有用——停的那一下，就是有事的地方。',
     next: 'j7',
   },
   'j4': { type: 'say', who: '许予安', text: '（愣了一下）早饭……阿姨做。', next: 'j5' },
   'j5': {
     type: 'say', note: { kind: 'supervision' },
     text: '问具体的事，比问人管用。他答「阿姨」的时候，没有先想「该不该说」。',
+    basic: '问具体的事比问人管用。问「还有别人吗」，他会想该不该说；问「早饭是谁做的」，他直接就答了。',
     next: 'j7',
   },
   'j6': {
     type: 'say', note: { kind: 'supervision' },
     text: '他有一个回答卡在那儿，你没接。下次再问到，多半还卡在那儿。',
+    basic: '他有个回答卡在那儿，你没往下接。下次再问到，多半还卡在同一个地方。',
     next: 'j7',
   },
   'j7': {
@@ -2136,6 +2214,7 @@ const XU_S1 = {
   'k3': {
     type: 'say', note: { kind: 'supervision' },
     text: '「她在我家做保洁」——他把人和身份放在一起说的。这个顺序，后面还会出现。',
+    basic: '他说的是「她在我家做保洁」——先说她是谁，再说她干什么。这个顺序后面还会出现：在他心里，「人」和「身份」是放在一起的。',
     next: 'm1',
   },
 
@@ -2146,6 +2225,7 @@ const XU_S1 = {
   'm4': {
     type: 'say', note: { kind: 'supervision' },
     text: '他答应得太快了，还先看了一眼钟。快得像在敷衍——这是「配合」，不是「愿意」。',
+    basic: '你问下礼拜还来不来，他说「行」，说得很快，还先看了一眼钟。这不是愿意，这是配合。真愿意的人会问一句「那下次聊什么」。',
     next: 'sc2',
   },
   'sc2': {
@@ -2215,6 +2295,7 @@ const XU_S2 = {
   'a3': {
     type: 'say', note: { kind: 'supervision' },
     text: '他从「没什么」自己走到了「她每天都要说」。接住情绪，话会自己往外走。',
+    basic: '你说「今天路上不太顺？」，他先答「没什么」，接着自己就说出了「她每天都要在门口说一遍」。先接住情绪，话会自己往外走。',
     next: 'i1',
   },
   'b1': { type: 'say', who: '许予安', text: '还行吧。', next: 'b2' },
@@ -2222,6 +2303,7 @@ const XU_S2 = {
   'b3': {
     type: 'say', note: { kind: 'supervision' },
     text: '「还行吧」后面那个「没啥事」，是他自己递出来的线头。',
+    basic: '「还行吧」后面跟了句「在家也没啥事」——这就是他自己递出来的话头。接住它，别一下子跳到「那你想聊什么」。',
     next: 'i1',
   },
   'c1x': { type: 'say', who: '许予安', text: '嗯。', next: 'c1y' },
@@ -2229,6 +2311,7 @@ const XU_S2 = {
   'c1z': {
     type: 'say', note: { kind: 'supervision' },
     text: '你一提阿姨，他先说的是「她非要跟上来」——他在替这件事找解释。',
+    basic: '你一提到阿姨，他先说的是「她今天非要跟上来」。他在替这件事找解释，说明这里他心里有负担。',
     next: 'i1',
   },
 
@@ -2255,18 +2338,21 @@ const XU_S2 = {
   'e3': {
     type: 'say', note: { kind: 'supervision' },
     text: '你把他护在身后。这一下他松了一口气，但也把「说真话的人」推了出去。回头得把这一层补回来。',
+    basic: '你把阿姨请出去，护住了他。他松了口气，同时也明白了一件事：说真话的人被赶走了。这句后面得补回来——「刚才不是不让她说话，是想先听你说」。',
     next: 'f1',
   },
   'e4': { type: 'say', who: '李阿姨', text: '我不坐，我不坐。我就说这一句。', next: 'e5' },
   'e5': {
     type: 'say', note: { kind: 'supervision' },
     text: '你先接住了照顾者的辛苦。可当着孩子的面认下阿姨的功劳，等于在他那儿记一笔「你不对」。',
+    basic: '你夸阿姨辛苦，这话没错，可当着孩子的面说，等于告诉他「你刚才不对」。照顾者的辛苦，得另外找时间说。',
     next: 'f1',
   },
   'e6': { type: 'say', who: '旁白', text: '两个人又顶了几句。她退出去，把门带上。', next: 'e6b' },
   'e6b': {
     type: 'say', note: { kind: 'supervision' },
     text: '不介入，冲突会自己结束——但结束的方式是「她让步」。他学到的还是「我发火管用」。',
+    basic: '你不出手，他们自己吵完了，结果是阿姨让了步。他学到的还是「我发火有用」——这正好是你想让他改掉的那件事。',
     next: 'f1',
   },
   'f1': { type: 'say', who: '旁白', text: '他坐回去，胸口起伏得厉害，手握在拐杖横杆上。', next: 'f2' },
@@ -2286,6 +2372,7 @@ const XU_S2 = {
   'g2b': {
     type: 'say', note: { kind: 'supervision' },
     text: '他答得出「我小时候」，说明这段关系在他心里有刻度。有刻度的关系，才谈得上生气。',
+    basic: '他答得出「我小时候她就在」，说明这段关系在他心里有年头。有年头的关系，才谈得上生气——他对陌生人不会这样。',
     next: 'g4',
   },
   'g3': { type: 'say', who: '许予安', text: '……烦。', next: 'g3b' },
@@ -2294,6 +2381,7 @@ const XU_S2 = {
   'g6': {
     type: 'say', note: { kind: 'supervision' },
     text: '你什么都没说，他自己交出了最难开口的那一段。沉默不是空转，是留位子。',
+    basic: '你什么都没说，他自己讲了最难的一段：昨天擦身的时候，他把阿姨赶了出去。有时候沉默比追问管用，你只是没把那个空档填满。',
     next: 'g4',
   },
   'g4': {
@@ -2318,6 +2406,7 @@ const XU_S2 = {
   'h3c': {
     type: 'say', note: { kind: 'supervision' },
     text: '这话说中了，但他听见的是「你不好」。说对了不等于说进去。',
+    basic: '你说「你对别人都客气，就对她不行」，这话没错，但他听到的是「你不好」。说对了，不等于说得进去。',
     next: 'h5',
   },
   'h4': { type: 'say', who: '许予安', text: '（抬头看你）', next: 'h4b' },
@@ -2325,6 +2414,7 @@ const XU_S2 = {
   'h5': {
     type: 'say', note: { kind: 'supervision' },
     text: '他把「我需要人」和「我很惨」绑成了一件事。这个结，是这条线要解的东西。',
+    basic: '他把两件事焊在了一起：「我需要人照顾」和「我很惨」。这条线要解的，就是这个焊点。',
     next: 'w6',
   },
 
@@ -2344,18 +2434,21 @@ const XU_S2 = {
   'w2': {
     type: 'say', note: { kind: 'supervision' },
     text: '「一年见一回」这句他记得。说明他听过，也说明这句话在他那儿放着没扔。',
+    basic: '「她孩子还在老家，一年见一回」，这句他记得，还主动说了出来。说明这句话他听进去了，一直放在心里。',
     next: 'x1',
   },
   'w3': { type: 'say', who: '许予安', text: '（很快）我不用她可怜。', next: 'w4' },
   'w4': {
     type: 'say', note: { kind: 'supervision' },
     text: '「可怜」是他自己加的词，阿姨没这么说过。他在替她说话，也在替自己防守。',
+    basic: '你说「你想过她也不容易吗」，他马上回「我不用她可怜」。「可怜」是他自己加的词——阿姨没说过，是他在防。',
     next: 'x1',
   },
   'w5': { type: 'say', who: '许予安', text: '（很久）她其实挺累的。', next: 'w5b' },
   'w5b': {
     type: 'say', note: { kind: 'supervision' },
     text: '他第一个说出来的不是「她可怜」，是「她累」。这一句里没有他自己——所以他敢说。',
+    basic: '他先说的是「她其实挺累的」，不是「她多可怜」。因为这句话里没有他自己，所以他说得出口。',
     next: 'x1',
   },
 
@@ -2367,6 +2460,7 @@ const XU_S2 = {
   'x5': {
     type: 'say', note: { kind: 'supervision' },
     text: '他没说完。这句半截话就是这条线的骨。别替他说完，也别忘了它。',
+    basic: '他说到「那样我就……」就停了。这半句话是全篇最要紧的地方：被看见，等于被确认自己很惨。别替他说完。',
     next: 'diary',
   },
 
@@ -2420,6 +2514,7 @@ const XU_S2 = {
   'dm3': {
     type: 'say', note: { kind: 'supervision' },
     text: '灯是他自己找的办法。先别急着改成「关灯」，先问「关了灯会想什么」。',
+    basic: '他说关灯就睡不着。灯是他自己想出来的办法。别急着让他「关灯」，先问「关了灯会想什么」。',
     next: 'sc3',
   },
   'dw1': { type: 'say', who: '许予安', text: '我不用她擦。', next: 'dw2' },
@@ -2427,6 +2522,7 @@ const XU_S2 = {
   'dw3': {
     type: 'say', note: { kind: 'supervision' },
     text: '「不想让她看见」——不是嫌她脏，是嫌自己被看见。这条后面要接第 9 章的「看得见 / 看不见」。',
+    basic: '「不想让她看见」——重点不是嫌她，是怕自己被看见。这句后面连着整条线的东西。',
     next: 'sc3',
   },
   'df1': { type: 'say', who: '许予安', text: '春游我不去。', next: 'df2' },
@@ -2434,6 +2530,7 @@ const XU_S2 = {
   'df3': {
     type: 'say', note: { kind: 'supervision' },
     text: '他把「没人问我」和「我不想去」写成同一件事。这两件事，得分开摆。',
+    basic: '他把「没人问我」和「我也不想去」写成了一件事。其实是两件：没人问是一回事，他不想去是另一回事。',
     next: 'sc3',
   },
   'ds1': { type: 'say', who: '许予安', text: '一天没出屋，挺好的。', next: 'ds2' },
@@ -2442,6 +2539,7 @@ const XU_S2 = {
   'ds4': {
     type: 'say', note: { kind: 'supervision' },
     text: '他说「挺好的」，是因为没有更难听的说法。这是回避，不是满意。',
+    basic: '他说「挺好的」，可这一天他都没出屋。这不是满意，是他没有更难听的说法。',
     next: 'sc3',
   },
 
@@ -2476,6 +2574,7 @@ const XU_S2 = {
   'k3': {
     type: 'say', note: { kind: 'supervision' },
     text: '他数的是次数，不是内容。反复问，说明他们自己也不安。',
+    basic: '他说爸妈「一天问八百遍」。他数的是次数，不是内容——次数越多，说明他们自己越不安。',
     next: 'l1',
   },
   'k4': { type: 'say', who: '许予安', text: '……我也不知道。', next: 'k4b' },
@@ -2483,6 +2582,7 @@ const XU_S2 = {
   'k5': {
     type: 'say', note: { kind: 'supervision' },
     text: '「我就得说没事」——他们的关心，成了他每天要做的一份工作。',
+    basic: '「他们一问，我就得说没事」——关心变成了他每天要做的一份工。这句值得停一下。',
     next: 'l1',
   },
   'k6': { type: 'say', who: '许予安', text: '（很久）我妈哭过。', next: 'k6b' },
@@ -2490,6 +2590,7 @@ const XU_S2 = {
   'k7': {
     type: 'say', note: { kind: 'supervision' },
     text: '先说事实（她哭了），再说情绪，比替他们解释「愧疚」更有用。别抢在他前面下结论。',
+    basic: '他先说「我妈哭过」，你才接着问。让他说事实，别替他说「他们是愧疚」——你替他说完，他就没话可接了。',
     next: 'l1',
   },
 
@@ -2500,6 +2601,7 @@ const XU_S2 = {
   'l4': {
     type: 'say', note: { kind: 'supervision' },
     text: '这是他第一次说出比「挺好的」更具体的一句。记住这一刻，它是这一节的全部成绩。',
+    basic: '他终于说出了「晚上关灯以后」。这是他第一次给出比「挺好的」更具体的一句。这一节到这儿就够了。',
     next: 'sc4',
   },
   'sc4': {
@@ -2546,6 +2648,7 @@ const XU_S3 = {
   'a3': {
     type: 'say', note: { kind: 'supervision' },
     text: '你讲的是道理，他讲的是退路。先让他把「不想去」说出来，比把他按回去有用。',
+    basic: '你说「不是都定好了吗」，他回「定好了也能不去」。你讲的是道理，他讲的是退路。先让他把「不想去」说完。',
     next: 'd1',
   },
   'b1': { type: 'say', who: '许予安', text: '……', next: 'b2' },
@@ -2553,12 +2656,14 @@ const XU_S3 = {
   'b3': {
     type: 'say', note: { kind: 'supervision' },
     text: '「怕什么」这个词太重，他接不住。先问「去了会怎么样」，比问「怕什么」容易入口。',
+    basic: '「你到底怕什么」这个词太重，他接不住。换成「回去那天会怎么样」，他就答得出来。',
     next: 'd1',
   },
   'c1x': { type: 'say', who: '许予安', text: '（很久）……他们都已经知道了。', next: 'c1y' },
   'c1y': {
     type: 'say', note: { kind: 'supervision' },
     text: '你自己什么都没说，他把最难的那句交出来了。这就是上一节攒下的东西在起作用。',
+    basic: '你什么都没问，他自己说了「他们都已经知道了」。这是前面两节一点点攒下的信任，在这一刻起了作用。',
     next: 'd1',
   },
   'd1': { type: 'say', who: '许予安', text: '他们都已经知道了。', next: 'd2' },
@@ -2577,6 +2682,7 @@ const XU_S3 = {
   'e1c': {
     type: 'say', note: { kind: 'supervision' },
     text: '「被整过」是他自己的说法。别急着替他换成「霸凌」——那个词归他，不归你。',
+    basic: '他说的是「被整过」，没说「霸凌」。先用他自己的词，别急着替他升级说法——那个词得由他说出口。',
     next: 'f1',
   },
   'e2': { type: 'say', who: '许予安', text: '他们会看我。', next: 'e2b' },
@@ -2584,6 +2690,7 @@ const XU_S3 = {
   'e2c': {
     type: 'say', note: { kind: 'supervision' },
     text: '他怕的不是再被打，是被看见。这条线走到这里，第一句真话才算出来。',
+    basic: '他怕的不是再被打，是所有人都看着他。这句出来，才算摸到真东西。',
     next: 'f1',
   },
   'e3': { type: 'say', who: '许予安', text: '我妈说的。', next: 'e3b' },
@@ -2591,6 +2698,7 @@ const XU_S3 = {
   'e3c': {
     type: 'say', note: { kind: 'supervision' },
     text: '妈妈想保护他，做法是让所有人都知道。保护和暴露，在他这里是同一件事。',
+    basic: '妈妈想保护他，办法是告诉老师、让所有人注意点。保护他，和把他推到人前，在这里是同一件事。',
     next: 'f1',
   },
   'f1': { type: 'say', who: '许予安', text: '以前他们就是打我几下，推我几下。', next: 'f2' },
@@ -2598,6 +2706,7 @@ const XU_S3 = {
   'f3': {
     type: 'say', note: { kind: 'supervision' },
     text: '「被打几下」他能忍，「都知道」他忍不了。这两件事的分量，他心里的排序和大人想的不一样。',
+    basic: '「以前就是打我几下」他能忍，「现在全校都知道」他忍不了。这两件事在他心里谁轻谁重，和大人想的正好相反。',
     next: 'f4',
   },
   'f4': { type: 'say', who: '许予安', text: '他们肯定会看我走路。', next: 'f5' },
@@ -2605,6 +2714,7 @@ const XU_S3 = {
   'f6': {
     type: 'say', note: { kind: 'supervision' },
     text: '他把最怕的东西说成了一个画面：有人学他走路。画面比「我怕」好接，也好办。',
+    basic: '他把最怕的场面说得很具体：「我们班有个男生，学人走路学得可像了」。有画面就好办，能就着画面一起想办法。',
     next: 'g1',
   },
   'g1': { type: 'say', who: '咨询师', text: '这段时间，你心里有没有特别沉的时候？', next: 'g2' },
@@ -2630,6 +2740,7 @@ const XU_S3 = {
   'cb4': {
     type: 'say', note: { kind: 'supervision' },
     text: '被动意念：他没想死，他只是不太在乎会不会出事。这一句必须当真，也必须不慌。',
+    basic: '这句必须当真，但不用慌。他说的是「不是想死，就是过马路的时候会想，撞上来会怎么样」——他已经不太在乎自己会不会出事。这时要给资源、要让人知道，别一个人扛。',
     next: 'cb5',
   },
   'cb5': { type: 'say', who: '咨询师', text: '谢谢你告诉我。这个我不会假装没听见。', next: 'cbCard' },
@@ -2665,12 +2776,14 @@ const XU_S3 = {
   'm2c': {
     type: 'say', note: { kind: 'supervision' },
     text: '保密例外不是背着他做决定，是提前告诉他你会做什么。他被瞒过太多次了。',
+    basic: '你要告诉他爸妈，这件事不能瞒着他做。做法三步：先告诉他、跟他一起说、只说该说的。他被瞒过太多次了。',
     next: 'm6',
   },
   'm3': { type: 'say', who: '许予安', text: '……那你别说。', next: 'm3b' },
   'm3b': {
     type: 'say', note: { kind: 'supervision' },
     text: '你答应了做不到的事。下次他再开口之前，会先想起这一次。',
+    basic: '你嘴上先答应了他，可这件事你做不到。下次他开口之前，会先想起这一次你说话不算。',
     next: 'm6',
   },
   'm4': { type: 'say', who: '许予安', text: '不要。', next: 'm5' },
@@ -2678,6 +2791,7 @@ const XU_S3 = {
   'm5b': {
     type: 'say', note: { kind: 'supervision' },
     text: '「他们一来就变成他们的事了」——他要的是自己还留在场。让他选怎么开口，比替他开口管用。',
+    basic: '「他们一来就变成他们的事了」——他要的是自己还在场。让他决定怎么开口，比替他开口有用。',
     next: 'm6',
   },
 
@@ -2690,6 +2804,7 @@ const XU_S3 = {
   'sk2': {
     type: 'say', note: { kind: 'supervision' },
     text: '你没问。这不扣分，也不代表你做错了什么。但他刚才那个「有」字，就留在这儿了。',
+    basic: '你没往下问。这不算错，也不扣分。但他刚才那个「有」字还留在原地。下次记着问。',
     next: 'm6',
   },
 
@@ -2701,6 +2816,7 @@ const XU_S3 = {
   'm10': {
     type: 'say', note: { kind: 'supervision' },
     text: '「下次吧」不是答应，但它不是「不」。这一节到这里就够了。',
+    basic: '「下次吧」不是答应，可也不是「不」。到这儿够了，别逼他。',
     next: 'sc5',
   },
 
@@ -2737,6 +2853,7 @@ const XU_S3 = {
   'p1c2': {
     type: 'say', note: { kind: 'supervision' },
     text: '「我陪你去」听着暖，但那是你在替学校那件事站队。边界上，这一步不该由咨询师迈。',
+    basic: '「我陪你去」听着暖，可那是替他从学校那件事里站出来。咨询师不该迈这一步，迈过去，就变成你的事了。',
     next: 'p3',
   },
   'p3': { type: 'say', who: '咨询师', text: '那就先这么定：上半天，撑不住就走，走之前给我发个消息。', next: 'p4' },
@@ -2744,6 +2861,7 @@ const XU_S3 = {
   'p5': {
     type: 'say', note: { kind: 'supervision' },
     text: '「回不回」是个表态，「上半天」是件能做的事。把大问题换成一件小事，他才动得了。',
+    basic: '「回不回学校」是个表态，「先上半天」是件能做的事。把大问题换成一件小事，他才动得了。',
     next: 'sc6',
   },
   'sc6': {
@@ -3632,6 +3750,59 @@ XLZX.storySlots = [
   const E = X.engine;
   const state = E.state;
 
+  // --------------------------------------------------------------------------
+  // 难度分级（v2.1）
+  // --------------------------------------------------------------------------
+  // 同一份剧本，三种读法：
+  //   novice   新手：每条反馈都用大白话讲清楚——哪里不对、更好的接法是什么。
+  //            可以放心选错，选错本身就是这门课的教学材料。
+  //   teaching 教学：同样的时机给反馈，但换成专业表述，交代知识点。
+  //   expert   专家：不给任何反馈，也不出节末汇总。全凭自己的判断走到结局，
+  //            走完之后看成绩单，自己核对。
+  const MODES = [
+    {
+      id: 'novice', name: '新手模式', tag: '边玩边学',
+      desc: '每次选完都会给一条督导笔记，用大白话说清哪里不对、该怎么接。选错是安全的。',
+    },
+    {
+      id: 'teaching', name: '教学模式', tag: '进阶',
+      desc: '同样的反馈时机，但给出专业术语与知识点。适合系统学过心理学的玩家。',
+    },
+    {
+      id: 'expert', name: '专家模式', tag: '挑战',
+      desc: '没有督导笔记，也没有节末汇总。全凭自己判断，结局之后再看轨迹。',
+    },
+  ];
+  const MODE_KEY = 'xlzx.mode';
+
+  function readMode() {
+    try {
+      const v = localStorage.getItem(MODE_KEY);
+      if (v && MODES.some(function (m) { return m.id === v; })) return v;
+    } catch (e) { /* file:// 下某些浏览器禁 localStorage，静默降级 */ }
+    return 'novice';
+  }
+
+  let mode = readMode();
+
+  function setMode(id) {
+    if (!MODES.some(function (m) { return m.id === id; })) return;
+    mode = id;
+    try { localStorage.setItem(MODE_KEY, id); } catch (e) { /* 同上 */ }
+  }
+
+  /**
+   * 这个节点的反馈，在**当前模式**下该给哪一版。
+   * 专家模式返回空串——调用方据此不出气泡、不做节末汇总。
+   */
+  function noteTextOf(node) {
+    if (!node || !node.note) return '';
+    if (mode === 'expert') return '';
+    const pro = node.note.text || node.text || '';
+    const plain = node.basic || '';
+    return mode === 'novice' ? (plain || pro) : (pro || plain);
+  }
+
   const $ = function (sel, root) { return (root || document).querySelector(sel); };
   const $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
 
@@ -3979,6 +4150,34 @@ XLZX.storySlots = [
         '往往不是事实，是当时脑子里的一句话</em>。',
     }));
 
+    // ---- 难度分级 ----
+    // 三档选的不是"游戏多难"，是**反馈给到哪一层**：
+    // 新手讲人话、教学讲术语、专家什么都不讲。
+    const modes = make('div', { class: 'modes' });
+    modes.appendChild(make('div', { class: 'modes-title', text: '难度 · 反馈给到哪一层' }));
+    const list = make('div', { class: 'mode-list', role: 'radiogroup', 'aria-label': '难度' });
+    MODES.forEach(function (m) {
+      const on = mode === m.id;
+      const btn = make('button', {
+        class: 'mode', type: 'button', 'data-on': String(on),
+        role: 'radio', 'aria-checked': String(on),
+      });
+      btn.appendChild(make('span', { class: 'n', text: m.name }));
+      btn.appendChild(make('span', { class: 't', text: m.tag }));
+      btn.addEventListener('click', function () {
+        setMode(m.id);
+        renderTitle();
+        const again = document.querySelector('.mode[data-on="true"]');
+        if (again) again.focus({ preventScroll: true });
+      });
+      list.appendChild(btn);
+    });
+    modes.appendChild(list);
+    // 说明只显示选中那一档——三行说明叠起来会把「开始」挤出屏幕底部
+    const curMode = MODES.filter(function (x) { return x.id === mode; })[0] || MODES[0];
+    modes.appendChild(make('p', { class: 'mode-desc', text: curMode.desc }));
+    left.appendChild(modes);
+
     const start = make('button', { class: 'start', type: 'button' });
     start.appendChild(make('span', { text: '开始' }));
     start.appendChild(make('span', { class: 'arrow', text: '→' }));
@@ -4066,6 +4265,14 @@ XLZX.storySlots = [
       text: slotN > 1
         ? slotN + ' 条完全独立的故事线，选一条走完。每条都是一次完整的过程，不用按顺序玩。'
         : '一次完整的过程，从头走到尾。',
+    }));
+    // 当前难度写在选线页上：玩家进了游戏就看不到标题页了，
+    // 至少在这儿能知道「为什么这一局有/没有督导笔记」。
+    const m = MODES.filter(function (x) { return x.id === mode; })[0] || MODES[0];
+    head.appendChild(make('p', {
+      class: 'mode-badge',
+      text: '难度 · ' + m.name + '（' + m.tag + '）' + (mode === 'expert'
+        ? '　这一局没有督导笔记，全凭自己判断。' : '　每条反馈都会以督导笔记给出。'),
     }));
     page.appendChild(head);
 
@@ -4256,7 +4463,7 @@ XLZX.storySlots = [
     // 带 note 的节点：整句就是"咨询师对玩家说的话"。
     // 用聊天气泡回一句——不拦路、不用点击；正文区让位，这句话只出现一次。
     // （否则同一句会大字号说一遍、气泡里又说一遍。）
-    const chatText = node.note ? ((node.note && node.note.text) || node.text) : '';
+    const chatText = noteTextOf(node);
     if (chatText) {
       if (typer) typer.skip();
       hideChat();
@@ -4474,10 +4681,10 @@ XLZX.storySlots = [
     const out = [];
     Object.keys(sec.nodes).forEach(function (k) {
       const n = sec.nodes[k];
-      if (n && n.note) {
-        const t = (n.note && n.note.text) || n.text;
-        if (t && out.indexOf(t) < 0) out.push(t);
-      }
+      if (!n || !n.note) return;
+      // 按当前模式取那一版；专家模式这里是空的，节末那张纸也就不出现。
+      const t = noteTextOf(n);
+      if (t && out.indexOf(t) < 0) out.push(t);
     });
     return out;
   }

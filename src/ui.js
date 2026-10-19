@@ -9,6 +9,59 @@
   const E = X.engine;
   const state = E.state;
 
+  // --------------------------------------------------------------------------
+  // 难度分级（v2.1）
+  // --------------------------------------------------------------------------
+  // 同一份剧本，三种读法：
+  //   novice   新手：每条反馈都用大白话讲清楚——哪里不对、更好的接法是什么。
+  //            可以放心选错，选错本身就是这门课的教学材料。
+  //   teaching 教学：同样的时机给反馈，但换成专业表述，交代知识点。
+  //   expert   专家：不给任何反馈，也不出节末汇总。全凭自己的判断走到结局，
+  //            走完之后看成绩单，自己核对。
+  const MODES = [
+    {
+      id: 'novice', name: '新手模式', tag: '边玩边学',
+      desc: '每次选完都会给一条督导笔记，用大白话说清哪里不对、该怎么接。选错是安全的。',
+    },
+    {
+      id: 'teaching', name: '教学模式', tag: '进阶',
+      desc: '同样的反馈时机，但给出专业术语与知识点。适合系统学过心理学的玩家。',
+    },
+    {
+      id: 'expert', name: '专家模式', tag: '挑战',
+      desc: '没有督导笔记，也没有节末汇总。全凭自己判断，结局之后再看轨迹。',
+    },
+  ];
+  const MODE_KEY = 'xlzx.mode';
+
+  function readMode() {
+    try {
+      const v = localStorage.getItem(MODE_KEY);
+      if (v && MODES.some(function (m) { return m.id === v; })) return v;
+    } catch (e) { /* file:// 下某些浏览器禁 localStorage，静默降级 */ }
+    return 'novice';
+  }
+
+  let mode = readMode();
+
+  function setMode(id) {
+    if (!MODES.some(function (m) { return m.id === id; })) return;
+    mode = id;
+    try { localStorage.setItem(MODE_KEY, id); } catch (e) { /* 同上 */ }
+  }
+
+  /**
+   * 这个节点的反馈，在**当前模式**下该给哪一版。
+   * 专家模式返回空串——调用方据此不出气泡、不做节末汇总。
+   */
+  function noteTextOf(node) {
+    if (!node || !node.note) return '';
+    if (mode === 'expert') return '';
+    const pro = node.note.text || node.text || '';
+    const plain = node.basic || '';
+    return mode === 'novice' ? (plain || pro) : (pro || plain);
+  }
+
   const $ = function (sel, root) { return (root || document).querySelector(sel); };
   const $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
 
@@ -356,6 +409,34 @@
         '往往不是事实，是当时脑子里的一句话</em>。',
     }));
 
+    // ---- 难度分级 ----
+    // 三档选的不是"游戏多难"，是**反馈给到哪一层**：
+    // 新手讲人话、教学讲术语、专家什么都不讲。
+    const modes = make('div', { class: 'modes' });
+    modes.appendChild(make('div', { class: 'modes-title', text: '难度 · 反馈给到哪一层' }));
+    const list = make('div', { class: 'mode-list', role: 'radiogroup', 'aria-label': '难度' });
+    MODES.forEach(function (m) {
+      const on = mode === m.id;
+      const btn = make('button', {
+        class: 'mode', type: 'button', 'data-on': String(on),
+        role: 'radio', 'aria-checked': String(on),
+      });
+      btn.appendChild(make('span', { class: 'n', text: m.name }));
+      btn.appendChild(make('span', { class: 't', text: m.tag }));
+      btn.addEventListener('click', function () {
+        setMode(m.id);
+        renderTitle();
+        const again = document.querySelector('.mode[data-on="true"]');
+        if (again) again.focus({ preventScroll: true });
+      });
+      list.appendChild(btn);
+    });
+    modes.appendChild(list);
+    // 说明只显示选中那一档——三行说明叠起来会把「开始」挤出屏幕底部
+    const curMode = MODES.filter(function (x) { return x.id === mode; })[0] || MODES[0];
+    modes.appendChild(make('p', { class: 'mode-desc', text: curMode.desc }));
+    left.appendChild(modes);
+
     const start = make('button', { class: 'start', type: 'button' });
     start.appendChild(make('span', { text: '开始' }));
     start.appendChild(make('span', { class: 'arrow', text: '→' }));
@@ -443,6 +524,14 @@
       text: slotN > 1
         ? slotN + ' 条完全独立的故事线，选一条走完。每条都是一次完整的过程，不用按顺序玩。'
         : '一次完整的过程，从头走到尾。',
+    }));
+    // 当前难度写在选线页上：玩家进了游戏就看不到标题页了，
+    // 至少在这儿能知道「为什么这一局有/没有督导笔记」。
+    const m = MODES.filter(function (x) { return x.id === mode; })[0] || MODES[0];
+    head.appendChild(make('p', {
+      class: 'mode-badge',
+      text: '难度 · ' + m.name + '（' + m.tag + '）' + (mode === 'expert'
+        ? '　这一局没有督导笔记，全凭自己判断。' : '　每条反馈都会以督导笔记给出。'),
     }));
     page.appendChild(head);
 
@@ -633,7 +722,7 @@
     // 带 note 的节点：整句就是"咨询师对玩家说的话"。
     // 用聊天气泡回一句——不拦路、不用点击；正文区让位，这句话只出现一次。
     // （否则同一句会大字号说一遍、气泡里又说一遍。）
-    const chatText = node.note ? ((node.note && node.note.text) || node.text) : '';
+    const chatText = noteTextOf(node);
     if (chatText) {
       if (typer) typer.skip();
       hideChat();
@@ -851,10 +940,10 @@
     const out = [];
     Object.keys(sec.nodes).forEach(function (k) {
       const n = sec.nodes[k];
-      if (n && n.note) {
-        const t = (n.note && n.note.text) || n.text;
-        if (t && out.indexOf(t) < 0) out.push(t);
-      }
+      if (!n || !n.note) return;
+      // 按当前模式取那一版；专家模式这里是空的，节末那张纸也就不出现。
+      const t = noteTextOf(n);
+      if (t && out.indexOf(t) < 0) out.push(t);
     });
     return out;
   }

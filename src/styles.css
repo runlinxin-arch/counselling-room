@@ -665,6 +665,68 @@ body::before {
 }
 .title-main .pitch em { font-style: normal; color: var(--ink); }
 
+/* ---------------------------------------------------------------------------
+   难度分级
+   ---------------------------------------------------------------------------
+   三档不是"游戏多难"，是"反馈给到哪一层"。所以每档都写清它给什么、不给什么，
+   别用「简单 / 普通 / 困难」这种说法——玩家不知道自己失去了什么。
+--------------------------------------------------------------------------- */
+.mode-badge {
+  font-size: 13px;
+  color: var(--dim);
+  margin: 10px 0 0;
+  letter-spacing: .02em;
+}
+.mode-badge::before {
+  content: "";
+  display: inline-block;
+  width: 6px; height: 6px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--blue);
+  vertical-align: middle;
+}
+
+.modes { margin: 26px 0 22px; }
+.modes-title {
+  font-size: 12px;
+  letter-spacing: .16em;
+  color: var(--dim);
+  margin-bottom: 10px;
+}
+.mode-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.mode {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  font-family: inherit;
+  background: rgba(255, 255, 255, .03);
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 3px;
+  padding: 8px 14px 9px;
+  cursor: pointer;
+  transition: background .16s, border-color .16s;
+}
+.mode:hover { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .18); }
+.mode[data-on="true"] {
+  background: rgba(127, 169, 191, .14);
+  border-color: rgba(127, 169, 191, .55);
+  box-shadow: inset 3px 0 0 var(--blue);
+}
+.mode .n { grid-area: n; font-size: 15px; color: var(--ink); letter-spacing: .04em; }
+.mode .n { font-size: 15px; color: var(--ink); letter-spacing: .04em; }
+.mode .t { font-size: 11.5px; letter-spacing: .1em; color: var(--dim); }
+.mode[data-on="true"] .t { color: var(--blue); }
+.mode-desc {
+  margin: 9px 0 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #a9a49b;
+  max-width: 44em;
+}
+.modes { margin: 20px 0 18px; }
+
 .start {
   align-self: flex-start;
   display: inline-flex;

@@ -362,6 +362,64 @@ const STEPS = [
     `,
   },
   {
+    shot: null, fresh: true,
+    check: 'expert',
+    after: `
+      // 专家模式：没有督导笔记，也不该出节末汇总。
+      // 选它 → 走完第 1 节 → 全程不许出现「督导」纸，也不许出现聊天气泡。
+      document.querySelectorAll('.mode')[2].click();
+      await new Promise(function (r) { setTimeout(r, 80); });
+      document.querySelector('.start').click();
+      document.querySelector('.line-card[data-ready="true"]').click();
+      await new Promise(function (r) { setTimeout(r, 220); });
+      var labels = {}, maxBubbles = 0;
+      for (var i = 0; i < 900; i++) {
+        var lab = document.querySelector('#overlay.on .label');
+        if (lab) labels[lab.textContent] = 1;
+        maxBubbles = Math.max(maxBubbles, document.querySelectorAll('#chat .bubble').length);
+        if ((window.XLZX.engine.state.line || '').indexOf('s2/') === 0) break;
+        var d = ${TICK};
+        if (d === 'stuck') return 'EXPERT_STUCK@' + i + ' line=' + window.XLZX.engine.state.line;
+        await new Promise(function (r) { setTimeout(r, 60); });
+      }
+      var names = Object.keys(labels);
+      var bad = names.filter(function (l) { return l.indexOf('督导') >= 0; });
+      if (bad.length) return 'EXPERT_HAS_NOTE ' + bad.join('/');
+      if (maxBubbles > 0) return 'EXPERT_HAS_BUBBLE ' + maxBubbles;
+      return 'EXPERT_OK line=' + window.XLZX.engine.state.line + ' papers=' + (names.join('/') || '-');
+    `,
+  },
+  {
+    shot: null, fresh: true,
+    check: 'teaching',
+    after: `
+      // 教学模式：给的是专业表述那一版（术语 + 知识点），不是大白话那一版。
+      // 两版搞反了是最安静的 bug：新手看到术语，教学看到大白话，都不报错。
+      document.querySelectorAll('.mode')[1].click();
+      await new Promise(function (r) { setTimeout(r, 80); });
+      document.querySelector('.start').click();
+      document.querySelector('.line-card[data-ready="true"]').click();
+      await new Promise(function (r) { setTimeout(r, 220); });
+      for (var i = 0; i < 200; i++) {
+        if (document.querySelector('#chat .bubble')) break;
+        var opts = document.querySelectorAll('.choice');
+        if (opts.length >= 3) { opts[2].click(); }
+        var t = document.getElementById('text');
+        if (t && t._advance) t._advance();
+        await new Promise(function (r) { setTimeout(r, 60); });
+      }
+      var line = window.XLZX.engine.state.line;
+      var sec = line.split('/')[0], id = line.split('/')[1];
+      var st = window.XLZX.stories && window.XLZX.stories.xu;
+      if (!st) return 'TEACHING_NO_STORY';
+      var node = st.sections.filter(function (s) { return s.id === sec; })[0].nodes[id];
+      var got = (document.querySelector('#chat .say') || {}).textContent || '';
+      if (!node || !node.note) return 'TEACHING_NO_NOTE_AT ' + line;
+      if (got.indexOf(node.text) < 0) return 'TEACHING_WRONG_VARIANT at ' + line + ' got=' + got.slice(0, 24);
+      return 'TEACHING_OK at ' + line + ' len=' + got.length;
+    `,
+  },
+  {
     shot: 'game-07-supervision-note', fresh: true,
     // 同样的路径，但这次把纸留在屏幕上截图（上面那一步是断言，不截图）
     after: `
@@ -567,6 +625,12 @@ try {
       }
       if (step.check === 'callout' && !/^CALLOUT_OK/.test(stepResult)) {
         assertBad = '房间箭头标注缺字（' + stepResult + '）';
+      }
+      if (step.check === 'expert' && !/^EXPERT_OK/.test(stepResult)) {
+        assertBad = '专家模式仍然弹了督导笔记（' + stepResult + '）';
+      }
+      if (step.check === 'teaching' && !/^TEACHING_OK/.test(stepResult)) {
+        assertBad = '教学模式给的不是术语版（' + stepResult + '）';
       }
     } else if (stepResult && !/^(ok|reached@\d+)$/.test(stepResult)) {
       // 截图步骤：ok / reached 之外都不是好结果

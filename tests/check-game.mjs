@@ -456,6 +456,23 @@ if (!E || stories.length === 0) {
   }
 
 
+  // ---- 难度分级（v2.1）：同一份数据要能供三档读法 ----
+  // 新手版必须存在、而且不许堆术语——它是给没学过心理学的人看的。
+  {
+    const notes = [];
+    for (const sec of story.sections) {
+      for (const [k, n] of Object.entries(sec.nodes)) if (n.note) notes.push([sec.id + '/' + k, n]);
+    }
+    const noBasic = notes.filter(([, n]) => !n.basic || String(n.basic).length < 20);
+    if (noBasic.length) {
+      fail(noBasic.length + ' 条笔记缺新手版（basic）：' + noBasic.slice(0, 5).map(([id]) => id).join(' '));
+    } else ok(notes.length + ' 条笔记都有两版：新手（大白话）/ 教学（术语）');
+    const JARGON = ['被动意念', '自动化思维', '认知歪曲', '读心术', '个人化', '保密例外', '移情', '阻抗', '评估量表'];
+    const hits = notes.filter(([, n]) => JARGON.some((w) => String(n.basic).includes(w)));
+    if (hits.length) fail('新手版里堆了术语：' + hits.slice(0, 3).map(([id]) => id).join(' '));
+    else ok('新手版没有堆术语（专家模式无反馈）');
+  }
+
   // ---- 成绩单（记分页）----
   // 不许给分数：内容必须是「这一程发生了什么 + 落在哪条轨迹」。
   {
