@@ -1010,32 +1010,38 @@
     const flags = state.flags;
     const choices = state.choices;
 
-    // 这一节真正发生了什么，全部从 choices / flags 里读出来，不写死
-    const lines = [];
+    // 这一节真正发生了什么，全部从 choices / flags 里读出来，不写死。
+    // v2：成绩单内容由**故事数据**给（result 节点的 rows），这里不再替某条线写死。
+    // 老数据没有 rows 时，仍走下面这套（保留给历史线，删了也不会坏）。
+    const builtin = [];
     const openB = flags.openB;
-    lines.push(['开场', openB ? '你先问他想聊什么，而不是复述转介单。'
+    builtin.push(['开场', openB ? '你先问他想聊什么，而不是复述转介单。'
       : flags.openA ? '你复述了转介单上「配合度差」那句。'
         : '你问了「最近怎么样」，换回一个安全答案。']);
-    lines.push(['保密例外', flags.askedBoundary
+    builtin.push(['保密例外', flags.askedBoundary
       ? '你把边界讲清楚了，他追问了一次——说明他听进去了。'
       : '你讲完了设置，但没确认他听懂没有。']);
-    lines.push(['王医生的托付', flags.ethB ? '你没替来访者做主，也没当面驳他。'
+    builtin.push(['王医生的托付', flags.ethB ? '你没替来访者做主，也没当面驳他。'
       : flags.ethA ? '你答应了一件不该由你答应的事。'
         : '你指出了医学事实，但那是你在走廊里替他定的调。']);
-    lines.push(['危机筛查', flags.screened
+    builtin.push(['危机筛查', flags.screened
       ? (flags.crisisTriggered ? '你问了。他说了。你按写死的流程接住了他。' : '你问了，他答了。')
       : '你没问。这不扣分，但下次得问。']);
 
     const diaryRead = state.diaryRead.length;
-    lines.push(['情绪日记', diaryRead >= 4 ? '四条都看了。你从里头认出了自动化思维、个人化、读心术和回避。'
+    builtin.push(['情绪日记', diaryRead >= 4 ? '四条都看了。你从里头认出了自动化思维、个人化、读心术和回避。'
       : '你看了 ' + diaryRead + ' 条。剩下的没看，也就没谈。']);
 
-    lines.push(['「等我能走了」', flags.waiting ? '你没拆他的目标，你把「等」摆到了桌面上。'
+    builtin.push(['「等我能走了」', flags.waiting ? '你没拆他的目标，你把「等」摆到了桌面上。'
       : flags.reality ? '你宣布了「接受现实」——目标是他的，不该由你说。'
         : '你抛回了一个太虚的问题，他接不住。']);
 
     const cards = state.cardsSeen.length;
-    lines.push(['看过的资料', cards + ' 张']);
+    builtin.push(['看过的资料', cards + ' 张']);
+
+    // 数据优先：result 节点给了 rows 就用它（v2 的做法）
+    const lines = (typeof node.rows === 'function') ? node.rows(flags, state)
+      : (Array.isArray(node.rows) ? node.rows : builtin);
 
     const body = make('div', {});
     const ul = make('ul', { class: 'tally' });
@@ -1052,8 +1058,9 @@
     if (!flags.screened) {
       body.appendChild(make('p', {
         style: 'color:#8a5a20',
-        text: '提醒：这条线里你没有做危机筛查。脊髓损伤的人里，抑郁很容易被漏掉——' +
-          '「没劲儿」「不想动」「睡不好」太容易被当成身体的问题。下一次，得问。',
+        text: node.reminder
+          || '提醒：这条线里你没有做危机筛查。抑郁很容易被身体的表现盖住——'
+          + '「没劲儿」「不想动」「睡不好」太容易被当成身体的问题。下一次，得问。',
       }));
     }
     body.appendChild(make('p', {

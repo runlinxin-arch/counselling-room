@@ -2020,6 +2020,18 @@ const XU_S1 = {
   'vf': {
     type: 'say', note: { kind: 'supervision' },
     text: '他把整件事说成了一份经过。你听不到一句「我难受」——第一次见面，这很正常，别急着要。',
+    next: 'sc1',
+  },
+  'sc1': {
+    type: 'card', kind: 'science',
+    title: '伤后的情绪反应，不是「心理素质差」',
+    lines: [
+      '车祸之后睡不好、不想说话、什么都不想干，是最常见的反应之一，不是意志力的问题。',
+      '把它说成「心理素质差」，会让人多背一层耻感：已经够难受了，还得为难受道歉。',
+      '情绪反应和身体恢复不是两条赛道。它本来就属于康复的一部分。',
+    ],
+    footer: '依据：第 5 章',
+    button: '知道了',
     next: 'e1',
   },
 
@@ -2133,6 +2145,18 @@ const XU_S1 = {
   'm4': {
     type: 'say', note: { kind: 'supervision' },
     text: '他答应得太快了，还先看了一眼钟。快得像在敷衍——这是「配合」，不是「愿意」。',
+    next: 'sc2',
+  },
+  'sc2': {
+    type: 'card', kind: 'science',
+    title: '「适应」不是只有一条路',
+    lines: [
+      '不是所有人都会走同一条路。追踪研究里最常见的是「良好适应」——多数人在一段时间后恢复功能与情绪。',
+      '也有一部分人出现持续的抑郁，一部分人是延迟发作，还有一部分落在其他形式上。',
+      '所以「什么时候能好」这个问题本身就有毛病：它假设只有一条轨道，而你必须走在上面。',
+    ],
+    footer: '依据：第 5 章',
+    button: '知道了',
     next: 'hw1',
   },
 
@@ -2385,21 +2409,21 @@ const XU_S2 = {
   'dm3': {
     type: 'say', note: { kind: 'supervision' },
     text: '灯是他自己找的办法。先别急着改成「关灯」，先问「关了灯会想什么」。',
-    next: 'j1',
+    next: 'sc3',
   },
   'dw1': { type: 'say', who: '许予安', text: '我不用她擦。', next: 'dw2' },
   'dw2': { type: 'say', who: '许予安', text: '……我主要是，不想让她看见。', next: 'dw3' },
   'dw3': {
     type: 'say', note: { kind: 'supervision' },
     text: '「不想让她看见」——不是嫌她脏，是嫌自己被看见。这条后面要接第 9 章的「看得见 / 看不见」。',
-    next: 'j1',
+    next: 'sc3',
   },
   'df1': { type: 'say', who: '许予安', text: '春游我不去。', next: 'df2' },
   'df2': { type: 'say', who: '许予安', text: '去了也是坐着看别人跑。', next: 'df3' },
   'df3': {
     type: 'say', note: { kind: 'supervision' },
     text: '他把「没人问我」和「我不想去」写成同一件事。这两件事，得分开摆。',
-    next: 'j1',
+    next: 'sc3',
   },
   'ds1': { type: 'say', who: '许予安', text: '一天没出屋，挺好的。', next: 'ds2' },
   'ds2': { type: 'say', who: '咨询师', text: '「挺好的」是这一天里最好的部分吗？', next: 'ds3' },
@@ -2407,6 +2431,19 @@ const XU_S2 = {
   'ds4': {
     type: 'say', note: { kind: 'supervision' },
     text: '他说「挺好的」，是因为没有更难听的说法。这是回避，不是满意。',
+    next: 'sc3',
+  },
+
+  'sc3': {
+    type: 'card', kind: 'science',
+    title: '看不见的伤，和看得见的伤',
+    lines: [
+      '支具和拐是看得见的。看得见的障碍，很容易被当成「全部的你」。',
+      '有些伤看不见：被起外号、被排挤、被当成笑话。它不流血，但每天都在。',
+      '两种伤都会带来同一个动作——把自己藏起来。',
+    ],
+    footer: '依据：第 9 章',
+    button: '知道了',
     next: 'j1',
   },
 
@@ -2452,6 +2489,18 @@ const XU_S2 = {
   'l4': {
     type: 'say', note: { kind: 'supervision' },
     text: '这是他第一次说出比「挺好的」更具体的一句。记住这一刻，它是这一节的全部成绩。',
+    next: 'sc4',
+  },
+  'sc4': {
+    type: 'card', kind: 'science',
+    title: '为什么「被人知道」比「被欺负」更难受',
+    lines: [
+      '青春期的核心任务之一，是在同伴里有一个位置。',
+      '「被欺负」伤的是这个位置；「被知道」拿走的是这个位置——所有人都在看你，而你看不清自己是谁了。',
+      '这解释了一件事：他宁可一个人扛，也不愿意让任何人知道。',
+    ],
+    footer: '依据：第 11 章',
+    button: '知道了',
     next: 's2end',
   },
   's2end': {
@@ -2641,6 +2690,19 @@ const XU_S3 = {
   'm10': {
     type: 'say', note: { kind: 'supervision' },
     text: '「下次吧」不是答应，但它不是「不」。这一节到这里就够了。',
+    next: 'sc5',
+  },
+
+  'sc5': {
+    type: 'card', kind: 'science',
+    title: '照顾你的人，和被照顾的你',
+    lines: [
+      '照顾者和被照顾者之间，位置是不对等的。这跟爱不爱没有关系。',
+      '被照顾的一方常常要付出另一种劳动：管住对方的情绪，证明自己没事。',
+      '所以「接受照顾」不是一件软弱的事。它需要练习，也需要边界。',
+    ],
+    footer: '依据：第 12 章',
+    button: '知道了',
     next: 'p1',
   },
 
@@ -2671,6 +2733,18 @@ const XU_S3 = {
   'p5': {
     type: 'say', note: { kind: 'supervision' },
     text: '「回不回」是个表态，「上半天」是件能做的事。把大问题换成一件小事，他才动得了。',
+    next: 'sc6',
+  },
+  'sc6': {
+    type: 'card', kind: 'science',
+    title: '未成年人做咨询，什么情况下不能保密',
+    lines: [
+      '咨询里的保密不是绝对的。对未成年人，这条线出现得更早。',
+      '出现自伤、伤人、被伤害（比如长期被霸凌）或严重风险时，要告知监护人。',
+      '但「告知」不等于「把你说的全转述」。做法是：先告诉你，跟你一起说，只说该说的。',
+    ],
+    footer: '依据：第 7 章',
+    button: '知道了',
     next: 's3end',
   },
   's3end': {
@@ -2689,6 +2763,38 @@ const XU_END = {
     title: '故事线 0 · 完',
     lead: '心理干预的目标不是让他不再有情绪，而是让一个人在自己的身体里，重新有得选。',
     button: '看这一程的轨迹',
+    // 成绩单不给分数。它只说他这一程落在哪条适应轨迹上，并说明这是评估、不是评判。
+    // rows 是函数：读这一局真的做过的选择（flags），不写死剧情。
+    rows: function (flags) {
+      return [
+        ['他怎么开头', flags.openB ? '你先问他想聊什么，他从「都行」开始。'
+          : flags.openA ? '你复述了转介单上那句判断，他先得替自己辩解。'
+            : '你问了「最近怎么样」，拿回一个「挺好的」。'],
+        ['那场车祸', flags.crashParts ? '你让他说还记得的部分，他给了声音和温度。'
+          : flags.crashMemory ? '你问的是记忆本身，他自己说出了「那天走到马路中间」。'
+            : '你把话题关上了。门没锁，但这次没进。'],
+        ['谁在照顾他', flags.pushSecond ? '你多问了一句，他才说出「还有个阿姨」。'
+          : flags.concrete ? '你从早饭问起，他没多想就说了阿姨。'
+            : '你没接那句卡住的话，它还在原地。'],
+        ['「她又不是我妈」', flags.separate ? '你把生气和嫌分开了，他听懂了。'
+          : flags.confront ? '你说对了，但他听见的是「你不好」。'
+            : '你把「她不是家人、你却要天天靠她」摆了出来，他抬头看了你。'],
+        ['阿姨也是个人', flags.auntStory ? '他说出了「一年见一回」。'
+          : flags.auntGuilt ? '你替阿姨说了话，他先防了一下。'
+            : '你没接，他自己说出了「她其实挺累的」。'],
+        ['危机筛查', flags.screened
+          ? (flags.crisisTriggered ? '你问了。他给了那句被动意念。你按写死的流程接住他，并给了资源。'
+            : '你问了，他答了。')
+          : '你没问。这不扣分，但下次得问。'],
+        ['复学', flags.planHalf ? '你们把「回不回」换成了「上半天」。'
+          : flags.planDoor ? '他只要送到路口。那是他能接受的距离。'
+            : '你说要陪他去。那句话暖，但越了界。'],
+        ['适应轨迹', '这一程他落在「缓慢适应」这一类：不是没在走，是走得慢。'
+          + '轨迹是评估，不是评判——它说的是他现在在哪儿，不是他值几分。'],
+      ];
+    },
+    // 没做筛查时的提醒。原文案是脊髓损伤那条线的，不能拿来给这个孩子用。
+    reminder: '提醒：这一次你没有做危机筛查。他那句「有」，就留在原地了。下一次，得问。',
     next: '2',
   },
   '2': {
@@ -4516,32 +4622,38 @@ XLZX.storySlots = [
     const flags = state.flags;
     const choices = state.choices;
 
-    // 这一节真正发生了什么，全部从 choices / flags 里读出来，不写死
-    const lines = [];
+    // 这一节真正发生了什么，全部从 choices / flags 里读出来，不写死。
+    // v2：成绩单内容由**故事数据**给（result 节点的 rows），这里不再替某条线写死。
+    // 老数据没有 rows 时，仍走下面这套（保留给历史线，删了也不会坏）。
+    const builtin = [];
     const openB = flags.openB;
-    lines.push(['开场', openB ? '你先问他想聊什么，而不是复述转介单。'
+    builtin.push(['开场', openB ? '你先问他想聊什么，而不是复述转介单。'
       : flags.openA ? '你复述了转介单上「配合度差」那句。'
         : '你问了「最近怎么样」，换回一个安全答案。']);
-    lines.push(['保密例外', flags.askedBoundary
+    builtin.push(['保密例外', flags.askedBoundary
       ? '你把边界讲清楚了，他追问了一次——说明他听进去了。'
       : '你讲完了设置，但没确认他听懂没有。']);
-    lines.push(['王医生的托付', flags.ethB ? '你没替来访者做主，也没当面驳他。'
+    builtin.push(['王医生的托付', flags.ethB ? '你没替来访者做主，也没当面驳他。'
       : flags.ethA ? '你答应了一件不该由你答应的事。'
         : '你指出了医学事实，但那是你在走廊里替他定的调。']);
-    lines.push(['危机筛查', flags.screened
+    builtin.push(['危机筛查', flags.screened
       ? (flags.crisisTriggered ? '你问了。他说了。你按写死的流程接住了他。' : '你问了，他答了。')
       : '你没问。这不扣分，但下次得问。']);
 
     const diaryRead = state.diaryRead.length;
-    lines.push(['情绪日记', diaryRead >= 4 ? '四条都看了。你从里头认出了自动化思维、个人化、读心术和回避。'
+    builtin.push(['情绪日记', diaryRead >= 4 ? '四条都看了。你从里头认出了自动化思维、个人化、读心术和回避。'
       : '你看了 ' + diaryRead + ' 条。剩下的没看，也就没谈。']);
 
-    lines.push(['「等我能走了」', flags.waiting ? '你没拆他的目标，你把「等」摆到了桌面上。'
+    builtin.push(['「等我能走了」', flags.waiting ? '你没拆他的目标，你把「等」摆到了桌面上。'
       : flags.reality ? '你宣布了「接受现实」——目标是他的，不该由你说。'
         : '你抛回了一个太虚的问题，他接不住。']);
 
     const cards = state.cardsSeen.length;
-    lines.push(['看过的资料', cards + ' 张']);
+    builtin.push(['看过的资料', cards + ' 张']);
+
+    // 数据优先：result 节点给了 rows 就用它（v2 的做法）
+    const lines = (typeof node.rows === 'function') ? node.rows(flags, state)
+      : (Array.isArray(node.rows) ? node.rows : builtin);
 
     const body = make('div', {});
     const ul = make('ul', { class: 'tally' });
@@ -4558,8 +4670,9 @@ XLZX.storySlots = [
     if (!flags.screened) {
       body.appendChild(make('p', {
         style: 'color:#8a5a20',
-        text: '提醒：这条线里你没有做危机筛查。脊髓损伤的人里，抑郁很容易被漏掉——' +
-          '「没劲儿」「不想动」「睡不好」太容易被当成身体的问题。下一次，得问。',
+        text: node.reminder
+          || '提醒：这条线里你没有做危机筛查。抑郁很容易被身体的表现盖住——'
+          + '「没劲儿」「不想动」「睡不好」太容易被当成身体的问题。下一次，得问。',
       }));
     }
     body.appendChild(make('p', {

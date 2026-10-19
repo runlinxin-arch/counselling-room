@@ -456,6 +456,23 @@ if (!E || stories.length === 0) {
   }
 
 
+  // ---- 科普卡与资源卡 ----
+  // 6 张科普卡（2/2/2 分布），每张必须标章节页脚；资源卡至少 2 张（危机 + 终章，
+  // 第三张是标题页的常驻入口，写在 ui.js 里）。
+  {
+    const sciCards = Object.values(allNodes).filter((n) => n.type === 'card' && n.kind === 'science');
+    const resCards = Object.values(allNodes).filter((n) => n.type === 'card' && n.kind === 'resource')
+      .concat(Object.values(story.endingNodes || {}).filter((n) => n.type === 'card' && n.kind === 'resource'));
+    if (sciCards.length !== 6) fail(`科普卡应有 6 张，实际 ${sciCards.length} 张`);
+    const noFooter = sciCards.filter((c) => !/^依据：第 \d+ 章/.test(String(c.footer || '')));
+    if (noFooter.length) fail('科普卡缺章节页脚：' + noFooter.map((c) => c.title).join('；'));
+    else if (sciCards.length === 6) ok('6 张科普卡都标了章节页脚');
+    const noLines = sciCards.filter((c) => !c.lines || !c.lines.length);
+    if (noLines.length) fail('科普卡没有正文：' + noLines.map((c) => c.title).join('；'));
+    if (resCards.length < 2) fail(`资源卡至少 2 张（危机 / 终章），实际 ${resCards.length}`);
+    else ok(`资源卡 ${resCards.length} 张（含终章），标题页另有常驻入口`);
+  }
+
   // ---- 房间箭头标注 ----
   let itemBad = 0;
   for (const id of ['referral', 'tissue', 'clock', 'sofa']) {
