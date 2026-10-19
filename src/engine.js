@@ -11,13 +11,22 @@
   const PAL = Object.assign({}, S.pal, X.PAL_EXT);
   const SAVE_KEY = 'xlzx.save.v1';
 
-  // 房间里的可点物件。x/y 是逻辑像素坐标，w/h 由 sprite 尺寸推出来。
-  const HOTSPOTS = [
-    { id: 'clock',    sprite: 'clock',    x: 43, y: 5,  label: '墙上的钟' },
-    { id: 'referral', sprite: 'referral', x: 43, y: 34, label: '茶几上的转介单' },
-    { id: 'tissue',   sprite: 'tissue',   x: 49, y: 35, label: '茶几上的纸巾盒' },
-    { id: 'sofa',     sprite: 'sofaR',    x: 56, y: 26, label: '两把沙发' },
-    { id: 'mobility',  sprite: 'chair',  x: 63, y: 33, label: '他手边的东西' },
+  // 房间里的箭头标注。
+  //
+  // 以前这里是"可点物件"：物品带光晕，点一下弹一张科普纸。现在改成**直接标在
+  // 房间里**——三条故事线共用同一间咨询室，所以位置写死在这里，只有文字跟着
+  // 故事数据走（见 ui.js 的 currentCallouts）。
+  //
+  //   anchor  箭头尖端指到的位置（逻辑像素）
+  //   box     文字框左上角（逻辑像素）
+  //
+  // 选择落位的要求：箭头尽量短、文字框互相不压、不出画面。房间 106×60，
+  // 各物品的坐标见 src/sprites.js 与 docs/mockups/方案B-内联SVG.html。
+  const CALLOUTS = [
+    { id: 'clock',    anchor: [48, 5],    box: [50, 0.4] },
+    { id: 'referral', anchor: [44, 34],   box: [36, 19.2] },
+    { id: 'tissue',   anchor: [51.5, 39], box: [42, 50.4] },
+    { id: 'sofa',     anchor: [79, 42],   box: [80, 36] },
   ];
 
   // --------------------------------------------------------------------------
@@ -404,16 +413,6 @@
     parent.appendChild(person);
   }
 
-  /** 物件在画布上的外框，给热区用 */
-  function boundsOf(sprite, x, y) {
-    return {
-      x: x,
-      y: y,
-      w: sprite && sprite[0] ? sprite[0].length : 8,
-      h: sprite ? sprite.length : 8,
-    };
-  }
-
   // 人物待机动效：呼吸起伏 + 眨眼。
   //
   // ⚠️ 三条硬约束，每条都是踩过坑之后定下的：
@@ -434,10 +433,6 @@
   //    再画一遍并盖在上面；眨眼时把这一层藏起来，露出的就是底下那张脸。
   //    位移为零，所以任何地方都不可能裂。
   const ANIM_RULES =
-    '.hs{cursor:pointer}' +
-    '.hs .art{animation:hs-b 1.9s ease-in-out infinite}' +
-    '.hs:hover .art,.hs:focus-visible .art{animation:none;opacity:1}' +
-    '@keyframes hs-b{0%,100%{opacity:1}50%{opacity:.6}}' +
     // 整个人：呼吸。头与躯干一起动，接缝不会裂。
     '.x-person{animation:xl-breathe 4s step-end infinite;transform-box:fill-box;transform-origin:50% 100%}' +
     '@keyframes xl-breathe{0%,45%{transform:translateY(0)}46%,75%{transform:translateY(-1px)}76%,100%{transform:translateY(0)}}' +
@@ -445,7 +440,71 @@
     '.x-eye{animation:xl-blink 6s step-end infinite}' +
     '@keyframes xl-blink{0%,92%{opacity:0}93%,95%{opacity:1}96%,97.5%{opacity:0}98%,99%{opacity:1}100%{opacity:0}}' +
     '@media (prefers-reduced-motion:reduce){' +
-    '.hs .art,.x-person,.x-eye{animation:none;opacity:1;transform:none}}';
+    '.x-person,.x-eye{animation:none;opacity:1;transform:none}}';
+
+  /**
+   * 箭头标注：指引线（带箭头）+ 两行文字框（物品名 / 功能）。
+   *
+   * 文字框故意不透明，会盖住后面的像素画——标注要能读，
+   * 压住一点家具比糊在地板花纹上强。箭头从文字框离物品最近的那条边出发。
+   */
+  function drawCallouts(svg, list) {
+    if (!list || !list.length) return;
+    const g = el('g', { class: 'ann', style: 'shape-rendering:auto' });
+    // 箭头用 marker，省得自己算三角形。同一屏只有一个 #scene，id 不冲突。
+    const defs = el('defs', {});
+    const marker = el('marker', {
+      id: 'ann-arrow', markerUnits: 'userSpaceOnUse',
+      markerWidth: 3, markerHeight: 3, refX: 2.6, refY: 1.5, orient: 'auto',
+    });
+    marker.appendChild(el('path', { d: 'M0,0 L3,1.5 L0,3 z', fill: '#ffe0a8' }));
+    defs.appendChild(marker);
+    g.appendChild(defs);
+
+    const NAME_FS = 2.5, TEXT_FS = 3.2, PAD_X = 1.4, PAD_Y = 1.0, LINE_H = 3.8;
+
+    list.forEach(function (a) {
+      const geo = CALLOUTS.find(function (c) { return c.id === a.id; });
+      if (!geo) return;
+      const name = a.name || '';
+      const text = a.text || '';
+      // 中文字宽≈字号，按字数估宽度即可（不依赖字体度量，file:// 下也稳）。
+      const w = Math.max(name.length * NAME_FS, text.length * TEXT_FS) + PAD_X * 2;
+      const h = PAD_Y * 2 + LINE_H * 2 - 0.6;
+      const bx = geo.box[0], by = geo.box[1];
+      const ax = geo.anchor[0], ay = geo.anchor[1];
+
+      // 从离 anchor 最近的那条边走线，箭头才不会穿过文字框。
+      let ex, ey;
+      if (ax < bx) { ex = bx; ey = Math.min(Math.max(ay, by), by + h); }
+      else if (ax > bx + w) { ex = bx + w; ey = Math.min(Math.max(ay, by), by + h); }
+      else { ey = ay < by ? by : by + h; ex = Math.min(Math.max(ax, bx + 1.6), bx + w - 1.6); }
+      g.appendChild(el('line', {
+        x1: ex, y1: ey, x2: ax, y2: ay,
+        stroke: '#ffe0a8', 'stroke-width': 0.4, 'marker-end': 'url(#ann-arrow)',
+      }));
+
+      // 文字框
+      g.appendChild(el('rect', {
+        x: bx, y: by, width: w, height: h, rx: 0.9,
+        fill: 'rgba(22,16,11,0.9)', stroke: '#8f6636', 'stroke-width': 0.3,
+      }));
+      const nm = el('text', {
+        x: bx + PAD_X, y: by + PAD_Y + 2.0,
+        'font-size': NAME_FS, fill: '#b6ab9c', 'font-family': 'inherit',
+      });
+      nm.textContent = name;
+      g.appendChild(nm);
+      const tx = el('text', {
+        x: bx + PAD_X, y: by + PAD_Y + 2.0 + LINE_H,
+        'font-size': TEXT_FS, fill: '#ffe0a8', 'font-weight': 600, 'font-family': 'inherit',
+      });
+      tx.textContent = text;
+      g.appendChild(tx);
+    });
+
+    svg.appendChild(g);
+  }
 
   /**
    * 画整个房间，按方案 B 的层级。
@@ -453,20 +512,17 @@
    *   act          1..3，决定钟针位置
    *   warmth       1..3，决定暖光和压暗
    *   withPeople   有没有人（第 1 节的走廊场景没有人）
-   *   clickable    [] 允许点的物件 id
-   *   onItem       (id) => void
+   *   callouts     [{id,name,text}] 要在房间里标出来的物品；空数组 = 不标
    */
   function renderScene(opts) {
     const act = opts.act || 1;
     const warmth = opts.warmth || 1;
-    const clickable = opts.clickable || [];
     const withPeople = opts.withPeople !== false;
     const hallway = !!opts.hallway;
     const svg = el('svg', { id: 'scene', viewBox: '0 0 ' + S.size.w + ' ' + S.size.h });
     const GW = S.size.w;
     const GH = S.size.h;
     // 随身物件与立绘由故事数据决定（故事线一是轮椅，二是双拐）。
-    // 必须提到函数级：下面画人和画热区两处都要用。
     const art = (state.story && state.story.clientArt) || null;
 
     // --- 0) 动画规则写在 SVG 内部，用 class 选择器，别被页面的 CSS 覆盖 ---
@@ -544,42 +600,8 @@
     svg.appendChild(el('rect', { x: 0, y: 0, width: GW, height: GH, fill: glowFill, opacity: glowOp }));
     svg.appendChild(el('rect', { x: 0, y: 0, width: GW, height: GH, fill: '#06070a', opacity: w.vignette * (hallway ? 0.62 : 0.38) }));
 
-    // --- 6) 可点物件的热区。放最上层，保证不被人物挡住。---
-    HOTSPOTS.forEach(function (hs) {
-      if (clickable.indexOf(hs.id) < 0) return;
-      if (hs.id === 'mobility' && !withPeople) return;
-
-      let sprite;
-      if (hs.id === 'mobility') sprite = X[(art && art.prop) || 'WHEELCHAIR'];
-      else if (hs.id === 'referral') sprite = X.REFERRAL;
-      else if (hs.id === 'tissue') sprite = X.TISSUE || S.sprites.tissue;
-      else if (hs.id === 'clock') sprite = X.CLOCK_VARIANTS['c' + act] || S.sprites.clock;
-      else sprite = S.sprites[hs.sprite];
-      if (!sprite) return;
-
-      const b = boundsOf(sprite, hs.x, hs.y);
-      const g = el('g', { class: 'hs', tabindex: '0', role: 'button' });
-      // 名字别叫 art：外层那个 art 是故事数据，这里会把它遮住（TDZ 报错）。
-      const artG = el('g', { class: 'art' });
-      paint(sprite, hs.x, hs.y, artG);
-      g.appendChild(artG);
-      const t = el('title', {});
-      t.textContent = hs.label;
-      g.appendChild(t);
-      // 热区比图形大一圈，鼠标好点中；而且它必须是透明的实心块，
-      // 否则 caster 和地板的缝里点不到。
-      g.appendChild(el('rect', {
-        x: b.x - 1.5, y: b.y - 1.5, width: b.w + 3, height: b.h + 3, fill: 'transparent',
-      }));
-      g.addEventListener('click', function () { opts.onItem && opts.onItem(hs.id); });
-      g.addEventListener('keydown', function (ev) {
-        if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
-          ev.preventDefault();
-          opts.onItem && opts.onItem(hs.id);
-        }
-      });
-      svg.appendChild(g);
-    });
+    // --- 6) 箭头标注。放最上层，保证不被人物和暖光压住。---
+    drawCallouts(svg, opts.callouts);
 
     return svg;
   }
@@ -589,7 +611,7 @@
   // --------------------------------------------------------------------------
   X.engine = {
     SAVE_KEY: SAVE_KEY,
-    HOTSPOTS: HOTSPOTS,
+    CALLOUTS: CALLOUTS,
     state: state,
     save: function () { return save; },
     load: load,

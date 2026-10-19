@@ -288,23 +288,21 @@ const STEPS = [
     after: `await ${PLAY_UNTIL(AWAITING, 0, 60)};`,
   },
   {
-    shot: 'game-05-room-item',
-    // 推到"房间里几样东西带光晕"那一段，热区这时才亮起来
-    after: `await ${PLAY_UNTIL(`document.querySelectorAll('.hs').length > 0`, 0, 120)};`,
+    shot: 'game-05-room-callouts',
+    // 推到"房间里几样东西，箭头标出了它们的用处"那一段：标注这时才出现。
+    after: `await ${PLAY_UNTIL(`document.querySelectorAll('.ann text').length >= 8`, 0, 120)};`,
   },
   {
-    shot: 'game-06-science-card',
-    // 点墙上那个钟 → 弹科普卡
+    shot: null,
+    check: 'callout',
+    // 红线：四件物品的标注文字必须真的画进房间里，不是只写在数据里。
     after: `
-      (function () {
-        var hs = document.querySelectorAll('.hs');
-        var target = null;
-        for (var i = 0; i < hs.length; i++) {
-          var t = hs[i].querySelector('title');
-          if (t && t.textContent.indexOf('钟') >= 0) target = hs[i];
-        }
-        if (target) target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      })();`,
+      var a = await ${PLAY_UNTIL(`document.querySelectorAll('.ann text').length >= 8`, 0, 120)};
+      if (a.indexOf('reached') !== 0) return 'CALLOUT_FAILED[' + a + ']';
+      var txt = document.getElementById('scene').textContent;
+      var need = ['墙上的钟', '出院后最危险', '纸巾盒', '在这儿可以哭', '沙发', '转介单'];
+      var miss = need.filter(function (w) { return txt.indexOf(w) < 0; });
+      return miss.length ? ('CALLOUT_MISSING ' + miss.join('/')) : 'CALLOUT_OK';`,
   },
   {
     shot: 'game-06b-counselor-bubble',
@@ -459,7 +457,7 @@ const DIAG = `
     document.title = 'DIAG ' + (window.__step || '-') +
       ' | line=' + (window.XLZX && window.XLZX.engine ? window.XLZX.engine.state.line : '?') +
       ' rects=' + (svg ? svg.querySelectorAll('rect').length : -1) +
-      ' hs=' + document.querySelectorAll('.hs').length +
+      ' ann=' + document.querySelectorAll('.ann').length +
       ' await=' + (!!c && c.style.display !== 'none' && c.querySelectorAll('.choice').length > 0 ? 'Y' : 'N') +
       ' hasAdv=' + (t && t._advance ? 'Y' : 'N') +
       ' waitNote=' + (t && t._awaitingNote ? 'Y' : 'N') +
@@ -555,6 +553,9 @@ try {
       }
       if (step.check === 'note' && !/^NOTE_OK/.test(stepResult)) {
         assertBad = '督导笔记没出来或没写出来（' + stepResult + '）';
+      }
+      if (step.check === 'callout' && !/^CALLOUT_OK/.test(stepResult)) {
+        assertBad = '房间箭头标注缺字（' + stepResult + '）';
       }
     } else if (stepResult && !/^(ok|reached@\d+)$/.test(stepResult)) {
       // 截图步骤：ok / reached 之外都不是好结果

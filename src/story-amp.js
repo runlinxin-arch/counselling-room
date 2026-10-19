@@ -125,10 +125,11 @@ const AMP_S1 = {
   },
   'c2b1': { type: 'say', who: '周航', text: '行。', next: 'room1' },
 
-  // ---- 咨询室可点物件（第 1 节）----
+  // ---- 咨询室箭头标注（第 1 节）----
   'room1': {
     type: 'say', who: '旁白',
-    text: '房间里有几样东西带光晕。点一下，会告诉你它们是干什么用的。',
+    text: '房间里几样东西，箭头标出了它们是干什么用的。',
+    allowItems: ['referral', 'tissue', 'clock', 'sofa'],
     next: 'r1',
   },
   'r1': {

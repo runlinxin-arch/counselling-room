@@ -184,16 +184,6 @@ body::before {
 
 #scene { display: block; width: 100%; height: 100%; shape-rendering: crispEdges; }
 
-/* 可点物件：平时极轻地呼吸，指上去立刻亮起来 */
-.hotspot { cursor: pointer; }
-.hotspot .art { animation: breathe 1.9s ease-in-out infinite; }
-.hotspot:hover .art,
-.hotspot:focus-visible .art {
-  animation: none;
-  filter: brightness(1.6) drop-shadow(0 0 4px var(--lamp));
-}
-@keyframes breathe { 0%, 100% { opacity: 1 } 50% { opacity: .62 } }
-
 /* ==========================================================================
    对话区
    ========================================================================== */
@@ -893,7 +883,6 @@ body::before {
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
-  .hotspot .art { opacity: 1; }
   .paper, .diary { animation: none; }
 }
 

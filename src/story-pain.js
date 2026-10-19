@@ -84,10 +84,11 @@ const PAIN_S1 = {
   },
   'setup3': { type: 'say', who: '陈静', text: '（点头）', next: 'room1' },
 
-  // ---- 咨询室可点物件 ----
+  // ---- 咨询室箭头标注 ----
   'room1': {
     type: 'say', who: '旁白',
-    text: '房间里有几样东西带光晕。点一下，会告诉你它们是干什么用的。',
+    text: '房间里几样东西，箭头标出了它们是干什么用的。',
+    allowItems: ['referral', 'tissue', 'clock', 'sofa'],
     next: 'r1',
   },
   'r1': { type: 'say', who: '陈静', text: '这个沙发挺软的。', next: 'r2' },
@@ -931,6 +932,11 @@ XLZX.storyPain = {
       '她一直用手压着腰。这个动作已经不需要想了，像别人跷腿一样自然。',
       '三年里她学会了一整套不弯腰的办法：用脚勾、叫别人、绕开。',
     ],
+  },
+  // 房间箭头标注里唯一要改的一条：转介单在三条线里是同一张纸，
+  // 但上面写的人不一样。
+  callouts: {
+    referral: { name: '转介单', text: '别人对她的判断' },
   },
   sections: [
     { id: 's1', title: '第 1 节', subtitle: '第一次见面', nodes: PAIN_S1 },

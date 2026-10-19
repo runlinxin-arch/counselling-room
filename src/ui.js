@@ -513,25 +513,30 @@
   // --------------------------------------------------------------------------
   // 场景
   // --------------------------------------------------------------------------
-  function currentClickable() {
+  /**
+   * 这一段房间里要标出来的物品。
+   *
+   * 房间是三条线共用的同一间，所以文案有一份共用底（X.roomCallouts），
+   * 每条故事线可以用 story.callouts 覆盖个别条目（比如转介单上写的是谁）。
+   * 能不能标，由节点的 allowItems 决定——和以前的"可点"是同一个闸门。
+   */
+  function currentCallouts() {
     const node = state.node || {};
-    const allowed = node.allowItems || [];
-    if (!allowed.length || !X.roomItems) return [];
-
-    const act = state.act;
-    // 既有内容、又被这一段允许的，才是热的
-    return allowed.filter(function (id) {
-      if (id === 'mobility') return true;
-      const item = X.roomItems[id];
-      return item && item.acts && item.acts[act];
-    });
+    const ids = node.allowItems || [];
+    if (!ids.length) return [];
+    const base = X.roomCallouts || {};
+    const over = (state.story && state.story.callouts) || {};
+    return ids.map(function (id) {
+      const c = over[id] || base[id];
+      return c ? { id: id, name: c.name, text: c.text } : null;
+    }).filter(Boolean);
   }
 
   function renderRoom() {
     const host = $('#room');
     if (!host) return;
     host.innerHTML = '';
-    const clickable = currentClickable();
+    const callouts = currentCallouts();
     // 中场休息（走廊）场景里屋里不该还坐着人：走廊场景用空房间。
     const inHallway = state.scene === 'hallway';
     const svg = E.renderScene({
@@ -539,36 +544,10 @@
       warmth: state.warmth,
       withPeople: !inHallway,
       hallway: inHallway,
-      clickable: inHallway ? [] : clickable,
-      onItem: openRoomItem,
+      callouts: inHallway ? [] : callouts,
     });
     host.appendChild(svg);
     scaleRoom();
-  }
-
-  function openRoomItem(id) {
-    E.recordItem(id);
-    if (id === 'mobility') {
-      // 文案来自故事数据：故事线一是轮椅，故事线二是双拐。
-      const m = (state.story && state.story.mobility) || null;
-      if (m) {
-        showPaper({ kind: 'science', title: m.title, lines: m.lines, button: '继续聊' });
-      }
-      return;
-    }
-    const item = X.roomItems[id];
-    if (!item) return;
-    const actData = item.acts[state.act];
-    if (!actData) return;
-    showPaper({
-      kind: actData.kind,
-      title: actData.title,
-      lines: actData.lines,
-      footer: actData.footer,
-      button: '知道了',
-      write: actData.kind === 'referral',
-      speed: 18,
-    });
   }
 
   /**
@@ -689,8 +668,7 @@
     let advanced = false;
 
     function allowAdvance() {
-      const hintText = node.hint
-        || (currentClickable().length ? '点房间里发光的东西，可以看它的来历' : '');
+      const hintText = node.hint || '';
       setHint(hintText);
       const right = $('#hint .right');
       if (right) right.textContent = '空格 / 点文字继续';

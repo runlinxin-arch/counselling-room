@@ -118,9 +118,8 @@ const SCI_S1 = {
   // ---- 房间可点（自由探索，不推进剧情）----
   'room1': {
     type: 'say', who: '旁白',
-    text: '房间里有几样东西带光晕。点一下，会告诉你是干什么用的。',
+    text: '房间里几样东西，箭头标出了它们是干什么用的。',
     allowItems: ['referral', 'tissue', 'clock', 'sofa'],
-    hint: '点房间里带光晕的东西',
     next: 'eth1',
   },
 
@@ -684,12 +683,19 @@ const SCI_END = {
   },
 };
 // ---------------------------------------------------------------------------
-// 房间里的可点物件。分节写，因为同一件东西在不同小节要说的话不一样。
-// 点开是「咨询设置」科普，不推进剧情。
+// 房间里的物件。
+//
+// 现在不再"点开弹纸"，而是在房间里直接用箭头标出它们的用处（见 engine.js
+// 的 drawCallouts）。callout 就是那两行标注；acts 里更长的科普文案保留下来，
+// 当前版本不显示，但课程报告和后续扩展还会用到。
 // ---------------------------------------------------------------------------
 const ROOM_ITEMS = {
   referral: {
     label: '茶几上的转介单',
+    callout: {
+      name: '转介单',
+      text: '别人对他的判断',
+    },
     acts: {
       1: {
         kind: 'referral', title: '转介单',
@@ -704,6 +710,10 @@ const ROOM_ITEMS = {
   },
   tissue: {
     label: '茶几上的纸巾盒',
+    callout: {
+      name: '纸巾盒',
+      text: '在这儿可以哭',
+    },
     acts: {
       1: {
         kind: 'science', title: '为啥这儿放着一盒纸巾',
@@ -720,6 +730,10 @@ const ROOM_ITEMS = {
   },
   clock: {
     label: '墙上的钟',
+    callout: {
+      name: '墙上的钟',
+      text: '出院后最危险',
+    },
     acts: {
       1: {
         kind: 'science', title: '为啥「出院后」是最危险的时候',
@@ -735,6 +749,10 @@ const ROOM_ITEMS = {
   },
   sofa: {
     label: '两把沙发',
+    callout: {
+      name: '沙发',
+      text: '不对着坐',
+    },
     acts: {
       1: {
         kind: 'science', title: '座位不是面对面的',
@@ -796,6 +814,14 @@ XLZX.storySci = {
 };
 
 XLZX.roomItems = ROOM_ITEMS;
+
+// 箭头标注的共用底：房间是三条线共用的，钟 / 纸巾盒 / 沙发在哪条线里
+// 都是同一个用处。转介单各线不同，用各故事自己的 callouts 覆盖。
+const ROOM_CALLOUTS = {};
+Object.keys(ROOM_ITEMS).forEach(function (id) {
+  if (ROOM_ITEMS[id].callout) ROOM_CALLOUTS[id] = ROOM_ITEMS[id].callout;
+});
+XLZX.roomCallouts = ROOM_CALLOUTS;
 
 // 后两条线还没写。引擎已经支持，只是没有内容——
 // 所以选线页把它们画成剪影，而不是假装「正在加载」。

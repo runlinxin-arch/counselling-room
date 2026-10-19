@@ -453,14 +453,16 @@ if (!E || stories.length === 0) {
   }
 
 
-  // ---- 房间物件 ----
+  // ---- 房间箭头标注 ----
   let itemBad = 0;
   for (const id of ['referral', 'tissue', 'clock', 'sofa']) {
     const item = X.roomItems && X.roomItems[id];
-    if (!item) { fail(`房间物件 "${id}" 在 UI 里被引用，roomItems 里没有`); itemBad++; }
-    else if (!item.acts || !item.acts[1]) { fail(`房间物件 "${id}" 第 1 节没有内容`); itemBad++; }
+    if (!item) { fail(`房间物件 "${id}" 没有数据`); itemBad++; }
+    else if (!item.callout || !item.callout.name || !item.callout.text) {
+      fail(`房间物件 "${id}" 缺少箭头标注文案（callout.name / callout.text）`); itemBad++;
+    }
   }
-  if (!itemBad) ok('房间里 4 样可点物件都有第 1 节内容');
+  if (!itemBad) ok('房间里 4 样物件都有箭头标注文案');
   if (!X.storySlots || X.storySlots.length !== 3) fail('storySlots 应有 3 条线');
   else {
     const ready = X.storySlots.filter((x) => x.ready).length;
@@ -527,7 +529,7 @@ if (!E || stories.length === 0) {
   // 只做 load 是抓不到"变量没定义""回调把外层参数遮住"这类错的——
   // 它们要等到真的调用才炸（我们踩过一次：renderScene 里的 warmth 被
   // shadows.forEach 的形参遮住，整间房一个矩形都没画，而静态检查全绿）。
-  const draw = (opts) => E.renderScene(Object.assign({ onItem() {}, clickable: [] }, opts));
+  const draw = (opts) => E.renderScene(Object.assign({ callouts: [] }, opts));
 
   let scenes = 0;
   for (const act of [1, 2, 3]) {
@@ -540,8 +542,9 @@ if (!E || stories.length === 0) {
 
   let full = null;
   try {
-    full = draw({ act: 1, warmth: 1, withPeople: true, clickable: ['clock', 'tissue', 'sofa', 'referral', 'wheelchair'] });
-    ok('带全部热区也能画出来');
+    full = draw({ act: 1, warmth: 1, withPeople: true,
+      callouts: E.CALLOUTS.map((c) => ({ id: c.id, name: '测试', text: '测试文字' })) });
+    ok('带全部箭头标注也能画出来');
 
     // 待机动效：每个人物必须是一个 .x-person 刚体组（内含 .x-eye 子层），
     // 且 CSS 里有关键帧与 prefers-reduced-motion 降级。
@@ -551,7 +554,7 @@ if (!E || stories.length === 0) {
     // .x-person 必须是 2 个（来访者+咨询师），而不存在独立的 .x-head/.x-body。
     {
       E.state.story = Object.values(X.stories)[0];
-      const svgA = E.renderScene({ act: 1, warmth: 1, withPeople: true, clickable: [] });
+      const svgA = E.renderScene({ act: 1, warmth: 1, withPeople: true, callouts: [] });
       let css = '';
       const found = { person: 0, eye: 0, head: 0, body: 0 };
       (function walk(n) {
@@ -595,20 +598,28 @@ if (!E || stories.length === 0) {
     else ok(`房间画了 ${rects} 个矩形`);
   }
 
-  // 热区必须拿得到像素图，否则点上去了没反应
+  // 箭头标注：锚点必须在画面里、文案必须齐。
   let hsBad = 0;
-  for (const hs of E.HOTSPOTS) {
-    // mobility 的像素图跟着故事走：故事线一是轮椅，二是双拐。
-    // 两条线各自的 clientArt.prop 都必须真的存在。
-    const has = hs.id === 'mobility'
-      ? Object.values(X.stories || {}).every((st) => !st.clientArt || !!X[st.clientArt.prop])
-      : hs.id === 'referral' ? !!X.REFERRAL
-        : hs.id === 'tissue' ? !!(X.TISSUE || X.sprites.sprites.tissue)
-          : hs.id === 'clock' ? !!X.sprites.sprites.clock
-            : !!(hs.sprite && X.sprites.sprites[hs.sprite]);
-    if (!has) { fail(`热区 "${hs.id}" 找不到像素图`); hsBad++; }
+  for (const c of E.CALLOUTS) {
+    if (!c.anchor || !c.box) { fail(`标注 "${c.id}" 缺少 anchor / box`); hsBad++; continue; }
+    const [ax, ay] = c.anchor;
+    if (ax < 0 || ay < 0 || ax > 106 || ay > 60) { fail(`标注 "${c.id}" 的锚点超出画面`); hsBad++; }
+    if (!X.roomCallouts || !X.roomCallouts[c.id]) { fail(`标注 "${c.id}" 没有文案`); hsBad++; }
   }
-  if (!hsBad) ok(`${E.HOTSPOTS.length} 个热区都有像素图`);
+  if (!hsBad) ok(`${E.CALLOUTS.length} 个箭头标注都有锚点和文案`);
+
+  // 标了 callouts 就必须真的多出指引线和文字。
+  {
+    const svgAnn = draw({ act: 1, warmth: 1, withPeople: true,
+      callouts: E.CALLOUTS.map((c) => ({ id: c.id, name: '钟', text: '测试' })) });
+    const lines = svgAnn.querySelectorAll('line').length;
+    const texts = svgAnn.querySelectorAll('text').length;
+    if (lines < E.CALLOUTS.length || texts < E.CALLOUTS.length * 2) {
+      fail(`箭头标注没有真的画出来：line=${lines} text=${texts}`);
+    } else {
+      ok(`箭头标注画出了 ${lines} 条指引线 / ${texts} 行文字`);
+    }
+  }
 
   // —— 三条本轮修过的回归，各留一条断言 ——
 
