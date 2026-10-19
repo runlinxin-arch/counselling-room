@@ -927,6 +927,13 @@
    * 成绩单和"小节末的督导笔记"共用这个收尾。
    */
   function presentPaper(opts) {
+    // 惰性建浮层：showPaper 早就这么做了，这里原先没有。
+    // 一条线的第一张纸如果是「节末笔记」或「成绩单」（v2 的许予安线就是这样），
+    // overlayEl 还是 null，会当场抛 TypeError。
+    if (!overlayEl) {
+      overlayEl = make('div', { id: 'overlay' });
+      document.body.appendChild(overlayEl);
+    }
     const paper = make('div', { class: 'paper', 'data-kind': opts.kind || 'science' });
     paper.appendChild(make('div', { class: 'head' }, [
       make('span', { class: 'label', text: opts.label || '' }),

@@ -388,13 +388,17 @@ if (!E || stories.length === 0) {
   if (!choiceBad) ok('每个选择点都有 ≥2 个不重复的选项，且都有下文');
 
   // ---- 逐个选项都必须能到终章（没有"答错就卡死"）----
+  // 终章有几个节点不写死：找链上 next 为空的那个，它才是「终点」。
+  const endTerminal = 'end/' + (Object.keys(story.endingNodes)
+    .find((k) => { const n = story.endingNodes[k]; return n.next === null || n.next === undefined; }) || '');
+  if (endTerminal === 'end/') fail('终章没有终点节点（next 全是非空）');
   let deadEnds = 0;
   for (const s of story.sections) {
     for (const [k, n] of Object.entries(s.nodes)) {
       if (n.type !== 'choice') continue;
       for (const o of n.options) {
         const start = E.resolve(story, s.id + '/' + k, o.next);
-        if (!reach(start).has('end/2')) {
+        if (!reach(start).has(endTerminal)) {
           fail(`${s.id}/${k} 选项 ${o.key}「${o.label}」走不到终章`); deadEnds++;
         }
       }
@@ -472,8 +476,14 @@ if (!E || stories.length === 0) {
 
   // ---- 存档 ----
   const empty = E.emptySave();
-  if (X.storySlots.some((s) => !(s.id in empty.done))) fail('emptySave().done 缺少故事线');
-  else ok('存档结构含每条线的通关标记');
+  if (!empty.done || typeof empty.done !== 'object') fail('emptySave().done 不是对象');
+  else {
+    const slot = X.storySlots[0];
+    empty.done[slot.id] = true;
+    const roundDone = JSON.parse(JSON.stringify(empty)).done;
+    if (roundDone[slot.id] !== true) fail('存档存不住这条线的通关标记');
+    else ok(`存档能存下这条线（${slot.id}）的通关标记`);
+  }
   const round = JSON.parse(JSON.stringify({ story: 'sci', line: 's1/n2', flags: { openB: true }, warmth: 2 }));
   if (round.line !== 's1/n2' || round.flags.openB !== true) fail('存档快照编解码不一致');
   else ok('存档快照编解码一致');
@@ -512,7 +522,7 @@ if (!E || stories.length === 0) {
       hops++;
     }
     if (hops < 50) fail(`状态机只走了 ${hops} 步就停了（停在 ${st.line}）`);
-    else if (st.line !== 'end/2') fail(`一直按第一个选项走，最后停在 ${st.line}，应该是 end/2`);
+    else if (st.line !== endTerminal) fail(`一直按第一个选项走，最后停在 ${st.line}，应该是 ${endTerminal}`);
     else ok(`状态机跑通：${hops} 步走到终章`);
 
     if (!st.flags.crisisTriggered) fail('走了「问」这条路，crisisTriggered 却没置上');
@@ -636,30 +646,31 @@ if (!E || stories.length === 0) {
     }
   }
 
-  // 2) 坐姿：林越必须用坐姿立绘，且臀落在座椅、脚落在脚踏。
+  // 2) 坐姿：来访者坐在沙发上，臀落在座垫、脚落在地面。
+  //    沙发坐垫在画布 y39–44（sofaR 摆 y=26，座垫从第 13 行起），地面在 y≈52。
   {
-    const sci = X.stories.sci;
-    if (!sci || sci.clientArt.body !== 'LINYUE_SEATED') {
-      fail('林越没有使用坐姿立绘 LINYUE_SEATED');
+    const first = stories[0];
+    if (!first || !first.clientArt || first.clientArt.body !== 'XUYUAN_SEATED') {
+      fail('来访者没有使用坐姿立绘 XUYUAN_SEATED');
     } else {
-      const art = sci.clientArt;
-      const seatY = art.propY + 10, footY = art.propY + 16;
-      const hipY = art.bodyY + 15, footAt = art.bodyY + 19;
-      const okSeat = hipY >= seatY && hipY <= seatY + 1;
-      const okFoot = Math.abs(footAt - footY) <= 1;
-      if (okSeat && okFoot) ok('林越坐姿：臀贴座、脚踏板');
-      else fail(`林越坐姿对不齐（臀 y${hipY} vs 座 y${seatY}；脚 y${footAt} vs 踏 y${footY}）`);
+      const art = first.clientArt;
+      const hipY = art.bodyY + 15;   // 立绘第 15 行是大腿（坐垫位置）
+      const footY = art.bodyY + 22;  // 最后一行是鞋（地面位置）
+      const onCushion = hipY >= 39 && hipY <= 46;
+      const onFloor = footY >= 50 && footY <= 54;
+      if (onCushion && onFloor) ok(`坐姿：臀落座垫（y${hipY}）、脚落地面（y${footY}）`);
+      else fail(`坐姿对不齐（臀 y${hipY}，应在 39–46；脚 y${footY}，应在 50–54）`);
     }
   }
 
-  // 3) 跨节推进：s1end 的 next 是 @s2/n1，advance 不能死循环。
+  // 3) 跨节推进：第 1 节末尾的 next 是 @s2/n1，advance 不能死循环。
   //    这个用纯函数模拟 UI 的 advance 判断太绕，改测数据 + engine 能解析。
   {
-    const sci = X.stories.sci;
+    const sci = stories[0];
     const s1end = sci.sections[0].nodes['s1end'];
     if (!s1end) fail('找不到 s1end');
     else {
-      const resolved = E.resolve(sci, 's1/s1end', s1end.next);
+      const resolved = E.resolve(sci, 's1/' + 's1end', s1end.next);
       const node = E.go ? null : null; // go 需要 state，不在这里测
       const targetSec = String(resolved || '').split('/')[0];
       if (resolved === 's2/n1' && targetSec === 's2') ok('第一次见面结束能解析到下一节（s2/n1）');

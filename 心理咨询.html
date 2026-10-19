@@ -1854,87 +1854,83 @@ XLZX.WARMTH = WARMTH;
 
 /* ===== src/story.js ===== */
 // ============================================================================
-// 内容数据 · 故事线一：脊髓损伤
+// 内容数据 · 故事线 0：许予安（v2 唯一一条线）
 // ----------------------------------------------------------------------------
-// 全部台词来自 docs/story/故事线1-脊髓损伤.md（剧本草稿 v2 · 日常口语版）。
-// 这里只做三件事：拆行、挂跳转、挂科普卡。
-// **不改台词**——台词的问题应该在剧本文件里改，改完再同步到这里。
+// 正本：docs/story/故事线0-许予安.md（人物 / 前史 / 三节要求 / 红线自查）
+// 这里只做三件事：拆行、挂跳转、挂科普卡。台词的问题在正本里改，改完再同步过来。
 //
-// 引擎只认识 say / choice / diary / card / end 五种节点，不认识「脊髓损伤」。
-// 加第二条线只需要再写一份同样结构的数据。
+// 引擎只认识 say / choice / diary / card / result 五种节点，不认识「下肢功能障碍」。
+// 主线是**伤残适应**，不是「治愈霸凌创伤」。霸凌是前史，不是这一次咨询要解决的问题。
+//
+// 核心洞察（写台词时别丢）：隐瞒霸凌和拒绝照顾是同一件事的两面——
+// 都不能让别人看见我弱。
 // ============================================================================
 
-// 全部挂在同一个命名空间上。产物只有一段脚本，但源码分文件写，
-// 用命名空间比靠「变量提升」更稳，顺序也随便调。
 var XLZX = (typeof window !== 'undefined' && window.XLZX) || {};
 if (typeof window !== 'undefined') window.XLZX = XLZX;
 
 // ---------------------------------------------------------------------------
-// 第 1 节
+// 第 1 节 · 第一次见面
 // ---------------------------------------------------------------------------
-const SCI_S1 = {
+const XU_S1 = {
   // ---- 开场 ----
   'n1': {
     type: 'say', who: '旁白', act: 1, warmth: 1,
-    text: '他比约定时间早到了十分钟。坐在靠门那把沙发上，轮椅停在手边。',
+    text: '他比约定时间早到了十分钟。坐得很直，两只手放在膝盖上，双拐靠在沙发扶手上。',
     next: 'n2',
   },
-  'n2': {
-    type: 'say', who: '咨询师',
-    text: '你好，我是这儿的心理咨询师。今天大概五十分钟，你看行吗？',
-    next: 'n3',
-  },
-  'n3': { type: 'say', who: '林越', text: '嗯。', next: 'c1' },
+  'n2': { type: 'say', who: '旁白', text: '看见你进来，他要站起来。', next: 'n3' },
+  'n3': { type: 'say', who: '咨询师', text: '不用起来，坐着说就行。', next: 'n4' },
+  'n4': { type: 'say', who: '许予安', text: '……哦。', next: 'c1' },
 
   // ---- 选项 1：开场白 ----
   'c1': {
     type: 'choice',
     prompt: '先说什么',
     options: [
-      { key: 'A', label: '王医生说你这段时间训练不太配合，咱先聊聊这个。', next: 'a1', flag: 'openA' },
-      { key: 'B', label: '今天想先认识一下你。你想聊啥，咱就聊啥。', next: 'b1', flag: 'openB' },
+      { key: 'A', label: '转介单上写着「不太愿意说话」，是这样吗？', next: 'a1', flag: 'openA' },
+      { key: 'B', label: '我是这儿的心理咨询师。你想从哪儿说起都行。', next: 'b1', flag: 'openB' },
       { key: 'C', label: '最近怎么样？', next: 'd1', flag: 'openC' },
     ],
   },
-  'a1': { type: 'say', who: '林越', text: '……哦。', next: 'a2' },
-  'a2': { type: 'say', who: '林越', text: '他跟你说的？', next: 'a3' },
-  'a3': { type: 'say', who: '林越', text: '我也去了啊。就是没笑而已。', next: 'a4' },
-  'a4': {
+  'a1': { type: 'say', who: '许予安', text: '……我不是不愿意说话。', next: 'a2' },
+  'a2': { type: 'say', who: '许予安', text: '是没什么好说的。', next: 'a3' },
+  'a3': {
     type: 'say', note: { kind: 'supervision' },
-    text: '转介单上「配合度差」是别的判断。你一上来就复述它，他就把你归到「他们」那边去了。',
+    text: '转介单上那句是别人写的判断。你一上来就复述它，他就得先花力气反驳那句话，而不是说自己的事。',
     next: 'setup1',
   },
 
-  'b1': { type: 'say', who: '林越', text: '都行。', next: 'b2' },
-  'b2': { type: 'say', who: '林越', text: '（顿了一下）我也不知道聊啥。', next: 'b3' },
+  'b1': { type: 'say', who: '许予安', text: '都行。', next: 'b2' },
+  'b2': { type: 'say', who: '许予安', text: '（停了一下）我也不知道该说啥。', next: 'b3' },
   'b3': {
     type: 'say', note: { kind: 'supervision' },
-    text: '他说「不知道聊啥」，不是拒绝，是在等你先开口。这时候别急着把话填满。',
+    text: '「不知道说啥」不是拒绝，是等你先开口。这时候别急着替他把话填满。',
     next: 'setup1',
   },
 
-  'd1': { type: 'say', who: '林越', text: '还行。', next: 'd2' },
+  'd1': { type: 'say', who: '许予安', text: '挺好的。', next: 'd2' },
   'd2': {
     type: 'say', note: { kind: 'supervision' },
-    text: '第一次见面就问「怎么样」，一般只能换回「还行」。他给你的是安全答案。',
+    text: '第一次见面问「怎么样」，一般只能换回「挺好的」。他给你的是安全答案。',
     next: 'setup1',
   },
 
-  // ---- 说明设置（必走）----
+  // ---- 保密设置 ----
   'setup1': {
     type: 'say', who: '咨询师',
-    text: '那我说一下这儿是怎么弄的。两三分钟，你听完再决定要不要接着聊。',
+    text: '那我先说这儿是怎么弄的。两三分钟，你听完再决定要不要接着聊。',
     next: 'setup2',
   },
   'setup2': { type: 'say', who: '咨询师', text: '一次五十分钟。你说的话我保密。', next: 'setup3' },
   'setup3': {
     type: 'say', who: '咨询师',
-    text: '但有个例外。你要是说到想伤害自己或者别人，那我不能瞒着，得做点事——可能是联系你的医生，也可能联系你家里人。真到那一步，我会先跟你说一声，不会背着你弄。',
+    text: '但有例外。你要是说到想伤害自己或者别人，那我不能瞒着，得做点事。真到那一步，我会先跟你说一声，不会背着你弄。',
     next: 'setup4',
   },
   'setup4': {
     type: 'say', who: '咨询师',
-    text: '还有，你要是不想回答哪个问题，直接说「这个不聊」就行，不影响的。',
+    text: '还有，哪个问题你不想答，直接说「这个不聊」就行。不影响。',
     next: 'c2',
   },
   'c2': {
@@ -1943,253 +1939,338 @@ const SCI_S1 = {
     options: [
       { key: 'A', label: '听明白了吗？', next: 'c2a1' },
       { key: 'B', label: '这里面有哪条，你想再问细点？', next: 'c2b1', flag: 'askedBoundary' },
-      { key: 'C', label: '直接往下：那咱说说，最近咋样？', next: 'c2c1' },
+      { key: 'C', label: '那咱说说，你最近都在忙什么？', next: 'c2c1' },
     ],
   },
-  'c2a1': { type: 'say', who: '林越', text: '嗯。', next: 'c2a2' },
+  'c2a1': { type: 'say', who: '许予安', text: '嗯。', next: 'c2a2' },
   'c2a2': {
     type: 'say', note: { kind: 'supervision' },
-    text: '他答「嗯」，但你不知道他到底听懂没有。',
+    text: '他答「嗯」，但你没确认他到底听懂没有。保密例外是拉近关系的东西，不是免责声明。',
     next: 'room1',
   },
-
-  'c2b1': { type: 'say', who: '林越', text: '（停了停）那个……「做点事」是啥意思？', next: 'c2b2' },
+  'c2b1': { type: 'say', who: '许予安', text: '（停了停）那个……「做点事」是啥意思？', next: 'c2b2' },
   'c2b2': { type: 'say', who: '咨询师', text: '看情况。要是有危险，可能得让人过来一趟。', next: 'c2b3' },
-  'c2b3': { type: 'say', who: '林越', text: '……告诉我爸妈？', next: 'c2b4' },
+  'c2b3': { type: 'say', who: '许予安', text: '……告诉我爸妈？', next: 'c2b4' },
   'c2b4': { type: 'say', who: '咨询师', text: '不一定。但不管做啥，我会先跟你说。', next: 'c2b5' },
-  'c2b5': { type: 'say', who: '林越', text: '……行。', next: 'c2b6' },
+  'c2b5': { type: 'say', who: '许予安', text: '……行。', next: 'c2b6' },
   'c2b6': {
     type: 'say', note: { kind: 'supervision' },
-    text: '他问的是边界，说明他听进去了。保密例外讲清楚，是拉近关系的东西，不是扫兴的免责声明。',
+    text: '他问的是边界。问出来，说明他听进去了，也说明他在考虑「要不要跟这个人说实话」。',
     next: 'room1',
   },
-
   'c2c1': {
     type: 'say', note: { kind: 'supervision' },
-    text: '跳过设置直接往下，你还没跟他讲清楚「哪些话我会往外说」。这条以后会回来找你。',
+    text: '跳过设置直接往下：你还不知道他听懂了没有。这条以后会回来找你。',
     next: 'room1',
   },
 
-  // ---- 房间可点（自由探索，不推进剧情）----
+  // ---- 房间可点 ----
   'room1': {
     type: 'say', who: '旁白',
     text: '房间里几样东西，箭头标出了它们是干什么用的。',
     allowItems: ['referral', 'tissue', 'clock', 'sofa'],
-    next: 'eth1',
+    next: 'e1',
   },
 
-  // ---- 伦理抉择：走廊里的王医生 ----
-  'eth1': { scene: 'hallway',
-    type: 'say', who: '旁白', 
-    text: '中间休息，你去走廊接水。迎面碰见康复科的王医生。',
-    next: 'eth2',
+  // ---- 他把话题带回「什么时候能回去上课」----
+  'e1': {
+    type: 'say', who: '许予安',
+    text: '那个……我想问一下，我什么时候能回去上课？',
+    next: 'e2',
   },
-  'eth2': { type: 'say', who: '王医生', scene: 'hallway', text: '哎，你见着他了吧？', next: 'eth3' },
-  'eth3': { scene: 'hallway',
-    type: 'say', who: '王医生', 
-    text: '那孩子就是得有人在后面推一把。你跟他说说，让他好好练。你说话他听。',
-    next: 'eth4',
-  },
-  'eth4': { scene: 'hallway',
-    type: 'say', who: '旁白', 
-    text: '（说完拍拍你肩膀，走了）',
-    next: 'c3',
-  },
-  'c3': { scene: 'hallway',
+  'e2': { type: 'say', who: '旁白', text: '这是他进门以后，第一次主动开口问事。', next: 'c3' },
+  'c3': {
     type: 'choice',
-    prompt: '怎么回他',
+    prompt: '他把话题带到了「回去上课」',
     options: [
-      { key: 'A', label: '行，我下回跟他说说。', next: 'e3a1', flag: 'ethA' },
-      { key: 'B', label: '我先看看他自己想干啥，再说。', next: 'e3b1', flag: 'ethB' },
-      { key: 'C', label: '他这种情况站不起来的，这么说他更不愿意练。', next: 'e3c1', flag: 'ethC' },
+      { key: 'A', label: '先接住：你很想回去。', next: 'f1', flag: 'joinHim' },
+      { key: 'B', label: '你为什么这么急着回去？', next: 'g1', flag: 'askWhy' },
+      { key: 'C', label: '你从头到尾只问了这一件事。', next: 'h1', flag: 'naming' },
     ],
   },
-  'e3a1': { scene: 'hallway',
+  'f1': { type: 'say', who: '许予安', text: '……嗯。', next: 'f2' },
+  'f2': { type: 'say', who: '许予安', text: '在家待着也没事干。', next: 'f3' },
+  'f3': {
     type: 'say', note: { kind: 'supervision' },
-    text: '你答应了一件做不到、也不该做的事。下回你开口，他听到的会是你，还是「他们」？',
-    next: 'crisis1',
+    text: '先接住再谈，他才会往下说。「没事干」这三个字后面藏着东西。',
+    next: 'i1',
   },
-  'e3b1': { scene: 'hallway', type: 'say', who: '王医生', text: '……也行。你们有你们的做法。', next: 'e3b2' },
-  'e3b2': { scene: 'hallway',
+  'g1': { type: 'say', who: '许予安', text: '（很快）就是……快期末了。', next: 'g2' },
+  'g2': { type: 'say', who: '许予安', text: '落太多补不回来。', next: 'g3' },
+  'g3': {
     type: 'say', note: { kind: 'supervision' },
-    text: '你没当面驳他，也没替来访者做主。「目标得他自己定」是伦理要求，不是客气话。\n\n【依据：第 7 章 · 尊重人的权利与尊严、忠诚与责任】',
-    next: 'crisis1',
+    text: '他答得很快。太快了——这是准备好的答案，不是想出来的答案。',
+    next: 'i1',
   },
-  'e3c1': { scene: 'hallway', type: 'say', who: '王医生', text: '（有点尴尬）我知道，我就随口一说。', next: 'e3c2' },
-  'e3c2': { scene: 'hallway',
+  'h1': { type: 'say', who: '许予安', text: '……', next: 'h2' },
+  'h2': { type: 'say', who: '许予安', text: '我就想问这个。', next: 'h3' },
+  'h3': {
     type: 'say', note: { kind: 'supervision' },
-    text: '医学上你说得对，但这句话里没有来访者。而且他能不能站起来，不该由你在走廊里替他定调。\n\n【依据：第 7 章 · 尊重人的权利与尊严、忠诚与责任】',
-    next: 'crisis1',
+    text: '你说得没错，但他听见的是「你被看穿了」。第一次见面就点破，关系容易僵。',
+    next: 'i1',
   },
 
-  // ---- 危机筛查（可以不问）----
-  'crisis1': { scene: 'hallway',
+  // ---- 谁在照顾他 ----
+  'i1': {
     type: 'say', who: '咨询师',
-    text: '还有个事，问得有点直接。你要是不想答，可以不答。',
-    next: 'c4',
+    text: '这段在家，谁照顾你？',
+    next: 'i2',
   },
-  'c4': { scene: 'hallway',
+  'i2': { type: 'say', who: '许予安', text: '我妈。', next: 'c4' },
+  'c4': {
     type: 'choice',
-    prompt: '问不问',
+    prompt: '他答得很快',
     options: [
-      { key: 'A', label: '最近有没有觉得，活着挺没意思的？或者不想醒过来？', next: 'cr1', flag: 'screened' },
-      { key: 'B', label: '不问。今天第一次见，先不碰这个。', next: 'cn1', flag: 'screenSkipped' },
+      { key: 'A', label: '再问一句：还有别人吗？', next: 'j1', flag: 'pushSecond' },
+      { key: 'B', label: '从具体事问：早饭是谁做的？', next: 'j4', flag: 'concrete' },
+      { key: 'C', label: '不追了，回到学校的话题。', next: 'j6', flag: 'letGo' },
     ],
   },
-  'cr1': { scene: 'hallway', type: 'say', who: '旁白', text: '（他没说话，过了会儿）', next: 'cr2' },
-  'cr2': { scene: 'hallway', type: 'say', who: '林越', text: '……有吧。', next: 'cr3' },
-  'cr3': { scene: 'hallway', type: 'say', who: '林越', text: '也不是说要干啥。', next: 'cr4' },
-  'cr4': { scene: 'hallway',
-    type: 'say', who: '林越',
-    text: '就是晚上躺那儿，有时候想，要是睡过去不醒了，好像也行。',
-    next: 'cr5',
-  },
-  'cr5': { scene: 'hallway', type: 'say', who: '咨询师', text: '谢谢你跟我说这个。', next: 'cr6' },
-  'cr6': { scene: 'hallway',
-    type: 'say', who: '咨询师',
-    text: '我想多问一句——是觉得累，还是不想活了？',
-    next: 'crisisBranch',
-  },
-
-  'cn1': { scene: 'hallway',
-    type: 'say', who: '林越', text: '（把轮椅往前挪了挪）那今天先这样？', next: 'cn2',
-  },
-  'cn2': { scene: 'hallway',
+  'j1': { type: 'say', who: '许予安', text: '……', next: 'j2' },
+  'j2': { type: 'say', who: '许予安', text: '还有个阿姨。', next: 'j3' },
+  'j3': {
     type: 'say', note: { kind: 'supervision' },
-    text: '第一次见不问，可以。\n\n但记住一件事：脊髓损伤的人里，抑郁很容易被漏掉。而「睡过去不醒」这种念头，不会自己冒出来。下一次，得问。',
-    effect: 'markScreenMissed',
-    next: 'hw1',
+    text: '他说「我妈」的时候没停顿，说「阿姨」之前停了一下。停顿的位置比话本身有用。',
+    next: 'j7',
+  },
+  'j4': { type: 'say', who: '许予安', text: '（愣了一下）早饭……阿姨做。', next: 'j5' },
+  'j5': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '问具体的事，比问人管用。他答「阿姨」的时候，没有先想「该不该说」。',
+    next: 'j7',
+  },
+  'j6': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '他有一个回答卡在那儿，你没接。下次再问到，多半还卡在那儿。',
+    next: 'j7',
+  },
+  'j7': {
+    type: 'say', who: '咨询师',
+    text: '这个阿姨，是家里的亲戚吗？',
+    next: 'c5',
   },
 
-  // ---- 危机关怀分支（写死，不给「再想想」的机会）----
-  'crisisBranch': { scene: 'hallway',
-    type: 'say', who: '咨询师', text: '谢谢你跟我说这个。能说出来，不容易。',
-    effect: 'crisis',
-    next: 'cb2',
-  },
-  'cb2': { scene: 'hallway', type: 'say', who: '咨询师', text: '我想跟你多聊几句，行吗？', next: 'cb3' },
-  'cb3': { scene: 'hallway',
-    type: 'say', who: '咨询师',
-    text: '你刚说「睡过去不醒也挺省事」。我想分清楚一件事——是觉得活着太累了，还是不想活了？',
-    next: 'cb4',
-  },
-  'cb4': { scene: 'hallway', type: 'say', who: '林越', text: '……累。', next: 'cb5' },
-  'cb5': { scene: 'hallway', type: 'say', who: '林越', text: '也不是想死。', next: 'cb6' },
-  'cb6': { scene: 'hallway',
-    type: 'say', who: '林越',
-    text: '就是每天醒过来，发现还是这样。然后又要过一天。',
-    next: 'cb7',
-  },
-  'cb7': { scene: 'hallway', type: 'say', who: '咨询师', text: '我明白了。', next: 'cb8' },
-  'cb8': { scene: 'hallway',
-    type: 'say', who: '咨询师',
-    text: '这种累是真的。我不打算劝你「会好的」。',
-    next: 'cb9',
-  },
-  'cb9': { scene: 'hallway',
-    type: 'say', who: '咨询师',
-    text: '但有三件事，我现在得跟你说清楚。',
-    next: 'cb10',
-  },
-  'cb10': { scene: 'hallway',
-    type: 'say', who: '咨询师',
-    text: '第一，这种念头要是变强了，或者你开始想具体怎么做，一定要马上告诉人。告诉我、告诉王医生，或者打下面这个电话。这不是「麻烦别人」，这是你现在该做的事。',
-    next: 'cb11',
-  },
-  'cb11': { scene: 'hallway',
-    type: 'say', who: '咨询师',
-    text: '第二，你不是一个人。脊髓损伤之后有这种感受的人不少。这跟你「够不够坚强」没关系。',
-    next: 'cb12',
-  },
-  'cb12': { scene: 'hallway',
-    type: 'say', who: '咨询师',
-    text: '第三，接下来这段时间，我想跟你见得勤一点。',
-    next: 'cbCard',
-  },
-  'cbCard': { scene: 'hallway',
-    type: 'card', kind: 'resource',
-    title: '如果你或你身边的人正在经历这些',
-    lines: [
-      '全国心理援助热线：12356（国家卫健委统一号码）',
-      '北京心理危机研究与干预中心：010-82951332',
-      '如果存在立即的危险，请拨打 120，或直接前往最近的急诊。',
+  // ---- 李阿姨 ----
+  'c5': {
+    type: 'choice',
+    prompt: '他不太想接这句',
+    options: [
+      { key: 'A', label: '等她是谁这件事，先放着。', next: 'k1', flag: 'holdAunt' },
+      { key: 'B', label: '追问：她在这儿多久了？', next: 'k2', flag: 'pushAunt' },
     ],
-    footer: '这不是「小题大做」。打这个电话的人，每天都在打。',
-    button: '知道了',
+  },
+  'k1': {
+    type: 'say', who: '许予安', text: '……不是亲戚。',
+    next: 'k1b',
+  },
+  'k1b': {
+    type: 'say', who: '许予安', text: '她在我家做保洁。',
+    next: 'k3',
+  },
+  'k2': { type: 'say', who: '许予安', text: '好几年了吧。', next: 'k2b' },
+  'k2b': { type: 'say', who: '许予安', text: '我不太清楚。', next: 'k3' },
+  'k3': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '「她在我家做保洁」——他把人和身份放在一起说的。这个顺序，后面还会出现。',
+    next: 'm1',
+  },
+
+  // ---- 收尾 ----
+  'm1': { type: 'say', who: '咨询师', text: '今天快到了。下礼拜这个时间，再来一次？', next: 'm2' },
+  'm2': { type: 'say', who: '许予安', text: '行。', next: 'm3' },
+  'm3': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '他答应得太快了。快得像在敷衍——这是「配合」，不是「愿意」。',
     next: 'hw1',
   },
 
   // ---- 留作业 ----
-  'hw1': { scene: 'hallway',
+  'hw1': {
     type: 'say', who: '咨询师',
-    text: '今天先到这儿。给你留个小东西，不用给谁看。',
+    text: '给你留个小东西，不用给谁看。',
     next: 'hw2',
   },
-  'hw2': { scene: 'hallway',
+  'hw2': {
     type: 'say', who: '咨询师',
-    text: '记一下每天啥时候最难受。一句话就行，写手机上。',
+    text: '记一下每天什么时候最难受。一句话就行，写手机上。',
     next: 'hw3',
   },
-  'hw3': { scene: 'hallway', type: 'say', who: '林越', text: '记这干啥？', next: 'hw4' },
-  'hw4': { scene: 'hallway',
+  'hw3': { type: 'say', who: '许予安', text: '记这干啥？', next: 'hw4' },
+  'hw4': {
     type: 'say', who: '咨询师',
-    text: '下回带来，咱一块看看。我想知道啥时候、因为啥事，你最不好受。',
+    text: '下回带来。我想知道什么时候、因为啥事，你最不好受。',
     next: 'hw5',
   },
-  'hw5': { scene: 'hallway',
-    type: 'say', who: '林越', text: '……行吧。',
+  'hw5': {
+    type: 'say', who: '许予安', text: '……行吧。',
     effect: 'unlockDiary',
     next: 's1end',
   },
-  's1end': { scene: 'hallway',
+  's1end': {
     type: 'say', who: '旁白',
-    text: '他把手机揣回兜里，轮椅转到门口，停了一下才出去。',
+    text: '他撑着拐站起来，走到门口。走廊里有个穿蓝色工作服的女人在等，见他出来，先把拐接了过去。',
     next: '@s2/n1',
   },
 };
-
 // ---------------------------------------------------------------------------
-// 第 2 节
+// 第 2 节 · 一周后
 // ---------------------------------------------------------------------------
-const SCI_S2 = {
+const XU_S2 = {
   'n1': {
     type: 'say', who: '旁白', act: 2, warmth: 2,
-    text: '一周后，同一间房。他从兜里掏出手机。',
+    text: '一周后。他迟到了几分钟。门口那个穿蓝色工作服的女人正低头跟他说什么，他没应。',
     next: 'n2',
   },
-  'n2': { type: 'say', who: '林越', text: '……记了。', next: 'n3' },
-  'n3': { type: 'say', who: '林越', text: '没啥内容。', next: 'n4' },
-  'n4': {
-    type: 'say', who: '旁白',
-    text: '手机递过来，备忘录里四条。',
+  'n2': { type: 'say', who: '李阿姨', text: '……那你好好跟医生说。啊？', next: 'n3' },
+  'n3': { type: 'say', who: '许予安', text: '知道了。', next: 'n4' },
+  'n4': { type: 'say', who: '旁白', text: '他进来把拐靠在沙发上，比上次放得响。', next: 'c1' },
+  'c1': {
+    type: 'choice',
+    prompt: '今天从哪儿开始',
+    options: [
+      { key: 'A', label: '今天路上不太顺？', next: 'a1', flag: 'warmOpen' },
+      { key: 'B', label: '先说说这一周吧。', next: 'b1', flag: 'plainOpen' },
+      { key: 'C', label: '门口那位，是李阿姨吧。', next: 'c1x', flag: 'nameAunt' },
+    ],
+  },
+  'a1': { type: 'say', who: '许予安', text: '……没什么。', next: 'a2' },
+  'a2': { type: 'say', who: '许予安', text: '她每天都要在门口说一遍。', next: 'a3' },
+  'a3': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '他从「没什么」自己走到了「她每天都要说」。接住情绪，话会自己往外走。',
+    next: 'i1',
+  },
+  'b1': { type: 'say', who: '许予安', text: '还行吧。', next: 'b2' },
+  'b2': { type: 'say', who: '许予安', text: '（顿了顿）在家也没啥事。', next: 'b3' },
+  'b3': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '「还行吧」后面那个「没啥事」，是他自己递出来的线头。',
+    next: 'i1',
+  },
+  'c1x': { type: 'say', who: '许予安', text: '嗯。', next: 'c1y' },
+  'c1y': { type: 'say', who: '许予安', text: '她今天非要跟上来。', next: 'c1z' },
+  'c1z': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '你一提阿姨，他先说的是「她非要跟上来」——他在替这件事找解释。',
+    next: 'i1',
+  },
+
+  // ---- 主线事件：阿姨当着他的面说他「晚上不睡」----
+  'i1': { type: 'say', who: '旁白', text: '门被轻轻敲了一下。李阿姨端着一杯水进来。', next: 'i2' },
+  'i2': {
+    type: 'say', who: '李阿姨',
+    text: '老师，我说一句就走。他这阵子晚上不睡，屋里灯亮到一两点。您说说他。',
+    next: 'i3',
+  },
+  'i3': { type: 'say', who: '许予安', text: '你能不能别说了。', next: 'i4' },
+  'i4': { type: 'say', who: '许予安', text: '我说了别说了！', next: 'c2' },
+  'c2': {
+    type: 'choice',
+    prompt: '这一下他炸了',
+    options: [
+      { key: 'A', label: '先护住他：阿姨，这些咱回头单独说。', next: 'e1', flag: 'shieldBoy' },
+      { key: 'B', label: '先接住阿姨：您先坐，您也辛苦。', next: 'e4', flag: 'shieldAunt' },
+      { key: 'C', label: '先不介入，让他们自己说。', next: 'e6', flag: 'stepBack' },
+    ],
+  },
+  'e1': { type: 'say', who: '李阿姨', text: '……诶，好，好。', next: 'e2' },
+  'e2': { type: 'say', who: '旁白', text: '门关上了。', next: 'e3' },
+  'e3': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '你把他护在身后。这一下他松了一口气，但也把「说真话的人」推了出去。回头得把这一层补回来。',
+    next: 'f1',
+  },
+  'e4': { type: 'say', who: '李阿姨', text: '我不坐，我不坐。我就说这一句。', next: 'e5' },
+  'e5': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '你先接住了照顾者的辛苦。可当着孩子的面认下阿姨的功劳，等于在他那儿记一笔「你不对」。',
+    next: 'f1',
+  },
+  'e6': { type: 'say', who: '旁白', text: '两个人又顶了几句。她退出去，把门带上。', next: 'e6b' },
+  'e6b': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '不介入，冲突会自己结束——但结束的方式是「她让步」。他学到的还是「我发火管用」。',
+    next: 'f1',
+  },
+  'f1': { type: 'say', who: '旁白', text: '他坐回去，胸口起伏得厉害，手握在拐杖横杆上。', next: 'f2' },
+  'f2': { type: 'say', who: '许予安', text: '她又不是我妈。', next: 'f3' },
+  'f3': { type: 'say', who: '许予安', text: '凭什么管我这些。', next: 'c3' },
+  'c3': {
+    type: 'choice',
+    prompt: '「她又不是我妈」',
+    options: [
+      { key: 'A', label: '她照顾你多久了？', next: 'g1', flag: 'askHistory' },
+      { key: 'B', label: '她管你这些，让你什么感觉？', next: 'g3', flag: 'askFeeling' },
+      { key: 'C', label: '（不接，等一会儿）', next: 'g5', flag: 'silence' },
+    ],
+  },
+  'g1': { type: 'say', who: '许予安', text: '好几年了。', next: 'g2' },
+  'g2': { type: 'say', who: '许予安', text: '我小时候她就在。', next: 'g4' },
+  'g3': { type: 'say', who: '许予安', text: '……烦。', next: 'g3b' },
+  'g3b': { type: 'say', who: '许予安', text: '不是那种烦。', next: 'g4' },
+  'g5': { type: 'say', who: '许予安', text: '（很久）……她昨天给我擦身的时候，我让她出去。', next: 'g6' },
+  'g6': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '你什么都没说，他自己交出了最难开口的那一段。沉默不是空转，是留位子。',
+    next: 'g4',
+  },
+  'g4': {
+    type: 'say', who: '许予安',
+    text: '……她对我挺好的。',
+    next: 'g4b',
+  },
+  'g4b': { type: 'say', who: '许予安', text: '我刚才是不是挺过分的。', next: 'c4' },
+  'c4': {
+    type: 'choice',
+    prompt: '他自己开始自责了',
+    options: [
+      { key: 'A', label: '你刚才是生气，不是嫌她。', next: 'h1', flag: 'separate' },
+      { key: 'B', label: '你对别人都能客气，就对她不行。', next: 'h3', flag: 'confront' },
+      { key: 'C', label: '她不是家人，你却天天得靠她。', next: 'h4', flag: 'nameBoth' },
+    ],
+  },
+  'h1': { type: 'say', who: '许予安', text: '……有区别吗。', next: 'h2' },
+  'h2': { type: 'say', who: '咨询师', text: '有。生气是「你别管我」，嫌是「你别存在」。你刚才想说的是前一句。', next: 'h5' },
+  'h3': { type: 'say', who: '许予安', text: '……', next: 'h3b' },
+  'h3b': { type: 'say', who: '许予安', text: '因为她天天在。', next: 'h3c' },
+  'h3c': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '这话说中了，但他听见的是「你不好」。说对了不等于说进去。',
+    next: 'h5',
+  },
+  'h4': { type: 'say', who: '许予安', text: '（抬头看你）', next: 'h4b' },
+  'h4b': { type: 'say', who: '许予安', text: '……你怎么知道。', next: 'h5' },
+  'h5': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '他把「我需要人」和「我很惨」绑成了一件事。这个结，是这条线要解的东西。',
     next: 'diary',
   },
 
-  // ---- 情绪日记面板 ----
+  // ---- 情绪日记 ----
   'diary': {
     type: 'diary',
-    title: '情绪日记 · 林越的手机备忘录',
+    title: '情绪日记 · 许予安的手机备忘录',
     hint: '点开看看他都记了什么',
     entries: [
       {
         id: 'mon', day: '周一',
-        lines: ['去楼下买水。走到单元门口，看见台阶。', '算了。', '反正也没啥意思。'],
-        note: '这条里有第一句「自动化思维」。',
+        lines: ['晚上最难熬。', '白天有人来，晚上没人。', '灯不敢关。'],
+        note: '他把「难受」和「一个人」绑在一起了。',
       },
       {
         id: 'wed', day: '周三',
-        lines: ['我妈又哭了。以为我没看见。', '都怪我。'],
-        note: '「都怪我」——典型的个人化。',
+        lines: ['阿姨要给我擦身。', '我说我自己来。', '她站门口没走。'],
+        note: '拒绝帮忙的那一刻，他记下来了。',
       },
       {
         id: 'fri', day: '周五',
-        lines: ['老张问去不去看球。', '没回。', '去了也是累赘。他就是客气一下。'],
-        note: '「他就是客气一下」——读心术。',
+        lines: ['班级群在说春游。', '没人问我。', '我也不想去。'],
+        note: '「没人问我」和「我也不想去」之间有个空档。',
       },
       {
         id: 'sun', day: '周日',
-        lines: ['今天还行。', '一天没出门。', '挺好。'],
-        note: '这条最要紧。',
+        lines: ['今天挺好的。', '一天没出屋。'],
+        note: '这条最要紧。「挺好的」后面紧跟着「一天没出屋」。',
       },
     ],
     next: 'c5',
@@ -2199,315 +2280,271 @@ const SCI_S2 = {
     prompt: '先谈哪一条',
     hint: '四条都能谈，谈出来的东西不一样',
     options: [
-      { key: 'A', label: '周一 · 「反正也没啥意思」', next: 'dm1' },
-      { key: 'B', label: '周三 · 「都怪我」', next: 'dw1' },
-      { key: 'C', label: '周五 · 「他就是客气一下」', next: 'df1' },
-      { key: 'D', label: '周日 · 「一天没出门，挺好」', next: 'ds1' },
+      { key: 'A', label: '周一 · 「灯不敢关」', next: 'dm1' },
+      { key: 'B', label: '周三 · 「她站门口没走」', next: 'dw1' },
+      { key: 'C', label: '周五 · 「没人问我」', next: 'df1' },
+      { key: 'D', label: '周日 · 「一天没出屋」', next: 'ds1' },
     ],
   },
-
-  'dm1': {
-    type: 'say', who: '咨询师',
-    text: '周一这条。你说「反正也没啥意思」。',
-    next: 'dm2',
-  },
-  'dm2': {
-    type: 'say', who: '咨询师',
-    text: '这句是你在门口想的，还是出门前就这么想的？',
-    next: 'dm3',
-  },
-  'dm3': { type: 'say', who: '林越', text: '……啥意思？', next: 'dm4' },
-  'dm4': {
-    type: 'say', who: '咨询师',
-    text: '就是，你走到门口之前，知道「没意思」吗？还是看见台阶那一下，才冒出来的？',
-    next: 'dm5',
-  },
-  'dm5': { type: 'say', who: '林越', text: '（想了想）……看见台阶的时候吧。', next: 'dm6' },
-  'dm6': { type: 'say', who: '咨询师', text: '嗯。', next: 'dm7' },
-  'dm7': {
-    type: 'say', who: '咨询师',
-    text: '那这句是那会儿冒出来的，不是你查证过的事。',
-    next: 'dm8',
-  },
-  'dm8': { type: 'say', who: '林越', text: '那不一个意思吗。', next: 'dm9' },
-  'dm9': { type: 'say', who: '咨询师', text: '不太一样。', next: 'dm10' },
-  'dm10': { type: 'say', who: '林越', text: '……', next: 'dm11' },
-  'dm11': {
+  'dm1': { type: 'say', who: '许予安', text: '关了灯就……想事儿。', next: 'dm2' },
+  'dm2': { type: 'say', who: '许予安', text: '开着灯能睡着。', next: 'dm3' },
+  'dm3': {
     type: 'say', note: { kind: 'supervision' },
-    text: '这就是识别自动化思维。关键不是告诉他「你想错了」，是让他自己看见「这是个念头，不是判决」。',
-    next: 'card3',
+    text: '灯是他自己找的办法。先别急着改成「关灯」，先问「关了灯会想什么」。',
+    next: 'j1',
   },
-
-  'dw1': {
-    type: 'say', who: '咨询师',
-    text: '周三。「我妈哭了，都怪我」。',
-    next: 'dw2',
-  },
-  'dw2': {
-    type: 'say', who: '咨询师',
-    text: '这个「都」，是你确定的，还是猜的？',
-    next: 'dw3',
-  },
-  'dw3': { type: 'say', who: '林越', text: '她哭我就知道。', next: 'dw4' },
-  'dw4': {
-    type: 'say', who: '咨询师',
-    text: '嗯。那有没有可能是，她自己难受？看着你遭这个罪，她过不去。',
-    next: 'dw5',
-  },
-  'dw5': { type: 'say', who: '林越', text: '（没说话）', next: 'dw6' },
-  'dw6': { type: 'say', who: '林越', text: '那不还是因为我。', next: 'dw7' },
-  'dw7': { type: 'say', who: '咨询师', text: '是因为这场事故。', next: 'dw8' },
-  'dw8': { type: 'say', who: '咨询师', text: '不是因为你。', next: 'dw9' },
-  'dw9': { type: 'say', who: '林越', text: '……', next: 'dw10' },
-  'dw10': {
+  'dw1': { type: 'say', who: '许予安', text: '我不用她擦。', next: 'dw2' },
+  'dw2': { type: 'say', who: '许予安', text: '……我主要是，不想让她看见。', next: 'dw3' },
+  'dw3': {
     type: 'say', note: { kind: 'supervision' },
-    text: '这是个人化——把外面的事的因果揽到自己身上。注意你没说「你想多了」，你只是把「事故」和「你」分开了。',
-    next: 'card3',
+    text: '「不想让她看见」——不是嫌她脏，是嫌自己被看见。这条后面要接第 9 章的「看得见 / 看不见」。',
+    next: 'j1',
   },
-
-  'df1': {
-    type: 'say', who: '咨询师',
-    text: '周五。老张约你看球，你没回。',
-    next: 'df2',
-  },
-  'df2': {
-    type: 'say', who: '咨询师',
-    text: '你说「他就是客气一下」。这是他说的，还是你猜的？',
-    next: 'df3',
-  },
-  'df3': { type: 'say', who: '林越', text: '……猜的吧。', next: 'df4' },
-  'df4': { type: 'say', who: '林越', text: '还能咋的。', next: 'df5' },
-  'df5': { type: 'say', who: '咨询师', text: '那就是不知道。', next: 'df6' },
-  'df6': { type: 'say', who: '林越', text: '（笑了一下）你这不废话吗。', next: 'df7' },
-  'df7': { type: 'say', who: '咨询师', text: '是废话。', next: 'df8' },
-  'df8': {
-    type: 'say', who: '咨询师',
-    text: '但你现在是拿一个猜的东西，当不回消息的理由了。',
-    next: 'df9',
-  },
-  'df9': {
+  'df1': { type: 'say', who: '许予安', text: '春游我不去。', next: 'df2' },
+  'df2': { type: 'say', who: '许予安', text: '去了也是坐着看别人跑。', next: 'df3' },
+  'df3': {
     type: 'say', note: { kind: 'supervision' },
-    text: '这是读心术——假定自己知道别人怎么想。你没让他「往好处想」，只是把「不知道」还回给「不知道」。',
-    next: 'card3',
+    text: '他把「没人问我」和「我不想去」写成同一件事。这两件事，得分开摆。',
+    next: 'j1',
   },
-
-  'ds1': {
-    type: 'say', who: '咨询师',
-    text: '周日。「一天没出门，挺好。」',
-    next: 'ds2',
-  },
-  'ds2': {
-    type: 'say', who: '咨询师',
-    text: '我想问一下，这个「挺好」，是舒服，还是松口气？',
-    next: 'ds3',
-  },
-  'ds3': { type: 'say', who: '林越', text: '（愣住）', next: 'ds4' },
-  'ds4': { type: 'say', who: '林越', text: '……啥区别。', next: 'ds5' },
-  'ds5': {
-    type: 'say', who: '咨询师',
-    text: '你今天没出门，是觉得挺自在，还是觉得这天算是躲过去了？',
-    next: 'ds6',
-  },
-  'ds6': { type: 'say', who: '林越', text: '（很久）', next: 'ds7' },
-  'ds7': { type: 'say', who: '林越', text: '……躲过去了。', next: 'ds8' },
-  'ds8': {
+  'ds1': { type: 'say', who: '许予安', text: '一天没出屋，挺好的。', next: 'ds2' },
+  'ds2': { type: 'say', who: '咨询师', text: '「挺好的」是这一天里最好的部分吗？', next: 'ds3' },
+  'ds3': { type: 'say', who: '许予安', text: '……不是。', next: 'ds4' },
+  'ds4': {
     type: 'say', note: { kind: 'supervision' },
-    text: '这是整份日记里最要紧的一条。回避经常伪装成「我还行」。',
-    next: 'card3',
+    text: '他说「挺好的」，是因为没有更难听的说法。这是回避，不是满意。',
+    next: 'j1',
   },
 
-  // ---- 科普卡 3 ----
-  'card3': {
-    type: 'card', kind: 'science',
-    title: '脑子里冒出来的那句话',
-    lines: [
-      '认出它，是认知行为治疗最基础的一步。',
-      '它的意思不是「你想错了」，而是：那个让你停下来的结论，往往不是事实，是当时脑子里的一句话。',
-      '关于证据，有件事得说实话：CBT 用在脊髓损伤后的抑郁焦虑上，证据等级是中等——只有单项随机对照试验或小样本研究支持。它有用，但不是「最有效的疗法」。',
-      '别的方向上，问题解决训练在减轻照护者抑郁上证据更强；动机式访谈对「还在犹豫的人」更合适。',
-      '所以：别把 CBT 写成万能药。',
+  // ---- 家庭 ----
+  'j1': { type: 'say', who: '咨询师', text: '你爸妈这段时间，跟你说话多吗？', next: 'j2' },
+  'j2': { type: 'say', who: '许予安', text: '多。', next: 'j3' },
+  'j3': { type: 'say', who: '许予安', text: '太多了。', next: 'c6' },
+  'c6': {
+    type: 'choice',
+    prompt: '「太多了」',
+    options: [
+      { key: 'A', label: '他们都问些什么？', next: 'k1', flag: 'askParents' },
+      { key: 'B', label: '「太多了」是烦，还是别的？', next: 'k4', flag: 'askFeelParents' },
+      { key: 'C', label: '他们是不是觉得，是自己没照顾好你？', next: 'k6', flag: 'nameGuilt' },
     ],
-    footer: '依据：第 5 章 · 表 5.1 证据等级',
-    button: '继续',
-    next: 'end1',
   },
-  'end1': {
-    type: 'say', who: '咨询师',
-    text: '今天不聊训练，也不聊以后。',
-    next: 'end2',
+  'k1': { type: 'say', who: '许予安', text: '问疼不疼，问吃了没，问要不要买个啥。', next: 'k2' },
+  'k2': { type: 'say', who: '许予安', text: '一天问八百遍。', next: 'k3' },
+  'k3': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '他数的是次数，不是内容。反复问，说明他们自己也不安。',
+    next: 'l1',
   },
-  'end2': {
-    type: 'say', who: '咨询师',
-    text: '就一件事：下回那个念头冒出来，你看它一眼。不用改，看一眼就行。',
-    next: 'end3',
+  'k4': { type: 'say', who: '许予安', text: '……我也不知道。', next: 'k4b' },
+  'k4b': { type: 'say', who: '许予安', text: '他们一问，我就得说「没事」。', next: 'k5' },
+  'k5': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '「我就得说没事」——他们的关心，成了他每天要做的一份工作。',
+    next: 'l1',
   },
-  'end3': { type: 'say', who: '林越', text: '……看一眼。', next: 'end4' },
-  'end4': { type: 'say', who: '咨询师', text: '嗯。', next: 'end5' },
-  'end5': {
-    type: 'say', who: '林越', text: '（推着轮椅到门口）行。',
+  'k6': { type: 'say', who: '许予安', text: '（很久）我妈哭过。', next: 'k6b' },
+  'k6b': { type: 'say', who: '许予安', text: '半夜，以为我睡了。', next: 'k7' },
+  'k7': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '先说事实（她哭了），再说情绪，比替他们解释「愧疚」更有用。别抢在他前面下结论。',
+    next: 'l1',
+  },
+
+  // ---- 收束 ----
+  'l1': { type: 'say', who: '咨询师', text: '刚才你说了好几次「挺好的」。今天有没有哪件事，不是挺好的？', next: 'l2' },
+  'l2': { type: 'say', who: '许予安', text: '……', next: 'l3' },
+  'l3': { type: 'say', who: '许予安', text: '晚上关灯以后。', next: 'l4' },
+  'l4': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '这是他第一次说出比「挺好的」更具体的一句。记住这一刻，它是这一节的全部成绩。',
+    next: 's2end',
+  },
+  's2end': {
+    type: 'say', who: '旁白',
+    text: '他起身的时候，把拐杖在地上点了两下才站稳。门外，那把蓝色的塑料凳子还在。',
     next: '@s3/n1',
   },
 };
-
 // ---------------------------------------------------------------------------
-// 第 3 节
+// 第 3 节 · 准备回学校
 // ---------------------------------------------------------------------------
-const SCI_S3 = {
+const XU_S3 = {
   'n1': {
     type: 'say', who: '旁白', act: 3, warmth: 3,
-    text: '第三次见面。他这次坐得离你近了点。',
+    text: '又过了一周。学校那边定了复学的日子，就在下周一。',
     next: 'n2',
   },
-  'n2': { type: 'say', who: '林越', text: '我想问个事。', next: 'n3' },
-  'n3': { type: 'say', who: '林越', text: '王医生说，我要是好好练，以后没准能站。', next: 'n4' },
-  'n4': { type: 'say', who: '林越', text: '你们是不是都觉得我在浪费时间。', next: 'n5' },
-  'n5': { type: 'say', who: '林越', text: '等我能走了，这些事不都好办了吗。', next: 'c6' },
-
-  'c6': {
+  'n2': { type: 'say', who: '旁白', text: '他今天进门的时候，拐杖在地上拖了一下才提起来。', next: 'n3' },
+  'n3': { type: 'say', who: '咨询师', text: '下周一就回去了。你想先说点什么？', next: 'n4' },
+  'n4': { type: 'say', who: '许予安', text: '……我不想去了。', next: 'c1' },
+  'c1': {
     type: 'choice',
-    prompt: '这是他最要紧的一句话',
+    prompt: '「我不想去了」',
     options: [
-      { key: 'A', label: '你得接受现实。T6 完全性损伤，站起来的可能很小。', next: 'f6a1', flag: 'reality' },
-      { key: 'B', label: '我听到的是——你在等。等能走了，再开始过。', next: 'f6b1', flag: 'waiting' },
-      { key: 'C', label: '你有没有想过，也许生活不是这个顺序？', next: 'f6c1' },
+      { key: 'A', label: '不是都定好了吗？', next: 'a1', flag: 'pushBack' },
+      { key: 'B', label: '「不想去」，是怕什么？', next: 'b1', flag: 'askFear' },
+      { key: 'C', label: '（等一等，看他自己往下说）', next: 'c1x', flag: 'wait' },
     ],
   },
-  'f6a1': { type: 'say', who: '林越', text: '（脸沉下来）', next: 'f6a2' },
-  'f6a2': { type: 'say', who: '林越', text: '……所以你也这么觉得。', next: 'f6a3' },
-  'f6a3': {
+  'a1': { type: 'say', who: '许予安', text: '定好了也能不去。', next: 'a2' },
+  'a2': { type: 'say', who: '许予安', text: '我请假就是了。', next: 'a3' },
+  'a3': {
     type: 'say', note: { kind: 'supervision' },
-    text: '你说的可能是医学事实。但「接受现实」这四个字，是由你来宣布的。这就变成了「哀伤阶段」那套假设——书里明确说别这么干。而且目标该由他定，不是你。',
+    text: '你讲的是道理，他讲的是退路。先让他把「不想去」说出来，比把他按回去有用。',
+    next: 'd1',
+  },
+  'b1': { type: 'say', who: '许予安', text: '……', next: 'b2' },
+  'b2': { type: 'say', who: '许予安', text: '就是不想去。', next: 'b3' },
+  'b3': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '「怕什么」这个词太重，他接不住。先问「去了会怎么样」，比问「怕什么」容易入口。',
+    next: 'd1',
+  },
+  'c1x': { type: 'say', who: '许予安', text: '（很久）……他们都已经知道了。', next: 'c1y' },
+  'c1y': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '你自己什么都没说，他把最难的那句交出来了。这就是上一节攒下的东西在起作用。',
+    next: 'd1',
+  },
+  'd1': { type: 'say', who: '许予安', text: '他们都已经知道了。', next: 'd2' },
+  'd2': { type: 'say', who: '旁白', text: '他说这句的时候没看你，眼睛盯着茶几上的纸巾盒。', next: 'c2' },
+  'c2': {
+    type: 'choice',
+    prompt: '「他们都已经知道了」',
+    options: [
+      { key: 'A', label: '知道什么了？', next: 'e1', flag: 'askWhat' },
+      { key: 'B', label: '知道了，会怎么样？', next: 'e2', flag: 'askSoWhat' },
+      { key: 'C', label: '谁告诉他们的？', next: 'e3', flag: 'askWho' },
+    ],
+  },
+  'e1': { type: 'say', who: '许予安', text: '我以前在学校……被整过。', next: 'e1b' },
+  'e1b': { type: 'say', who: '许予安', text: '一年多了。', next: 'e1c' },
+  'e1c': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '「被整过」是他自己的说法。别急着替他换成「霸凌」——那个词归他，不归你。',
+    next: 'f1',
+  },
+  'e2': { type: 'say', who: '许予安', text: '他们会看我。', next: 'e2b' },
+  'e2b': { type: 'say', who: '许予安', text: '看我这样。', next: 'e2c' },
+  'e2c': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '他怕的不是再被打，是被看见。这条线走到这里，第一句真话才算出来。',
+    next: 'f1',
+  },
+  'e3': { type: 'say', who: '许予安', text: '我妈说的。', next: 'e3b' },
+  'e3b': { type: 'say', who: '许予安', text: '她跟老师说，让他们注意点。', next: 'e3c' },
+  'e3c': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '妈妈想保护他，做法是让所有人都知道。保护和暴露，在他这里是同一件事。',
+    next: 'f1',
+  },
+  'f1': { type: 'say', who: '许予安', text: '以前他们就是打我几下，推我几下。', next: 'f2' },
+  'f2': { type: 'say', who: '许予安', text: '现在全校都知道我被……都知道我这样了。', next: 'f3' },
+  'f3': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '「被打几下」他能忍，「都知道」他忍不了。这两件事的分量，他心里的排序和大人想的不一样。',
     next: 'g1',
   },
+  'g1': { type: 'say', who: '咨询师', text: '这段时间，你心里有没有特别沉的时候？', next: 'g2' },
+  'g2': { type: 'say', who: '许予安', text: '……有。', next: 'c3' },
 
-  'f6b1': { type: 'say', who: '林越', text: '（没说话，挺久）', next: 'f6b2' },
-  'f6b2': { type: 'say', who: '林越', text: '……嗯。', next: 'f6b3' },
-  'f6b3': { type: 'say', who: '林越', text: '我就是想着，等能走了……', next: 'f6b4' },
-  'f6b4': {
-    type: 'say', who: '咨询师',
-    text: '我不是说这个念头不对。',
-    next: 'f6b5',
+  // ---- 危机筛查（写死分支）----
+  'c3': {
+    type: 'choice',
+    prompt: '要不要往下问一句',
+    hint: '这一句得问。问得不好可以练，不问就没有下一句。',
+    options: [
+      { key: 'A', label: '我问得直接一点：有没有想过，活着没什么意思？', next: 'cb1', flag: 'screened' },
+      { key: 'B', label: '今天先不问这个。', next: 'sk1', flag: 'skipScreen' },
+    ],
   },
-  'f6b5': {
-    type: 'say', who: '咨询师',
-    text: '我就是想问一句——那这一年多，你在干啥？',
-    next: 'f6b6',
+  'cb1': {
+    type: 'say', who: '许予安', text: '……',
+    effect: 'crisis',
+    next: 'cb2',
   },
-  'f6b6': { type: 'say', who: '林越', text: '（停了停）', next: 'f6b7' },
-  'f6b7': { type: 'say', who: '林越', text: '……等着。', next: 'f6b8' },
-  'f6b8': {
+  'cb2': { type: 'say', who: '许予安', text: '不是想死。', next: 'cb3' },
+  'cb3': { type: 'say', who: '许予安', text: '就是有时候过马路，会想，要是撞上来会怎么样。', next: 'cb4' },
+  'cb4': {
     type: 'say', note: { kind: 'supervision' },
-    text: '你没拆他的目标，你只是把「等」摆到桌面上，让他自己看见。这就是目标调整。不是让他认命，是给卡住的目标腾个位置。',
-    next: 'g1',
+    text: '被动意念：他没想死，他只是不太在乎会不会出事。这一句必须当真，也必须不慌。',
+    next: 'cb5',
   },
-
-  'f6c1': { type: 'say', who: '林越', text: '啥顺序？', next: 'f6c2' },
-  'f6c2': { type: 'say', who: '林越', text: '（看着你）', next: 'f6c3' },
-  'f6c3': { type: 'say', who: '咨询师', text: '……', next: 'f6c4' },
-  'f6c4': {
-    type: 'say', note: { kind: 'supervision' },
-    text: '方向对，但你抛了个太虚的问题回去。具体一点，他才接得住。',
-    next: 'g1',
-  },
-
-  // ---- 拆小目标 ----
-  'g1': {
-    type: 'say', who: '咨询师',
-    text: '问你个事。今年有没有啥你其实想去、后来算了的？',
-    next: 'g2',
-  },
-  'g2': { type: 'say', who: '林越', text: '（想了想）……老张结婚。下个月。', next: 'g3' },
-  'g3': { type: 'say', who: '林越', text: '他跟我说了。我说看情况。', next: 'g4' },
-  'g4': { type: 'say', who: '咨询师', text: '看情况是啥意思？', next: 'g5' },
-  'g5': { type: 'say', who: '林越', text: '……就是不去了。', next: 'g6' },
-  'g6': { type: 'say', who: '咨询师', text: '那咱不聊去不去。', next: 'g7' },
-  'g7': {
-    type: 'say', who: '咨询师',
-    text: '就聊一件事：真要去，最麻烦的是哪一步？',
-    next: 'g8',
-  },
-  'g8': { type: 'say', who: '林越', text: '……酒店那个台阶吧。', next: 'g9' },
-  'g9': { type: 'say', who: '林越', text: '还有，坐一晚上腰受不了。', next: 'g10' },
-  'g10': { type: 'say', who: '咨询师', text: '这俩都是能想办法的事。', next: 'g11' },
-  'g11': {
-    type: 'say', who: '咨询师',
-    text: '台阶可以问酒店有没有坡道。坐久了难受，可以带个垫子，或者中途出来歇会儿。',
-    next: 'g12',
-  },
-  'g12': {
-    type: 'say', who: '咨询师',
-    text: '这些都不用等能走了才能弄。',
-    next: 'g13',
-  },
-  'g13': { type: 'say', who: '林越', text: '（沉默）', next: 'g14' },
-  'g14': {
-    type: 'say', who: '林越',
-    text: '……那我得问他酒店有没有坡道？这咋问啊。',
-    next: 'g15',
-  },
-  'g15': { type: 'say', who: '咨询师', text: '嗯。', next: 'g16' },
-  'g16': {
-    type: 'say', who: '咨询师',
-    text: '你刚问的这句，就已经是个能做的动作了。',
-    next: 'g17',
-  },
-  'g17': {
-    type: 'say', note: { kind: 'supervision' },
-    text: '目标调整的样子，不是「放弃婚礼」，是从「等我能走」变成「我先问问有没有坡道」。',
-    next: 'card4',
-  },
-
-  // ---- 科普卡 4 ----
-  'card4': {
-    type: 'card', kind: 'science',
-    title: '「适应」不是一条必经的悲伤阶梯',
+  'cb5': { type: 'say', who: '咨询师', text: '谢谢你告诉我。这个我不会假装没听见。', next: 'cbCard' },
+  'cbCard': {
+    scene: 'hallway',
+    type: 'card', kind: 'resource',
+    title: '如果你或你身边的人正在经历这些',
     lines: [
-      '很多人以为，遭遇脊髓损伤之后，人一定会依次经过否认、愤怒、讨价还价、抑郁、接受。',
-      '这个「五阶段」说法缺乏实证支持。书里明确提醒：不要假定当事人正在经历哀伤反应——实际情况比想象中少得多，而且因人而异。',
-      '真实的适应轨迹大概是：约 66% 适应良好；约 13% 一开始很痛苦，一年内缓解；约 10% 是迟发的；10%–11% 会持续处在痛苦中。',
-      '所以「他一定会经过这几个阶段，熬过去就好了」——是错的。适应没有规定路线，也不是每个人都要走一遍。',
+      '全国心理援助热线：12356（国家卫健委统一号码）',
+      '北京心理危机研究与干预中心：010-82951332',
+      '如果存在立即的危险，请拨打 120，或直接前往最近的急诊。',
     ],
-    footer: '依据：第 5 章 · Natural History；第 17 章',
-    button: '继续',
-    next: 'end1',
+    footer: '这不是「小题大做」。打这个电话的人，每天都在打。',
+    button: '知道了',
+    next: 'cb6',
   },
-  'end1': {
-    type: 'say', who: '咨询师',
-    text: '今天到这儿。我不问你下个月去不去。',
-    next: 'end2',
+  'cb6': { scene: 'hallway', type: 'say', who: '旁白', text: '走廊里没有人。饮水机在响。', next: 'cb7' },
+  'cb7': { scene: 'hallway', type: 'say', who: '许予安', text: '你别告诉我爸妈。', next: 'c4' },
+
+  // ---- 保密例外怎么处理 ----
+  'c4': {
+    type: 'choice',
+    prompt: '「你别告诉我爸妈」',
+    options: [
+      { key: 'A', label: '我不能全答应你。有件事我要跟他们谈。', next: 'm1', flag: 'honest' },
+      { key: 'B', label: '先答应他，回头再想。', next: 'm3', flag: 'promise' },
+      { key: 'C', label: '让你爸妈下次一起来，咱们一块说。', next: 'm4', flag: 'family' },
+    ],
   },
-  'end2': {
-    type: 'say', who: '咨询师',
-    text: '就问一件事：这周，你会不会去问一下那个坡道？',
-    next: 'end3',
+  'm1': { type: 'say', who: '许予安', text: '……你就不能不说吗。', next: 'm2' },
+  'm2': { type: 'say', who: '咨询师', text: '不能。但我可以做到三件事：先告诉你，跟你一起说，只说该说的。', next: 'm2b' },
+  'm2b': { type: 'say', who: '许予安', text: '……', next: 'm2c' },
+  'm2c': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '保密例外不是背着他做决定，是提前告诉他你会做什么。他被瞒过太多次了。',
+    next: 'm6',
   },
-  'end3': { type: 'say', who: '旁白', text: '（推到门口，停了一下）', next: 'end4' },
-  'end4': { type: 'say', who: '林越', text: '……我问问吧。', next: 'end5' },
-  'end5': { type: 'say', who: '林越', text: '不一定去啊。', next: 'end6' },
-  'end6': { type: 'say', who: '咨询师', text: '嗯。不一定去。', next: 'end7' },
-  'end7': {
+  'm3': { type: 'say', who: '许予安', text: '……那你别说。', next: 'm3b' },
+  'm3b': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '你答应了做不到的事。下次他再开口之前，会先想起这一次。',
+    next: 'm6',
+  },
+  'm4': { type: 'say', who: '许予安', text: '不要。', next: 'm5' },
+  'm5': { type: 'say', who: '许予安', text: '他们一来，就变成他们的事了。', next: 'm5b' },
+  'm5b': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '「他们一来就变成他们的事了」——他要的是自己还留在场。让他选怎么开口，比替他开口管用。',
+    next: 'm6',
+  },
+
+  // ---- 不问的那条路 ----
+  'sk1': {
+    type: 'say', who: '许予安', text: '……',
+    effect: 'markScreenMissed',
+    next: 'sk2',
+  },
+  'sk2': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '你没问。这不扣分，也不代表你做错了什么。但他刚才那个「有」字，就留在这儿了。',
+    next: 'm6',
+  },
+
+  // ---- 收束 ----
+  'm6': { type: 'say', who: '咨询师', text: '下周一，不管你去不去，我都在这儿。', next: 'm7' },
+  'm7': { type: 'say', who: '许予安', text: '……嗯。', next: 'm8' },
+  'm8': { type: 'say', who: '咨询师', text: '那次放学，你愿意下次跟我说说吗？', next: 'm9' },
+  'm9': { type: 'say', who: '许予安', text: '（很久）……下次吧。', next: 'm10' },
+  'm10': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '「下次吧」不是答应，但它不是「不」。这一节到这里就够了。',
+    next: 's3end',
+  },
+  's3end': {
     type: 'say', who: '旁白',
-    text: '这一节结束时，他没说「我好了」。他说的是——「我下周还来。」',
-    next: 'end8',
-  },
-  'end8': {
-    type: 'say', who: '咨询师（内心）',
-    text: '一年以后他会不会去上班，我不知道。',
-    next: 'end9',
-  },
-  'end9': {
-    type: 'say', who: '咨询师（内心）',
-    text: '伤后十年，脊髓损伤者的就业率是 24% 到 32%，截瘫大概是四肢瘫的两倍，而受教育程度是最强的预测因素。这些数字我都知道。',
-    next: 'end10',
-  },
-  'end10': {
-    type: 'say', who: '咨询师（内心）',
-    text: '但今天他做的是：把「等我能走了」往后挪了一格，腾出一小块地方，放了一件今天就能做的事。',
-    next: 'end11',
-  },
-  'end11': {
-    type: 'say', who: '咨询师（内心）',
-    text: '这就是今天全部的成绩。',
+    text: '他撑着拐站起来。这次没有把拐杖拖在地上。',
     next: '@end/1',
   },
 };
@@ -2515,15 +2552,30 @@ const SCI_S3 = {
 // ---------------------------------------------------------------------------
 // 终章
 // ---------------------------------------------------------------------------
-const SCI_END = {
+const XU_END = {
   '1': {
     type: 'result',
-    title: '故事线一 · 完',
-    lead: '心理干预的目标，不是消除疼痛，也不是恢复行走，而是功能、自我效能，和一个人觉得值得过的生活。',
-    button: '看这一节的成绩单',
+    title: '故事线 0 · 完',
+    lead: '心理干预的目标不是让他不再有情绪，而是让一个人在自己的身体里，重新有得选。',
+    button: '看这一程的轨迹',
     next: '2',
   },
   '2': {
+    type: 'say', who: '旁白',
+    text: '第二次咨询之后的那个周一。学校门口，他站在台阶下面，站了将近一分钟。',
+    next: '3',
+  },
+  '3': {
+    type: 'say', who: '旁白',
+    text: '然后他转过去，对扶着他的那个人说：「你扶我一下吧。」',
+    next: '4',
+  },
+  '4': {
+    type: 'say', who: '咨询师',
+    text: '下一回，他说说那天放学的事。',
+    next: '5',
+  },
+  '5': {
     type: 'card', kind: 'resource',
     title: '如果你或你身边的人正在经历这些',
     lines: [
@@ -2538,76 +2590,59 @@ const SCI_END = {
   },
 };
 // ---------------------------------------------------------------------------
-// 房间里的物件。
-//
-// 现在不再"点开弹纸"，而是在房间里直接用箭头标出它们的用处（见 engine.js
-// 的 drawCallouts）。callout 就是那两行标注；acts 里更长的科普文案保留下来，
-// 当前版本不显示，但课程报告和后续扩展还会用到。
+// 房间里的物件（所有故事线共用同一条房间数据）
 // ---------------------------------------------------------------------------
 const ROOM_ITEMS = {
   referral: {
     label: '茶几上的转介单',
-    callout: {
-      name: '转介单',
-      text: '别人对他的判断',
-    },
+    callout: { name: '转介单', text: '别人对他的判断' },
     acts: {
       1: {
         kind: 'referral', title: '转介单',
         lines: [
-          '林越，26 岁，T6 完全性脊髓损伤，伤后 14 个月。',
-          '情绪低落，训练配合度差，建议心理干预。',
-          '——康复科 王医生',
+          '许予安，14 岁，初二。车祸后全身多处骨折。',
+          '现遗留下肢功能障碍，右腿戴矫形支具，需长期使用双拐。',
+          '家属反映情绪低落，本人主动要求心理康复。',
+          '——康复科门诊',
         ],
-        footer: '这上面写的是别人对他的判断。他本人没说要来。',
+        footer: '这上面写的是别人对他的判断。这一次是他自己说要来的。',
       },
     },
   },
   tissue: {
     label: '茶几上的纸巾盒',
-    callout: {
-      name: '纸巾盒',
-      text: '在这儿可以哭',
-    },
+    callout: { name: '纸巾盒', text: '在这儿可以哭' },
     acts: {
       1: {
         kind: 'science', title: '为啥这儿放着一盒纸巾',
         lines: [
           '它就在你一伸手够得到的地方。没人会说「别哭」。',
           '摆在那儿，本身就是一句话：在这儿，你可以哭。',
-          '顺带说个数：脊髓损伤之后出现抑郁的人，比一般人想的要多——不同研究给的比例在 22% 到 28% 之间。',
-          '而最容易被漏掉的，恰恰是最该被看见的那部分。因为「没劲儿」「不想动」「睡不好」这些表现，太容易被当成身体的问题了。',
-          '一个人躺在那儿不动，可能是身体不行，也可能是心里不行。这两件事看着一样。',
+          '十四岁的男孩尤其需要这句话。这个年纪，哭是最先被没收掉的东西。',
         ],
-        footer: '依据：第 17 章',
+        footer: '依据：第 11 章',
       },
     },
   },
   clock: {
     label: '墙上的钟',
-    callout: {
-      name: '墙上的钟',
-      text: '出院后最危险',
-    },
+    callout: { name: '墙上的钟', text: '出院后最难' },
     acts: {
       1: {
-        kind: 'science', title: '为啥「出院后」是最危险的时候',
+        kind: 'science', title: '为啥「出院之后」最难',
         lines: [
-          '很多人觉得，出院说明最难的过去了。',
-          '但对脊髓损伤的人来说，刚确诊之后和出院回家之后，是两个心理上最容易出事的时候。',
-          '在医院里啥都给你安排好了：几点训练、几点吃饭、去哪儿检查。回到家，这些突然全没了。而门口那几级台阶、没有扶手的卫生间、别人的眼神——才刚开始。',
+          '很多人以为，出院说明最难的过去了。',
+          '对多发伤的孩子来说，住院时一切都被安排好：几点训练、几点吃饭、去哪儿检查。',
+          '回家以后这些突然全没了。而门口的台阶、学校的走廊、别人的眼神——才刚开始。',
           '最难的不是事故那天晚上，是回家以后的某个下午。',
         ],
-        footer: '依据：第 17 章',
+        footer: '依据：第 22 章',
       },
     },
   },
   sofa: {
     label: '两把沙发',
-    callout: {
-      name: '沙发',
-      text: '不对着坐',
-    },
+    callout: { name: '沙发', text: '不对着坐' },
     acts: {
       1: {
         kind: 'science', title: '座位不是面对面的',
@@ -2623,69 +2658,69 @@ const ROOM_ITEMS = {
   },
 };
 
-// ---------------------------------------------------------------------------
-// 组装。
-// sections 必须在四个分节都声明完之后才求值——不能写在上头，
-// 那时候 SCI_S1 还在暂时性死区里。
-// ---------------------------------------------------------------------------
-XLZX.storySci = {
-  id: 'sci',
-  title: '脊髓损伤',
-  numeral: '一',
-  lead: '把「等我能走了」当成人生的前提，因而什么也不做',
-  client: {
-    name: '林越',
-    line1: '26 岁 · 男',
-    line2: 'T6 完全性脊髓损伤 · 伤后 14 个月',
-    line3: '出院回家 6 个月',
-  },
-  sections: [
-    { id: 's1', title: '第 1 节', subtitle: '第一次见面', nodes: SCI_S1 },
-    { id: 's2', title: '第 2 节', subtitle: '一周后', nodes: SCI_S2 },
-    { id: 's3', title: '第 3 节', subtitle: '「等我能走了」', nodes: SCI_S3 },
-  ],
-  endingNodes: SCI_END,
-  // 来访者随身的东西。写死成轮椅的话，第二条线就会串。
-  clientArt: {
-    prop: 'WHEELCHAIR', propX: 51, propY: 34,
-    body: 'LINYUE_SEATED', bodyX: 51, bodyY: 30,
-  },
-  mobility: {
-    title: '他的轮椅',
-    lines: [
-      '轮椅停在沙发边上，离他很近，但不是「停好」的那种近——轮子还朝着门。',
-      '一个人坐着的时候，椅子朝向哪边，比他说什么更早说明他准备待多久。',
-      '第 1 节，他早到十分钟。椅子朝着门。',
-    ],
-  },
-  start: 's1/n1',
-  ending: 'end/1',
-  // 结束页文案。原先写死在 ui.js 里，加第二条线就串了，已挪到数据里。
-  end: {
-    heading: '故事线一 · 完',
-    closing: '他把「等我能走了」往后挪了一格，腾出一小块地方，放了一件今天就能做的小事。'
-      + '这就是今天全部的成绩——不是痊愈，是带着工具继续生活。',
-  },
-};
-
 XLZX.roomItems = ROOM_ITEMS;
 
-// 箭头标注的共用底：房间是三条线共用的，钟 / 纸巾盒 / 沙发在哪条线里
-// 都是同一个用处。转介单各线不同，用各故事自己的 callouts 覆盖。
 const ROOM_CALLOUTS = {};
 Object.keys(ROOM_ITEMS).forEach(function (id) {
   if (ROOM_ITEMS[id].callout) ROOM_CALLOUTS[id] = ROOM_ITEMS[id].callout;
 });
 XLZX.roomCallouts = ROOM_CALLOUTS;
 
-// v2 只留一条线。故事线二、三已在 v2 删除（git 历史里还在，tag pre-v2 可回滚）。
-// 新剧本「许予安」还没落地，先用故事线一顶上——这一步只求地基是绿的，不求内容对。
-// 所以这里只挂一条 slot；选线页不再画剪影。
+// ---------------------------------------------------------------------------
+// 组装。
+// sections 必须在三个分节都声明完之后才求值——不能写在上头，
+// 那时候 XU_S1 还在暂时性死区里。
+//
+// ⚠️ 导出名仍是 XLZX.storySci：engine.js 里按固定名字注册（X.storySci / storyAmp /
+// storyPain），引擎冻结，所以这里沿用旧名字挂新内容。id 才是真正的身份。
+// ---------------------------------------------------------------------------
+const STORY_XU = {
+  id: 'xu',
+  title: '伤残适应',
+  numeral: '一',
+  lead: '一个认为「被照顾＝被知道自己很惨」的人，怎么接受有人愿意照顾他',
+  client: {
+    name: '许予安',
+    line1: '14 岁 · 男',
+    line2: '初二 · 车祸后多发伤',
+    line3: '下肢功能障碍 · 伤后 5 个月',
+  },
+  sections: [
+    { id: 's1', title: '第 1 节', subtitle: '第一次见面', nodes: XU_S1 },
+    { id: 's2', title: '第 2 节', subtitle: '一周后', nodes: XU_S2 },
+    { id: 's3', title: '第 3 节', subtitle: '准备回学校', nodes: XU_S3 },
+  ],
+  endingNodes: XU_END,
+  // 来访者随身的东西。写死成轮椅的话，换线就会画出别人的轮椅。
+  clientArt: {
+    prop: 'CRUTCH_PAIR', propX: 70, propY: 34,
+    body: 'XUYUAN_SEATED', bodyX: 58, bodyY: 30,
+  },
+  mobility: {
+    title: '他的双拐',
+    lines: [
+      '双拐靠在沙发扶手上，不在他手里。',
+      '一个人坐着的时候，拐放在哪儿，比他说什么更早说明他准备待多久。',
+      '第 1 节，他早到十分钟，拐靠得很整齐。',
+    ],
+  },
+  start: 's1/n1',
+  ending: 'end/1',
+  end: {
+    heading: '故事线 0 · 完',
+    closing: '他没有回学校，也没有变得更好。他做的是另一件事：'
+      + '第一次主动开口，让人扶他一把。',
+  },
+};
+
+XLZX.storySci = STORY_XU;
+
+// v2 只留一条线。选线页只有一张卡，不再画剪影。
 XLZX.storySlots = [
   {
-    id: 'sci', numeral: '一', title: '脊髓损伤', ready: true,
-    lead: '把「等我能走了」当成人生的前提，因而什么也不做',
-    who: '林越 · 26 岁 · T6 完全性脊髓损伤 · 伤后 14 个月',
+    id: 'xu', numeral: '一', title: '伤残适应', ready: true,
+    lead: '一个认为「被照顾＝被知道自己很惨」的人，怎么接受有人愿意照顾他',
+    who: '许予安 · 14 岁 · 初二 · 下肢功能障碍 · 伤后 5 个月',
   },
 ];
 
@@ -4267,6 +4302,13 @@ XLZX.storySlots = [
    * 成绩单和"小节末的督导笔记"共用这个收尾。
    */
   function presentPaper(opts) {
+    // 惰性建浮层：showPaper 早就这么做了，这里原先没有。
+    // 一条线的第一张纸如果是「节末笔记」或「成绩单」（v2 的许予安线就是这样），
+    // overlayEl 还是 null，会当场抛 TypeError。
+    if (!overlayEl) {
+      overlayEl = make('div', { id: 'overlay' });
+      document.body.appendChild(overlayEl);
+    }
     const paper = make('div', { class: 'paper', 'data-kind': opts.kind || 'science' });
     paper.appendChild(make('div', { class: 'head' }, [
       make('span', { class: 'label', text: opts.label || '' }),

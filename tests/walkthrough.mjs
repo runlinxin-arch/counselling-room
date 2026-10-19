@@ -239,7 +239,7 @@ const TO_CRISIS_BRANCH = `
       var labels = document.querySelectorAll('.choice .label');
       var isScreen = false;
       for (var k = 0; k < labels.length; k++) {
-        if (labels[k].textContent.indexOf('活着挺没意思') >= 0) isScreen = true;
+        if (labels[k].textContent.indexOf('活着没什么意思') >= 0) isScreen = true;
       }
       if (isScreen) break;
     }
@@ -255,7 +255,7 @@ const TO_CRISIS_BRANCH = `
   // 用 state.line 判断最稳：不受打字机进度影响。
   for (var j = 0; j < 200; j++) {
     var line = window.XLZX.engine.state.line;
-    if (line === 's1/cb2') return 'AT_BRANCH@' + j;
+    if (line === 's3/cb2') return 'AT_BRANCH@' + j;
     var d2 = ${DRIVE(0)};
     if (d2 === 'stuck') return 'STUCK_AT_' + line;
     await new Promise(function (r) { setTimeout(r, 16); });
@@ -300,7 +300,7 @@ const STEPS = [
       var a = await ${PLAY_UNTIL(`document.querySelectorAll('.ann text').length >= 8`, 0, 120)};
       if (a.indexOf('reached') !== 0) return 'CALLOUT_FAILED[' + a + ']';
       var txt = document.getElementById('scene').textContent;
-      var need = ['墙上的钟', '出院后最危险', '纸巾盒', '在这儿可以哭', '沙发', '转介单'];
+      var need = ['墙上的钟', '出院后最难', '纸巾盒', '在这儿可以哭', '沙发', '转介单'];
       var miss = need.filter(function (w) { return txt.indexOf(w) < 0; });
       return miss.length ? ('CALLOUT_MISSING ' + miss.join('/')) : 'CALLOUT_OK';`,
   },
@@ -385,11 +385,14 @@ const STEPS = [
   },
   {
     shot: 'game-10-diary',
-    // 关掉资源卡，推到第 2 节开头的情绪日记，展开两条看排版
+    // 日记在第 2 节，危机分支在第 3 节——不能接在上一步后面，
+    // 必须从标题页重新走一遍，推到情绪日记，展开两条看排版
     after: `
-      (function () { var b = document.querySelector('#overlay.on .btn'); if (b) b.click(); })();
-      await new Promise(function (r) { setTimeout(r, 240); });
-      await ${PLAY_UNTIL(`!!document.querySelector('.diary')`, 0, 600)};
+      window.XLZX.ui.restart();
+      document.querySelector('.start').click();
+      document.querySelector('.line-card[data-ready="true"]').click();
+      await new Promise(function (r) { setTimeout(r, 220); });
+      await ${PLAY_UNTIL(`!!document.querySelector('.diary')`, 0, 900)};
       (function () {
         var es = document.querySelectorAll('.entry');
         if (es[0]) es[0].click();
@@ -437,7 +440,7 @@ const STEPS = [
       (function () { var b = document.querySelector('#overlay.on .btn'); if (b) b.click(); })();
       await new Promise(function (r) { setTimeout(r, 240); });
       var r = await ${PLAY_UNTIL(
-        `window.XLZX.engine.state.line === 'end/2'`,
+        `window.XLZX.engine.state.line === 'end/5'`,
         0, 3000)};
       // MAXED 的时候只报"没走完"没用，得知道卡在哪一句、各动作各做了多少次
       return 'WALK_' + r + ' line=' + window.XLZX.engine.state.line;
