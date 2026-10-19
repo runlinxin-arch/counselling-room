@@ -3,17 +3,18 @@
 // 为什么要生成而不是手抄：手抄必然与数据漂移。而剧本是"正本"、数据是"投影"，
 // 两者不一致时谁对谁错会变成扯不清的事。所以让数据做唯一来源，正本由它生成。
 //
-// 用法：node tools/gen-story-md.mjs        （生成全部三条线）
+// 用法：node tools/gen-story-md.mjs        （目前没有生成目标，见下面的 LINES）
 import { readFileSync, writeFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 // ⚠️ 故事线一**不在这里**：它的正本 docs/story/故事线1-脊髓损伤.md 是手写的，
 // 比从数据投影出来的版本更细（含批注与舞台细节）。用生成器覆盖它会丢东西。
 // 所以只生成后两条线；故事线一的正本由人维护。
-const LINES = [
-  { file: 'src/story-amp.js', key: 'storyAmp', out: 'docs/story/故事线2-截肢.md', chapter: '第 16 章 Limb Loss' },
-  { file: 'src/story-pain.js', key: 'storyPain', out: 'docs/story/故事线3-慢性疼痛.md', chapter: '第 14 章 Chronic Pain' },
-];
+//
+// v2（2026-10-19）：故事线二、三已删除，只剩故事线一（正本手写），
+// 所以 LINES 目前是空的——本脚本没有生成目标，跑起来只打印一句说明。
+// 新剧本落地后若决定「正本由数据生成」，把那一项加回来即可。
+const LINES = [];
 
 const NUM = ['二', '三'];
 
@@ -110,4 +111,8 @@ function gen({ file, key, out, chapter }, idx) {
   console.log('已生成 ' + out + '（' + L.length + ' 行）');
 }
 
-LINES.forEach(gen);
+if (LINES.length === 0) {
+  console.log('没有要生成的剧本：v2 只剩故事线一，它的正本是手写的（docs/story/故事线1-脊髓损伤.md）。');
+} else {
+  LINES.forEach(gen);
+}

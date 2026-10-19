@@ -161,7 +161,7 @@ function extraProseOf(src) {
   }
   return out.join('\n');
 }
-const earlyProse = ['src/story.js', 'src/story-amp.js', 'src/story-pain.js']
+const earlyProse = ['src/story.js']
   .map((f) => extraProseOf(readFileSync(f, 'utf8'))).join('\n');
 
 // 禁用词
@@ -211,7 +211,7 @@ function proseOf(src) {
   }
   return out.join('\n');
 }
-const STORY_FILES = ['src/story.js', 'src/story-amp.js', 'src/story-pain.js'];
+const STORY_FILES = ['src/story.js'];
 const storySrc = STORY_FILES.map((f) => readFileSync(f, 'utf8')).join('\n');
 const prose = STORY_FILES.map((f) => proseOf(readFileSync(f, 'utf8'))).join('\n');
 
@@ -280,10 +280,8 @@ try {
   sandbox.window.XLZX.sprites = spritesJson;
   loadInto('src/sprites.js');
   loadInto('src/story.js');
-  loadInto('src/story-amp.js');
-  loadInto('src/story-pain.js');
   loadInto('src/engine.js');
-  ok('sprites / 三条故事线 / engine 能在 vm 里加载');
+  ok('sprites / 故事线 / engine 能在 vm 里加载');
 
   // 督导笔记的两条约束（都是踩过的坑）：
   //  A) 必须"收集起来本节末一起看"，不能跟着台词一条条弹 —— 太碎；
@@ -463,18 +461,18 @@ if (!E || stories.length === 0) {
     }
   }
   if (!itemBad) ok('房间里 4 样物件都有箭头标注文案');
-  if (!X.storySlots || X.storySlots.length !== 3) fail('storySlots 应有 3 条线');
+  if (!X.storySlots || X.storySlots.length !== 1) fail('storySlots 应有 1 条线（v2 只留一条）');
   else {
     const ready = X.storySlots.filter((x) => x.ready).length;
     const everyReadyHasStory = X.storySlots.every((x) => !x.ready || (X.stories || {})[x.id]);
     if (!everyReadyHasStory) fail('有 storySlots 标了 ready，但 X.stories 里没有对应故事');
-    else ok(`选线页有 3 条线（${ready} 条可玩 + ${3 - ready} 条剪影）`);
+    else ok(`选线页有 ${X.storySlots.length} 条线（${ready} 条可玩 + ${X.storySlots.length - ready} 条剪影）`);
   }
 
   // ---- 存档 ----
   const empty = E.emptySave();
-  if (['sci', 'amp', 'pain'].some((k) => !(k in empty.done))) fail('emptySave().done 缺少故事线');
-  else ok('存档结构含三条线的通关标记');
+  if (X.storySlots.some((s) => !(s.id in empty.done))) fail('emptySave().done 缺少故事线');
+  else ok('存档结构含每条线的通关标记');
   const round = JSON.parse(JSON.stringify({ story: 'sci', line: 's1/n2', flags: { openB: true }, warmth: 2 }));
   if (round.line !== 's1/n2' || round.flags.openB !== true) fail('存档快照编解码不一致');
   else ok('存档快照编解码一致');

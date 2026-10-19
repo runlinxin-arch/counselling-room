@@ -437,9 +437,12 @@
     const head = make('div', { class: 'choose-head' });
     head.appendChild(make('div', { class: 'kicker', text: '选一条线' }));
     head.appendChild(make('h2', { text: '同一间诊室，不同的人' }));
+    // 文案跟着线数走：v2 只剩一条线，不能再写着「三条线，选一条」。
+    const slotN = (X.storySlots || []).length;
     head.appendChild(make('p', {
-      text: '三条完全独立的故事线，选一条走完。每条都是一次完整的过程，' +
-        '不用按顺序玩。目前只有第一条写完了，另外两条还在写。',
+      text: slotN > 1
+        ? slotN + ' 条完全独立的故事线，选一条走完。每条都是一次完整的过程，不用按顺序玩。'
+        : '一次完整的过程，从头走到尾。',
     }));
     page.appendChild(head);
 

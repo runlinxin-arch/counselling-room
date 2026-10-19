@@ -823,23 +823,14 @@ Object.keys(ROOM_ITEMS).forEach(function (id) {
 });
 XLZX.roomCallouts = ROOM_CALLOUTS;
 
-// 后两条线还没写。引擎已经支持，只是没有内容——
-// 所以选线页把它们画成剪影，而不是假装「正在加载」。
+// v2 只留一条线。故事线二、三已在 v2 删除（git 历史里还在，tag pre-v2 可回滚）。
+// 新剧本「许予安」还没落地，先用故事线一顶上——这一步只求地基是绿的，不求内容对。
+// 所以这里只挂一条 slot；选线页不再画剪影。
 XLZX.storySlots = [
   {
     id: 'sci', numeral: '一', title: '脊髓损伤', ready: true,
     lead: '把「等我能走了」当成人生的前提，因而什么也不做',
     who: '林越 · 26 岁 · T6 完全性脊髓损伤 · 伤后 14 个月',
-  },
-  {
-    id: 'amp', numeral: '二', title: '截肢', ready: true,
-    lead: '身体意象、幻肢痛，和出院之后那一段情绪回落',
-    who: '周航 · 41 岁 · 右小腿截肢 · 伤后 5 个月',
-  },
-  {
-    id: 'pain', numeral: '三', title: '慢性疼痛', ready: true,
-    lead: '影像学看不出问题，不代表痛是假的',
-    who: '陈静 · 38 岁 · 慢性下背痛 · 三年',
   },
 ];
 
