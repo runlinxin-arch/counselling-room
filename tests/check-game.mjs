@@ -456,6 +456,21 @@ if (!E || stories.length === 0) {
   }
 
 
+  // ---- 成绩单（记分页）----
+  // 不许给分数：内容必须是「这一程发生了什么 + 落在哪条轨迹」。
+  {
+    const rn = (story.endingNodes || {})['1'];
+    if (!rn || rn.type !== 'result') fail('终章第一个节点应是成绩单（result）');
+    else if (typeof rn.rows === 'function') {
+      try {
+        const rows = rn.rows({}, {});
+        if (!Array.isArray(rows) || rows.length < 4) fail('成绩单行数太少：' + (rows && rows.length));
+        else if (!rows.some((x) => /轨迹|适应/.test(String(x[1])))) fail('成绩单没说适应轨迹');
+        else ok(`成绩单 ${rows.length} 行，数据驱动，描述适应轨迹`);
+      } catch (e) { fail('成绩单 rows 抛错：' + e.message); }
+    } else ok('成绩单用内置行（老数据）');
+  }
+
   // ---- 科普卡与资源卡 ----
   // 6 张科普卡（2/2/2 分布），每张必须标章节页脚；资源卡至少 2 张（危机 + 终章，
   // 第三张是标题页的常驻入口，写在 ui.js 里）。

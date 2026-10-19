@@ -1044,6 +1044,14 @@
       : (Array.isArray(node.rows) ? node.rows : builtin);
 
     const body = make('div', {});
+    if (!flags.screened) {
+      body.appendChild(make('p', {
+        style: 'color:#8a5a20;margin-bottom:14px',
+        text: node.reminder
+          || '提醒：这条线里你没有做危机筛查。抑郁很容易被身体的表现盖住——'
+          + '「没劲儿」「不想动」「睡不好」太容易被当成身体的问题。下一次，得问。',
+      }));
+    }
     const ul = make('ul', { class: 'tally' });
     lines.forEach(function (pair) {
       const li = make('li', {});
@@ -1055,14 +1063,6 @@
     });
     body.appendChild(ul);
 
-    if (!flags.screened) {
-      body.appendChild(make('p', {
-        style: 'color:#8a5a20',
-        text: node.reminder
-          || '提醒：这条线里你没有做危机筛查。抑郁很容易被身体的表现盖住——'
-          + '「没劲儿」「不想动」「睡不好」太容易被当成身体的问题。下一次，得问。',
-      }));
-    }
     body.appendChild(make('p', {
       style: 'color:#6d6250;font-size:13.5px;margin-top:14px',
       text: '同一件事有不止一种做法，没有哪一次选择会卡死。',

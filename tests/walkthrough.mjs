@@ -305,7 +305,7 @@ const STEPS = [
       return miss.length ? ('CALLOUT_MISSING ' + miss.join('/')) : 'CALLOUT_OK';`,
   },
   {
-    shot: 'game-06b-counselor-bubble',
+    shot: 'game-06b-counselor-bubble', fresh: true,
     // 第一个选择点选 C（「最近怎么样？」）。它后面的 d2 是一句典型的
     // "咨询师对玩家说的话"，现在以聊天气泡的形式出现。
     // 这条路径是确定的：选 C → d1（旁白）→ d2（气泡）。
@@ -328,7 +328,7 @@ const STEPS = [
     `,
   },
   {
-    shot: null,
+    shot: null, fresh: true,
     check: 'note',
     after: `
       // 督导笔记现在是**本节末统一看**（成绩单之后一张纸），不再跟着台词逐条弹。
@@ -362,7 +362,7 @@ const STEPS = [
     `,
   },
   {
-    shot: 'game-07-supervision-note',
+    shot: 'game-07-supervision-note', fresh: true,
     // 同样的路径，但这次把纸留在屏幕上截图（上面那一步是断言，不截图）
     after: `
       window.XLZX.ui.restart();
@@ -374,7 +374,7 @@ const STEPS = [
     `,
   },
   {
-    shot: 'game-08-crisis-branch',
+    shot: 'game-08-crisis-branch', fresh: true,
     // 红线：选「问」，必须进到写死的关怀回应
     after: `await ${TO_CRISIS_BRANCH};`,
   },
@@ -384,7 +384,7 @@ const STEPS = [
     after: `await ${CRISIS_TO_RESOURCE};`,
   },
   {
-    shot: 'game-10-diary',
+    shot: 'game-10-diary', fresh: true,
     // 日记在第 2 节，危机分支在第 3 节——不能接在上一步后面，
     // 必须从标题页重新走一遍，推到情绪日记，展开两条看排版
     after: `
@@ -412,7 +412,7 @@ const STEPS = [
   // 把结果写进 title，由外面判定 reached / 失败。
   // -------------------------------------------------------------------------
   {
-    shot: null,
+    shot: null, fresh: true,
     check: 'crisis',
     after: `
       var a = await ${TO_CRISIS_BRANCH};
@@ -428,7 +428,7 @@ const STEPS = [
     `,
   },
   {
-    shot: null,
+    shot: null, fresh: true,
     check: 'walk',
     after: `
       // 同样从头来一遍，走到危机分支再往下推到底——
@@ -475,13 +475,21 @@ function buildHarness(upto) {
   //
   // 整段必须 async —— 步骤体里有 await。写成普通 function 会让整块脚本
   // 直接语法错误，然后静默地"什么都没发生"（踩过一次）。
-  const script = STEPS.slice(0, upto + 1).map((s, i) => `
+  //
+  // fresh: 这一步自己会 restart 并从头走。那种步骤不重放前面的步骤——
+  // 前面 5 步跑完后再接着跑，截图会拍到残留的中间态（房间缩到顶部、
+  // 中间一大块空面板），看着像排版坏了，其实只是拍摄时机骗人。
+  const from = STEPS[upto] && STEPS[upto].fresh ? upto : 0;
+  const script = STEPS.slice(from, upto + 1).map((s, ii) => {
+    const i = from + ii;
+    return `
 try {
   await new Promise(function (r) { setTimeout(r, 200); });
   window.__step = 'step${i}';
   var r${i} = await (async function () { ${s.after} })();
   window.__step = 'step${i}=' + (r${i} === undefined ? 'ok' : r${i});
-} catch (e) { document.title = 'STEP${i} FAILED ' + e.message; }`).join('\n');
+} catch (e) { document.title = 'STEP${i} FAILED ' + e.message; }`;
+  }).join('\n');
   return `
 <script>
 // 内联脚本挂掉必须有人喊。写在最前面。

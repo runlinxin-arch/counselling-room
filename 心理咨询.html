@@ -512,7 +512,7 @@ body::before {
 .paper[data-kind="resource"] .body { font-size: 17px; }
 
 /* 成绩单 */
-.paper[data-kind="result"] .body { font-family: var(--sans); font-size: 15px; line-height: 1.9; }
+.paper[data-kind="result"] .body { font-family: var(--sans); font-size: 15px; line-height: 1.75; }
 /* lead 是"结论"，用衬线；下面的清单是"账目"，用无衬线 */
 .paper .result-lead {
   margin: 0;
@@ -530,7 +530,7 @@ body::before {
   border-bottom: 1px dashed rgba(58, 50, 39, .22);
 }
 .tally li:last-child { border-bottom: none; }
-.tally .k { flex: 0 0 6.5em; color: #6d6250; }
+.tally .k { flex: 0 0 7.8em; color: #6d6250; }
 .tally .v { flex: 1 1 auto; color: #2e281f; }
 .tally .v.miss { color: #8a5a20; }
 
@@ -4666,6 +4666,14 @@ XLZX.storySlots = [
       : (Array.isArray(node.rows) ? node.rows : builtin);
 
     const body = make('div', {});
+    if (!flags.screened) {
+      body.appendChild(make('p', {
+        style: 'color:#8a5a20;margin-bottom:14px',
+        text: node.reminder
+          || '提醒：这条线里你没有做危机筛查。抑郁很容易被身体的表现盖住——'
+          + '「没劲儿」「不想动」「睡不好」太容易被当成身体的问题。下一次，得问。',
+      }));
+    }
     const ul = make('ul', { class: 'tally' });
     lines.forEach(function (pair) {
       const li = make('li', {});
@@ -4677,14 +4685,6 @@ XLZX.storySlots = [
     });
     body.appendChild(ul);
 
-    if (!flags.screened) {
-      body.appendChild(make('p', {
-        style: 'color:#8a5a20',
-        text: node.reminder
-          || '提醒：这条线里你没有做危机筛查。抑郁很容易被身体的表现盖住——'
-          + '「没劲儿」「不想动」「睡不好」太容易被当成身体的问题。下一次，得问。',
-      }));
-    }
     body.appendChild(make('p', {
       style: 'color:#6d6250;font-size:13.5px;margin-top:14px',
       text: '同一件事有不止一种做法，没有哪一次选择会卡死。',
