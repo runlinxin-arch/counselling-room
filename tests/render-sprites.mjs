@@ -29,8 +29,15 @@ const ART = {
   TISSUE: X.TISSUE,
   LINYUE: X.LINYUE,
   COUNSELOR: X.COUNSELOR,
+  XUYUAN_SEATED: X.XUYUAN_SEATED,
+  CRUTCH_PAIR: X.CRUTCH_PAIR,
   ...X.CLOCK_VARIANTS,
 };
+
+// 来访者这一组（随身物件 + 立绘）由故事数据给，渲染时也照这个来，
+// 否则出图验收的就不是游戏里真正会画的那一版。
+const CLIENT_SCI = { prop: 'WHEELCHAIR', propX: 51, propY: 34, body: 'LINYUE_SEATED', bodyX: 51, bodyY: 30 };
+const CLIENT_XU = { prop: 'CRUTCH_PAIR', propX: 70, propY: 34, body: 'XUYUAN_SEATED', bodyX: 58, bodyY: 30 };
 
 let problems = 0;
 console.log('=== 像素校验 ===');
@@ -77,7 +84,7 @@ function bgChar(x, y) {
  * 画一帧房间。层级必须和 engine.js 的 renderScene 一致：
  * 背景 → 家具 → 人 → 茶几 → 茶几上的东西 → 钟 → 暖光
  */
-function drawRoom({ withPeople = true, act = 1, warmth = 1 } = {}) {
+function drawRoom({ withPeople = true, act = 1, warmth = 1, client = CLIENT_SCI } = {}) {
   const cv = makeCanvas(GW, GH);
 
   for (let y = 0; y < GH; y++) {
@@ -102,9 +109,8 @@ function drawRoom({ withPeople = true, act = 1, warmth = 1 } = {}) {
   }
 
   if (withPeople) {
-    const c = X.CHARS.client;
-    paint(X.WHEELCHAIR, c.chairX, c.chairY, cv);
-    paint(X.LINYUE, c.bodyX, c.bodyY, cv);
+    paint(X[client.prop], client.propX, client.propY, cv);
+    paint(X[client.body], client.bodyX, client.bodyY, cv);
     const k = X.CHARS.counselor;
     paint(X.COUNSELOR, k.bodyX, k.bodyY, cv);
   }
@@ -144,6 +150,19 @@ const write = (name, cv) => {
 console.log('\n=== 出图 ===');
 write('characters.png', sheet([
   stamp(X.COUNSELOR), stamp(X.LINYUE), stamp(X.WHEELCHAIR), stamp(X.REFERRAL), stamp(X.TISSUE),
+], { scale: SCALE }));
+
+// 许予安（v2）：立绘 + 双拐，单独出图，逐张人眼验收
+write('characters-xu.png', sheet([
+  stamp(X.XUYUAN_SEATED), stamp(X.CRUTCH_PAIR), stamp(X.LINYUE_SEATED),
+], { scale: SCALE }));
+
+// 许予安坐在右边沙发上，双拐靠在扶手边（腋托压在扶手上、脚垫落地）。
+// 三节各出一张：暖光递增，但他不会「亮起来」——那件事留给台词。
+write('room-xu-3-acts.png', sheet([
+  drawRoom({ act: 1, warmth: 1, client: CLIENT_XU }),
+  drawRoom({ act: 2, warmth: 2, client: CLIENT_XU }),
+  drawRoom({ act: 3, warmth: 3, client: CLIENT_XU }),
 ], { scale: SCALE }));
 
 write('room-3-acts.png', sheet([

@@ -36,6 +36,14 @@ const PAL_EXT = {
   m: '#45474d', // 深灰裤暗面
   I: '#8a6a4f', // 包（旧棕）
 
+  // 许予安（v2 新线）：14 岁，校服藏青 + 深灰运动裤 + 下肢矫形支具。
+  // 藏青是四个角色里唯一的冷色上衣（林越墨绿、周航土黄、陈静砖红），一眼分得开。
+  U: '#37476b', // 藏青校服
+  W: '#2a3752', // 藏青暗面
+  L: '#4a4a52', // 深灰运动裤
+  l: '#3a3a41', // 深灰运动裤暗面
+  K: '#c9c6bd', // 支具（医用塑料，冷灰）
+  E: '#9a968b', // 支具暗面 / 绑带
 };
 
 // 轮椅（14 × 17）：大轮 + 小前轮 + 脚踏 + 推手。
@@ -208,6 +216,85 @@ const LINYUE_SEATED = [
   '  DDD DDD   ',
 ];
 
+// 许予安（v2 唯一一条线）：14 岁，初二，车祸后遗留下肢功能障碍。
+// 右侧小腿戴矫形支具（从膝到踝），平时拄双拐；短距离能自己走。
+// 表情按规格写死成「警惕和忍耐」，不是悲伤：眼睛是平视的，嘴角不往下掉。
+// 骨架沿用（头 10 px、四肢短粗），换发型（短、露出耳朵，与林越的厚发帘分开）、
+// 换配色（藏青校服 + 深灰运动裤），坐姿与咨询师同一套（大腿平、小腿垂到地面）。
+const XUYUAN_SEATED = [
+  '  DYYYYYYD  ',
+  ' DYYYYYYYYD ',
+  ' DHHHHHHHHD ',
+  ' DHZZZZZZHD ',
+  ' DZXZZZZXZD ',
+  ' DZZZZZZZZD ',
+  '  DZZZZZZD  ',
+  '  DzzzzD    ',
+  '   DUUUUD   ',
+  '  DUUUUUUD  ',
+  ' DUUUUUUUUD ',
+  ' DUUwUUUUUD ',
+  ' DUUUUUUUUD ',
+  ' DUuUUUUuUD ',
+  ' DUUUUUUUUD ',
+  ' DLLLLLLLLD ',
+  ' DLLLLLLLLD ',
+  '  DKKD LLD  ',
+  '  DKED LLD  ',
+  '  DKKD LLD  ',
+  '  DKED LLD  ',
+  '  DKKD LLD  ',
+  '  DDDD DDD  ',
+];
+
+// 双拐（12 × 22）：靠沙发扶手立着，不在手上。
+// 拄着拐站着是「患者」的手势，坐着把拐放在一边才是这个人的常态。
+// 深色腋托 / 铝色杆 / 棕色握把 / 深色脚垫；两根略呈外八字，读起来是一对而不是两根竿。
+const CRUTCH_PAIR = [
+  ' DDD   DDD  ',
+  'DkkkD DkkkD ',
+  ' kkk   kkk  ',
+  ' k k   k k  ',
+  ' k k   k k  ',
+  ' k k   k k  ',
+  ' k k   k k  ',
+  ' k k   k k  ',
+  '  kk    kk  ',
+  '  kk    kk  ',
+  '  kkk   kkk ',
+  '  kkk   kkk ',
+  '  kk    kk  ',
+  '  kk    kk  ',
+  '  kk    kk  ',
+  '  kk    kk  ',
+  '  kk    kk  ',
+  '  kk    kk  ',
+  '  kk    kk  ',
+  '  XX    XX  ',
+  '  XX    XX  ',
+  '  XX    XX  ',
+  ' DDD  DDD   ',
+  '  kk    kk  ',
+  '  kk    kk  ',
+  '  kk    kk  ',
+  '  kk    kk  ',
+  '  kk    kk  ',
+  '  kk    kk  ',
+  '  kk    kk  ',
+  '  kk    kk  ',
+  '  kkk   kkk ',
+  '  kkk   kkk ',
+  '  kk    kk  ',
+  '  kk    kk  ',
+  '  kk   kk   ',
+  '  kk   kk   ',
+  '  kk   kk   ',
+  '  kk   kk   ',
+  '  kk   kk   ',
+  '  XX   XX   ',
+  '  XX   XX   ',
+  '  XX   XX   ',
+];
 const COUNSELOR = [
   '   DYYYYYD  ',
   '  DYYYYYYYD ',
@@ -342,6 +429,8 @@ XLZX.REFERRAL = REFERRAL;
 XLZX.TISSUE = TISSUE;
 XLZX.LINYUE = LINYUE;
 XLZX.LINYUE_SEATED = LINYUE_SEATED;
+XLZX.XUYUAN_SEATED = XUYUAN_SEATED;
+XLZX.CRUTCH_PAIR = CRUTCH_PAIR;
 XLZX.COUNSELOR = COUNSELOR;
 XLZX.CHARS = CHARS;
 XLZX.CLOCK_VARIANTS = CLOCK_VARIANTS;

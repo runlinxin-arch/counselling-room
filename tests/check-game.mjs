@@ -77,7 +77,7 @@ const PAL = { ...spritesJson.pal };
 // 去掉注释行：中文注释里有反引号和括号，容易干扰 vm。
 const spritesJs = readFileSync('src/sprites.js', 'utf8').replace(/^\s*\/\/.*$/gm, '');
 const extra = vm.runInNewContext(
-  spritesJs + '\n;({ PAL_EXT, WHEELCHAIR, REFERRAL, TISSUE, LINYUE, COUNSELOR, CHARS, CLOCK_VARIANTS, WARMTH })'
+  spritesJs + '\n;({ PAL_EXT, WHEELCHAIR, REFERRAL, TISSUE, LINYUE, LINYUE_SEATED, XUYUAN_SEATED, CRUTCH_PAIR, COUNSELOR, CHARS, CLOCK_VARIANTS, WARMTH })'
 );
 Object.assign(PAL, extra.PAL_EXT);
 
@@ -92,7 +92,8 @@ function auditSprite(name, rows) {
 const allSprites = {
   ...spritesJson.sprites,
   WHEELCHAIR: extra.WHEELCHAIR, REFERRAL: extra.REFERRAL, TISSUE: extra.TISSUE,
-  LINYUE: extra.LINYUE, COUNSELOR: extra.COUNSELOR,
+  LINYUE: extra.LINYUE, LINYUE_SEATED: extra.LINYUE_SEATED, COUNSELOR: extra.COUNSELOR,
+  XUYUAN_SEATED: extra.XUYUAN_SEATED, CRUTCH_PAIR: extra.CRUTCH_PAIR,
   ...extra.CLOCK_VARIANTS,
 };
 for (const [n, rows] of Object.entries(allSprites)) auditSprite(n, rows);
