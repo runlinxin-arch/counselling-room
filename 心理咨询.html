@@ -1969,6 +1969,57 @@ const XU_S1 = {
     type: 'say', who: '旁白',
     text: '房间里几样东西，箭头标出了它们是干什么用的。',
     allowItems: ['referral', 'tissue', 'clock', 'sofa'],
+    next: 'v1',
+  },
+
+  // ---- 车祸：他主动提，但只提「还记得」的那部分 ----
+  // 这一段是本节的骨：他能说的只有事故，说不出的都在事故之前。
+  'v1': {
+    type: 'say', who: '旁白',
+    text: '他把拐杖往身边挪了挪，忽然开口。',
+    next: 'v2',
+  },
+  'v2': { type: 'say', who: '许予安', text: '那天的事……我记不太清了。', next: 'v3' },
+  'v3': { type: 'say', who: '许予安', text: '就记得很响。还有地上很烫。', next: 'v4' },
+  'v4': { type: 'say', who: '许予安', text: '（停了停）我是不是该从头说说？', next: 'cv' },
+  'cv': {
+    type: 'choice',
+    prompt: '他把话头递过来了',
+    options: [
+      { key: 'A', label: '那就说说你还记得的部分。', next: 'va1', flag: 'crashParts' },
+      { key: 'B', label: '「记不清」是当时就模糊，还是后来想不起来？', next: 'vb1', flag: 'crashMemory' },
+      { key: 'C', label: '不记得也没关系。', next: 'vc1', flag: 'crashSkip' },
+    ],
+  },
+  'va1': { type: 'say', who: '许予安', text: '我记得我躺着。有人在喊，喊什么听不清。', next: 'va2' },
+  'va2': { type: 'say', who: '许予安', text: '后来就是在医院了，中间啥也没有。', next: 'va3' },
+  'va3': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '他记得声音、记得地上烫、记得躺着——不记得前因。这不是回避，创伤后的记忆本来就是碎的。',
+    next: 'vd',
+  },
+  'vb1': { type: 'say', who: '许予安', text: '（想了想）当时就是糊的。', next: 'vb2' },
+  'vb2': { type: 'say', who: '许予安', text: '后来我妈跟我讲了好几遍，我才知道那天我走到马路中间去了。', next: 'vb3' },
+  'vb3': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '「我妈讲了好多遍」——他对那天的记忆是别人转述的。这很常见，也很要紧：他手上没有自己的版本。',
+    next: 'vd',
+  },
+  'vc1': { type: 'say', who: '许予安', text: '……嗯。', next: 'vc2' },
+  'vc2': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '「没关系」把门关上了，但没锁。后面还能再敲一次，只是别在这儿敲。',
+    next: 'vd',
+  },
+  'vd': {
+    type: 'say', who: '旁白',
+    text: '他讲住院、讲手术、讲第一次下地。语气很平，像在说别人的事。',
+    next: 've',
+  },
+  've': { type: 'say', who: '许予安', text: '就这样。', next: 'vf' },
+  'vf': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '他把整件事说成了一份经过。你听不到一句「我难受」——第一次见面，这很正常，别急着要。',
     next: 'e1',
   },
 
@@ -2078,9 +2129,10 @@ const XU_S1 = {
   // ---- 收尾 ----
   'm1': { type: 'say', who: '咨询师', text: '今天快到了。下礼拜这个时间，再来一次？', next: 'm2' },
   'm2': { type: 'say', who: '许予安', text: '行。', next: 'm3' },
-  'm3': {
+  'm3': { type: 'say', who: '旁白', text: '他看了一眼墙上的钟，又收回去。', next: 'm4' },
+  'm4': {
     type: 'say', note: { kind: 'supervision' },
-    text: '他答应得太快了。快得像在敷衍——这是「配合」，不是「愿意」。',
+    text: '他答应得太快了，还先看了一眼钟。快得像在敷衍——这是「配合」，不是「愿意」。',
     next: 'hw1',
   },
 
@@ -2243,6 +2295,48 @@ const XU_S2 = {
   'h5': {
     type: 'say', note: { kind: 'supervision' },
     text: '他把「我需要人」和「我很惨」绑成了一件事。这个结，是这条线要解的东西。',
+    next: 'w6',
+  },
+
+  // ---- 阿姨也是个人 ----
+  'w6': { type: 'say', who: '旁白', text: '门外传来一声塑料凳子挪动的响。她在外面坐着。', next: 'w7' },
+  'w7': { type: 'say', who: '许予安', text: '……她孩子还在老家。', next: 'cw' },
+  'cw': {
+    type: 'choice',
+    prompt: '他自己提了一句',
+    options: [
+      { key: 'A', label: '她跟你提过？', next: 'w1', flag: 'auntStory' },
+      { key: 'B', label: '你想过她也不容易吗？', next: 'w3', flag: 'auntGuilt' },
+      { key: 'C', label: '（不接，等他往下说）', next: 'w5', flag: 'auntWait' },
+    ],
+  },
+  'w1': { type: 'say', who: '许予安', text: '提过一次。说一年见一回。', next: 'w2' },
+  'w2': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '「一年见一回」这句他记得。说明他听过，也说明这句话在他那儿放着没扔。',
+    next: 'x1',
+  },
+  'w3': { type: 'say', who: '许予安', text: '（很快）我不用她可怜。', next: 'w4' },
+  'w4': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '「可怜」是他自己加的词，阿姨没这么说过。他在替她说话，也在替自己防守。',
+    next: 'x1',
+  },
+  'w5': { type: 'say', who: '许予安', text: '（很久）她其实挺累的。', next: 'w5b' },
+  'w5b': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '他第一个说出来的不是「她可怜」，是「她累」。这一句里没有他自己——所以他敢说。',
+    next: 'x1',
+  },
+
+  // ---- 核心洞察：被照顾＝被看见＝被确认很惨 ----
+  'x1': { type: 'say', who: '咨询师', text: '你怕的好像不是她照顾你。', next: 'x2' },
+  'x2': { type: 'say', who: '咨询师', text: '是她看见你需要照顾。', next: 'x3' },
+  'x3': { type: 'say', who: '许予安', text: '……', next: 'x4' },
+  'x4': { type: 'say', who: '许予安', text: '（很小声）那样我就……', next: 'x5' },
+  'x5': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '他没说完。这句半截话就是这条线的骨。别替他说完，也别忘了它。',
     next: 'diary',
   },
 
