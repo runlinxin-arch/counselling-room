@@ -683,6 +683,13 @@ const XU_S3 = {
   'f3': {
     type: 'say', note: { kind: 'supervision' },
     text: '「被打几下」他能忍，「都知道」他忍不了。这两件事的分量，他心里的排序和大人想的不一样。',
+    next: 'f4',
+  },
+  'f4': { type: 'say', who: '许予安', text: '他们肯定会看我走路。', next: 'f5' },
+  'f5': { type: 'say', who: '许予安', text: '我们班有个男生，学人走路学得可像了。', next: 'f6' },
+  'f6': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '他把最怕的东西说成了一个画面：有人学他走路。画面比「我怕」好接，也好办。',
     next: 'g1',
   },
   'g1': { type: 'say', who: '咨询师', text: '这段时间，你心里有没有特别沉的时候？', next: 'g2' },
@@ -779,6 +786,36 @@ const XU_S3 = {
   'm10': {
     type: 'say', note: { kind: 'supervision' },
     text: '「下次吧」不是答应，但它不是「不」。这一节到这里就够了。',
+    next: 'p1',
+  },
+
+  // ---- 复学怎么落地：把「回不回」换成「怎么回」----
+  'p1': { type: 'say', who: '咨询师', text: '回去那天，你想怎么安排？', next: 'p2' },
+  'p2': { type: 'say', who: '许予安', text: '……安排？', next: 'cp' },
+  'cp': {
+    type: 'choice',
+    prompt: '他要的是一句具体的话，不是鼓励',
+    options: [
+      { key: 'A', label: '先上半天，撑不住就走。', next: 'p1a', flag: 'planHalf' },
+      { key: 'B', label: '让家里送到校门口，别送进去。', next: 'p1b', flag: 'planDoor' },
+      { key: 'C', label: '我陪你去一趟？', next: 'p1c', flag: 'planMe' },
+    ],
+  },
+  'p1a': { type: 'say', who: '许予安', text: '……半天啊。', next: 'p1a2' },
+  'p1a2': { type: 'say', who: '许予安', text: '半天好像行。', next: 'p3' },
+  'p1b': { type: 'say', who: '许予安', text: '（很快）别送进去。', next: 'p1b2' },
+  'p1b2': { type: 'say', who: '许予安', text: '就路口放下就行。', next: 'p3' },
+  'p1c': { type: 'say', who: '许予安', text: '……你去干嘛。', next: 'p1c2' },
+  'p1c2': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '「我陪你去」听着暖，但那是你在替学校那件事站队。边界上，这一步不该由咨询师迈。',
+    next: 'p3',
+  },
+  'p3': { type: 'say', who: '咨询师', text: '那就先这么定：上半天，撑不住就走，走之前给我发个消息。', next: 'p4' },
+  'p4': { type: 'say', who: '许予安', text: '……行。', next: 'p5' },
+  'p5': {
+    type: 'say', note: { kind: 'supervision' },
+    text: '「回不回」是个表态，「上半天」是件能做的事。把大问题换成一件小事，他才动得了。',
     next: 's3end',
   },
   's3end': {
